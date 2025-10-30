@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Fleet Dashboard</title>
+    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        {% include 'elements/side-bar/side-bar.html' %}
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
+                <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                    {% include 'elements/header/header.html' %}
+                </nav>
+                <div class="container-fluid">
+                    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-dark mb-0">Fleet Dashboard</h3>
+                        <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="#">
+                            <i class="fas fa-plus fa-sm text-white-50"></i> Add Vehicle
+                        </a>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-primary py-2">
+                                <div class="card-body">
+                                    <div class="row g-0 align-items-center">
+                                        <div class="col me-2">
+                                            <div class="text-uppercase text-primary fw-bold text-xs mb-1">
+                                                <span>Total Vehicles</span>
+                                            </div>
+                                            <div class="text-dark fw-bold h5 mb-0"><span>120</span></div>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-car fa-2x text-gray-300"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-success py-2">
+                                <div class="card-body">
+                                    <div class="row g-0 align-items-center">
+                                        <div class="col me-2">
+                                            <div class="text-uppercase text-success fw-bold text-xs mb-1">
+                                                <span>Available Vehicles</span>
+                                            </div>
+                                            <div class="text-dark fw-bold h5 mb-0"><span>85</span></div>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-info py-2">
+                                <div class="card-body">
+                                    <div class="row g-0 align-items-center">
+                                        <div class="col me-2">
+                                            <div class="text-uppercase text-info fw-bold text-xs mb-1">
+                                                <span>Maintenance Progress</span>
+                                            </div>
+                                            <div class="row g-0 align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="text-dark fw-bold h5 mb-0 me-3"><span>50%</span></div>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="progress progress-sm">
+                                                        <div class="progress-bar bg-info" style="width: 50%;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-tools fa-2x text-gray-300"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-warning py-2">
+                                <div class="card-body">
+                                    <div class="row g-0 align-items-center">
+                                        <div class="col me-2">
+                                            <div class="text-uppercase text-warning fw-bold text-xs mb-1">
+                                                <span>Active Drivers</span>
+                                            </div>
+                                            <div class="text-dark fw-bold h5 mb-0"><span>28</span></div>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-id-card fa-2x text-gray-300"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-7 col-xl-8">
+                            <div class="card shadow mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary fw-bold m-0">Vehicle Status Overview</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <canvas data-bss-chart='{"type":"line","data":{"labels":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],"datasets":[{"label":"Vehicles in Service","fill":true,"data":["40","45","50","55","53","60","58","65"],"backgroundColor":"rgba(78, 115, 223, 0.05)","borderColor":"rgba(78, 115, 223, 1)"}]}}'></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5 col-xl-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary fw-bold m-0">Fleet Categories</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <canvas data-bss-chart='{"type":"doughnut","data":{"labels":["Cars","Trucks","Motorcycles"],"datasets":[{"backgroundColor":["#4e73df","#1cc88a","#36b9cc"],"data":["60","35","25"]}]}}'></canvas>
+                                    </div>
+                                    <div class="text-center small mt-4">
+                                        <span class="me-2"><i class="fas fa-circle text-primary"></i> Cars</span>
+                                        <span class="me-2"><i class="fas fa-circle text-success"></i> Trucks</span>
+                                        <span class="me-2"><i class="fas fa-circle text-info"></i> Motorcycles</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="text-primary fw-bold m-0">Maintenance Projects</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="small fw-bold">Engine Check<span class="float-end">20%</span></h4>
+                                    <div class="progress mb-4">
+                                        <div class="progress-bar bg-danger" style="width: 20%;"></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Brake Fix<span class="float-end">40%</span></h4>
+                                    <div class="progress mb-4">
+                                        <div class="progress-bar bg-warning" style="width: 40%;"></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Body Repair<span class="float-end">60%</span></h4>
+                                    <div class="progress mb-4">
+                                        <div class="progress-bar bg-primary" style="width: 60%;"></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Oil Change<span class="float-end">80%</span></h4>
+                                    <div class="progress mb-4">
+                                        <div class="progress-bar bg-info" style="width: 80%;"></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Tire Replacement<span class="float-end">Complete</span></h4>
+                                    <div class="progress mb-4">
+                                        <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="text-primary fw-bold m-0">Vehicle Reminders</h6>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="row g-0 align-items-center">
+                                            <div class="col me-2">
+                                                <h6 class="mb-0"><strong>Insurance Renewal</strong></h6>
+                                                <span class="text-xs">12 Jan 2025</span>
+                                            </div>
+                                            <div class="col-auto">
+                                                <input class="form-check-input" type="checkbox">
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="row g-0 align-items-center">
+                                            <div class="col me-2">
+                                                <h6 class="mb-0"><strong>License Check</strong></h6>
+                                                <span class="text-xs">15 Jan 2025</span>
+                                            </div>
+                                            <div class="col-auto">
+                                                <input class="form-check-input" type="checkbox">
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <div class="row">
+
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card text-white bg-primary shadow">
+                                        <div class="card-body">
+                                            <p class="m-0">In Service</p>
+                                            <p class="text-white-50 small m-0">Operational</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card text-white bg-success shadow">
+                                        <div class="card-body">
+                                            <p class="m-0">Available</p>
+                                            <p class="text-white-50 small m-0">Ready</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card text-white bg-info shadow">
+                                        <div class="card-body">
+                                            <p class="m-0">In Maintenance</p>
+                                            <p class="text-white-50 small m-0">Being repaired</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card text-white bg-warning shadow">
+                                        <div class="card-body">
+                                            <p class="m-0">Pending Inspection</p>
+                                            <p class="text-white-50 small m-0">Await check</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card text-white bg-danger shadow">
+                                        <div class="card-body">
+                                            <p class="m-0">Decommissioned</p>
+                                            <p class="text-white-50 small m-0">Inactive</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <footer class="bg-white sticky-footer">
+                <div class="container my-auto">
+                    <div class="text-center my-auto copyright">
+                        <span>Copyright © Fleet Manager 2025</span>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+
+        <a class="border rounded d-inline scroll-to-top" href="#page-top">
+            <i class="fas fa-angle-up"></i>
+        </a>
+
+    </div>
+
+    <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../static/assets/js/chart.min.js"></script>
+    <script src="../static/assets/js/bs-init.js"></script>
+    <script src="../static/assets/js/theme.js"></script>
+</body>
+
+</html>
