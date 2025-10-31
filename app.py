@@ -3,7 +3,7 @@ from flask import Flask, redirect, url_for, render_template
 from blueprints.auth import auth_bp
 
 app = Flask(__name__)
-app.secret_key = 'sex'
+app.secret_key = 'xxx'
 
 @app.route('/')
 def hello_world():

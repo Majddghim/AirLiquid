@@ -21,9 +21,18 @@ class AuthViews:
             data = request.get_json()
             email = data.get('email')
             password = data.get('password')
+            if not email and password :
+                print("Email missing")
+                return jsonify({'status': 'failed', 'message': 'Email is required'})
+
+            if not password and email:
+                print("Password missing")
+                return jsonify({'status': 'failed', 'message': 'Password is required'})
+
             if not email or not password:
                 return jsonify({'status': 'failed', 'message': 'Email and password are required'})
                 print("missing email or password")
+
             user = self.Admin_Service.get_admin_by_email(email)
             if user is None:
                 return jsonify({'status': 'failed', 'message': 'Utilisateur non trouvé'})
@@ -32,8 +41,8 @@ class AuthViews:
                 print(user , 'failed')
             print("user found:", user)
             if not user or user.password != password:
-                return jsonify({'status': 'failed', 'message': 'Email ou mot de passe incorrect'})
-            # session['user'] = user
+                return jsonify({'status': 'failed', 'message': 'mot de passe incorrect'})
+            session['user'] = user
             return jsonify({'status': 'success', 'message': 'Login successful'})
 
         @self.auth_bp.route('/logout', methods=['GET'])
