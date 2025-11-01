@@ -11,7 +11,10 @@ function login_request(email, password) {
             var response = JSON.parse(xhr.responseText);
             console.log(response);
             if (response.status === 'success') {
-                notifs.success("Connexion réussie", "Bienvenue " );
+                notifs.success("Authentification réussie", "Redirection en cours...");
+                setTimeout(function () {
+                    window.location.href = '/dashboard';
+                }, 1500);
 
             } else {
                 loginBtn.disabled = false;

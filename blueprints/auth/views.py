@@ -30,20 +30,25 @@ class AuthViews:
                 return jsonify({'status': 'failed', 'message': 'Password is required'})
 
             if not email or not password:
-                return jsonify({'status': 'failed', 'message': 'Email and password are required'})
                 print("missing email or password")
+                return jsonify({'status': 'failed', 'message': 'Email and password are required'})
+
+            #if '@' not in email:
+                #print("Invalid email format")
+                #return jsonify({'status': 'failed', 'message': 'Invalid email format'})
 
             user = self.Admin_Service.get_admin_by_email(email)
             if user is None:
                 return jsonify({'status': 'failed', 'message': 'Utilisateur non trouvé'})
             if user is None:
+                print(user, 'failed')
                 return jsonify({'status': 'error', 'message': 'Something went wrong'})
-                print(user , 'failed')
             print("user found:", user)
             if not user or user.password != password:
                 return jsonify({'status': 'failed', 'message': 'mot de passe incorrect'})
-            session['user'] = user
-            return jsonify({'status': 'success', 'message': 'Login successful'})
+            session['user_id'] = user.id
+            print(session['user_id'], 'logged in successfully')
+            return jsonify({'status': 'success', 'redirect': url_for('dashboard.admin_dashboard')})
 
         @self.auth_bp.route('/logout', methods=['GET'])
         def logout():

@@ -3,7 +3,7 @@ from entities.admin import Admin
 from blueprints.auth.views import AuthViews
 class DashboardViews :
     def __init__(self):
-        self.dashboard_views = blueprints .Blueprint('dashboard', __name__, template_folder='templates')
+        self.admin_bp= blueprints .Blueprint('dashboard', __name__, template_folder='templates')
         self.admin_routes()
 
     def admin_routes(self):

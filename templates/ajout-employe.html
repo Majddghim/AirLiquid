@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Détails Employé - Brand</title>
+    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        {% include 'elements/side-bar/side-bar.html' %}
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
+                <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                    {% include 'elements/header/header.html' %}
+                </nav>
+                <div class="container-fluid">
+                    <h3 class="text-dark mb-4">Détails de l'employé</h3>
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <p class="text-primary m-0 fw-bold">Informations sur l'employé</p>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="first_name"><strong>Prénom</strong></label>
+                                        <input class="form-control" type="text" id="first_name" name="first_name" placeholder="Ex: Ahmed">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="last_name"><strong>Nom</strong></label>
+                                        <input class="form-control" type="text" id="last_name" name="last_name" placeholder="Ex: Ben Ali">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="department"><strong>Département</strong></label>
+                                        <input class="form-control" type="text" id="department" name="department" placeholder="Ex: Informatique">
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="position"><strong>Poste</strong></label>
+                                        <input class="form-control" type="text" id="position" name="position" placeholder="Ex: Développeur Backend">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="email"><strong>Email</strong></label>
+                                        <input class="form-control" type="email" id="email" name="email" placeholder="Ex: ahmed.benali@example.com">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="phone"><strong>Téléphone</strong></label>
+                                        <input class="form-control" type="tel" id="phone" name="phone" placeholder="Ex: +216 55 123 456">
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="created_at"><strong>Date d'ajout</strong></label>
+                                        <input class="form-control" type="date" id="created_at" name="created_at">
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-save"></i> Enregistrer</button>
+                                    <button class="btn btn-secondary btn-sm" type="reset"><i class="fas fa-undo"></i> Réinitialiser</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="bg-white sticky-footer">
+                <div class="container my-auto">
+                    <div class="text-center my-auto copyright">
+                        <span>Copyright © Brand 2025</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+        <a class="border rounded d-inline scroll-to-top" href="#page-top">
+            <i class="fas fa-angle-up"></i>
+        </a>
+    </div>
+
+    <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../static/assets/js/bs-init.js"></script>
+    <script src="../static/assets/js/theme.js"></script>
+</body>
+
+</html>

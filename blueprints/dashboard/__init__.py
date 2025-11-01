@@ -1,3 +1,3 @@
 from .views import DashboardViews
 
-dashboard_bp = DashboardViews().dashboard_views
+dashboard_bp = DashboardViews().admin_bp

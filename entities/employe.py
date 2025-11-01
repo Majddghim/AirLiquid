@@ -1,4 +1,4 @@
-class Employer :
+class Employe:
     def __init__(self, id , first_name , last_name , department , position , email, phone , created_at):
         self.id = id
         self.first_name = first_name
