@@ -11,6 +11,7 @@ auth_views = AuthViews()
 app.register_blueprint(auth_views.auth_bp, url_prefix='/auth')
 app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 
+
 @app.route('/')
 def hello_world():
     return redirect(url_for('login'))
@@ -23,21 +24,6 @@ def login():
 def index():
     return render_template('dashboard.html')
 
-@app.route('/profile')
-def profile():
-    return render_template('profile.html')
-
-@app.route('/employe')
-def employer():
-    return render_template('employe.html')
-
-@app.route('/ajout-voiture')
-def voiture():
-    return render_template('ajout-voiture.html')
-
-@app.route('/ajout-employe')
-def detaille():
-    return render_template('ajout-employe.html')
 
 if __name__ == '__main__':
     app.run()

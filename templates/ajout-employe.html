@@ -25,7 +25,7 @@
                             <p class="text-primary m-0 fw-bold">Informations sur l'employé</p>
                         </div>
                         <div class="card-body">
-                            <form method="POST">
+                            <form>
                                 <div class="row mb-3">
                                     <div class="col-md-4">
                                         <label class="form-label" for="first_name"><strong>Prénom</strong></label>
@@ -64,7 +64,7 @@
                                 </div>
 
                                 <div class="text-end">
-                                    <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-save"></i> Enregistrer</button>
+                                    <button class="btn btn-primary btn-sm"  onclick="enregistrerEmploye()"><i class="fas fa-save"></i> Enregistrer</button>
                                     <button class="btn btn-secondary btn-sm" type="reset"><i class="fas fa-undo"></i> Réinitialiser</button>
                                 </div>
                             </form>
@@ -85,7 +85,7 @@
             <i class="fas fa-angle-up"></i>
         </a>
     </div>
-
+    <script src="../static/js/empl.js"></script>
     <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="../static/assets/js/bs-init.js"></script>
     <script src="../static/assets/js/theme.js"></script>
