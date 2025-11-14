@@ -25,26 +25,26 @@
                             <p class="text-primary m-0 fw-bold">Informations sur l'employé</p>
                         </div>
                         <div class="card-body">
-                            <form>
+                            <form id="employeForm" onsubmit="return false;">
                                 <div class="row mb-3">
                                     <div class="col-md-4">
                                         <label class="form-label" for="first_name"><strong>Prénom</strong></label>
-                                        <input class="form-control" type="text" id="first_name" name="first_name" placeholder="Ex: Ahmed">
+                                        <input class="form-control" type="text" id="nom" name="first_name" placeholder="Ex: Ahmed">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label" for="last_name"><strong>Nom</strong></label>
-                                        <input class="form-control" type="text" id="last_name" name="last_name" placeholder="Ex: Ben Ali">
+                                        <input class="form-control" type="text" id="prenom" name="last_name" placeholder="Ex: Ben Ali">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label" for="department"><strong>Département</strong></label>
-                                        <input class="form-control" type="text" id="department" name="department" placeholder="Ex: Informatique">
+                                        <input class="form-control" type="text" id="departement" name="department" placeholder="Ex: Informatique">
                                     </div>
                                 </div>
 
                                 <div class="row mb-3">
                                     <div class="col-md-4">
                                         <label class="form-label" for="position"><strong>Poste</strong></label>
-                                        <input class="form-control" type="text" id="position" name="position" placeholder="Ex: Développeur Backend">
+                                        <input class="form-control" type="text" id="poste" name="position" placeholder="Ex: Développeur Backend">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label" for="email"><strong>Email</strong></label>
@@ -85,7 +85,7 @@
             <i class="fas fa-angle-up"></i>
         </a>
     </div>
-    <script src="../static/js/empl.js"></script>
+    <script src="{{ url_for('static', filename='js/empl.js') }}"></script>
     <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="../static/assets/js/bs-init.js"></script>
     <script src="../static/assets/js/theme.js"></script>

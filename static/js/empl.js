@@ -4,15 +4,15 @@ async function enregistrerEmploye() {
         nom: document.getElementById("nom").value.trim(),
         prenom: document.getElementById("prenom").value.trim(),
         email: document.getElementById("email").value.trim(),
-        telephone: document.getElementById("telephone").value.trim(),
+        telephone: document.getElementById("phone").value.trim(),
         poste: document.getElementById("poste").value.trim(),
         departement: document.getElementById("departement").value.trim(),
         created_at: document.getElementById("created_at").value
     };
-
+    console.log("JS LOADED");
     try {
         // Send data to Flask backend
-        const response = await fetch("/ajout-employe", {
+        const response = await fetch("/employe/ajout-employe", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
