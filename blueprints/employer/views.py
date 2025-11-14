@@ -8,9 +8,6 @@ class employe :
         self.employe_bp = Blueprint('employe', __name__)
         self.employe_routes()
     def employe_routes(self):
-
-
-
         @self.employe_bp.route('/ajout-employe', methods=['POST'])
         def ajout():
             data = request.get_json()
