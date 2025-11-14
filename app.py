@@ -2,7 +2,7 @@ from flask import Flask, redirect, url_for, render_template
 
 from blueprints.auth.views import AuthViews
 from blueprints.dashboard import dashboard_bp
-from blueprints.employer.views import employe
+from blueprints.employer import employe_bp
 
 app = Flask(__name__)
 app.secret_key = 'xxx'
@@ -11,7 +11,7 @@ app.secret_key = 'xxx'
 auth_views = AuthViews()
 app.register_blueprint(auth_views.auth_bp, url_prefix='/auth')
 app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-app.register_blueprint(employe.employe_bp, url_prefix='/employe')
+app.register_blueprint(employe_bp, url_prefix='/employe')
 
 
 @app.route('/')

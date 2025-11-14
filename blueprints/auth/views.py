@@ -33,9 +33,9 @@ class AuthViews:
                 print("missing email or password")
                 return jsonify({'status': 'failed', 'message': 'Email and password are required'})
 
-            #if '@' not in email:
-                #print("Invalid email format")
-                #return jsonify({'status': 'failed', 'message': 'Invalid email format'})
+            if '@' not in email:
+                print("Invalid email format")
+                return jsonify({'status': 'failed', 'message': 'Invalid email format'})
 
             user = self.Admin_Service.get_admin_by_email(email)
             if user is None:

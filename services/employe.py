@@ -7,7 +7,7 @@ class EmployeService:
 
     def get_employe_by_email(self, email):
         con, cursor = self.db_tools.find_connection()
-        query = "SELECT id, first_name, last_name, department, position, email, phone, created_at FROM employes WHERE email = %s"
+        query = "SELECT id, first_name, last_name, department, position, email, phone, created_at FROM employees WHERE email = %s"
         cursor.execute(query, (email,))
         result  = cursor.fetchall()
         if result:
@@ -26,7 +26,7 @@ class EmployeService:
 
     def get_employe_by_id(self, id):
         con, cursor = self.db_tools.find_connection()
-        query = "SELECT id, first_name, last_name, department, position, email, phone, created_at FROM employes WHERE id = %s"
+        query = "SELECT id, first_name, last_name, department, position, email, phone, created_at FROM employees WHERE id = %s"
         cursor.execute(query, (id,))
         result  = cursor.fetchall()
         if result:
@@ -45,7 +45,7 @@ class EmployeService:
 
     def get_all_employes(self):
         con, cursor = self.db_tools.find_connection()
-        query = "SELECT id, first_name, last_name, department, position, email, phone, created_at FROM employes"
+        query = "SELECT id, first_name, last_name, department, position, email, phone, created_at FROM employees"
         cursor.execute(query)
         results  = cursor.fetchall()
         employes = []
@@ -65,7 +65,7 @@ class EmployeService:
     def add_employe(self, first_name, last_name, department, position, email, phone , created_at):
         con, cursor = self.db_tools.find_connection()
         query = """
-        INSERT INTO employes (first_name, last_name, department, position, email, phone, created_at)
+        INSERT INTO employees (first_name, last_name, department, position, email, phone, created_at)
         VALUES (%s, %s, %s, %s, %s, %s,%s)
         """
         cursor.execute(query, (first_name, last_name, department, position, email, phone, created_at))

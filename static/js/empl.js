@@ -9,30 +9,46 @@ async function enregistrerEmploye() {
         departement: document.getElementById("departement").value.trim(),
         created_at: document.getElementById("created_at").value
     };
-    console.log("JS LOADED");
+
     try {
-        // Send data to Flask backend
         const response = await fetch("/employe/ajout-employe", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         });
 
-        // Parse response
         const result = await response.json();
 
-        // Display message
         if (result.status === "success") {
-            alert("✅ " + result.message);
-            document.getElementById("employeForm").reset();
+    Swal.fire({
+        icon: "success",
+        title: "Employé ajouté",
+        text: result.message,
+        showConfirmButton: false,
+        timer: 1800   // SweetAlert closes after 1.8 seconds
+    }).then(() => {
+        window.location.href = "/dashboard/employe";
+    });
+
+
+
         } else {
-            alert("⚠️ " + result.message);
+            Swal.fire({
+                icon: "warning",
+                title: "Attention",
+                text: result.message,
+                confirmButtonColor: "#f0ad4e"
+            });
         }
 
     } catch (error) {
         console.error("Erreur lors de l'envoi :", error);
-        alert("❌ Une erreur s'est produite lors de l'enregistrement.");
+
+        Swal.fire({
+            icon: "error",
+            title: "Erreur",
+            text: "Une erreur s'est produite lors de l'enregistrement.",
+            confirmButtonColor: "#d33"
+        });
     }
 }
