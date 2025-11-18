@@ -1,12 +1,13 @@
-from flask import Blueprint , request
+from flask import Blueprint, request, jsonify
 from services.employe import EmployeService
 
 
-class employe :
+class employe:
     def __init__(self):
         self.EmployeService = EmployeService()
         self.employe_bp = Blueprint('employe', __name__)
         self.employe_routes()
+
     def employe_routes(self):
         @self.employe_bp.route('/ajout-employe', methods=['POST'])
         def ajout():
@@ -40,7 +41,6 @@ class employe :
                 print("created_at missing")
                 return {'status': 'failed', 'message': 'Date de creation est requis'}
 
-
             empl = self.EmployeService.get_employe_by_email(email)
             if empl is not None:
                 return {'status': 'failed', 'message': 'Employe avec cet email existe déjà'}
@@ -48,3 +48,28 @@ class employe :
             self.EmployeService.add_employe(nom, prenom, departement, poste, email, telephone, created)
 
             return {'status': 'success', 'message': 'Employe ajouté avec succès'}
+
+        @self.employe_bp.route('/get-employes', methods=['GET'])
+        def get_employes():
+            search_by_name = request.args.get('search_by_name', '').strip().lower()
+            page = request.args.get('page', 1)
+            limit = request.args.get('limit', 10)
+            print(f"Search by name: {search_by_name}, Page: {page}, Limit: {limit}")
+            try:
+                page = int(page)
+                limit = int(limit)
+            except ValueError:
+                return jsonify({'status': 'failed', 'message': 'Page and limit must be integers'})
+            begin = (page - 1) * limit
+            data, count = self.EmployeService.get_employe_by_name(search_by_name, number=limit,
+                                                                                 begin=begin, dict_form=True)
+
+            if data is not None and  len(data) == 0  :
+                return jsonify({'status': 'failed', 'message': data})
+            print(f"Retrieved {len(data)} employes out of {count} matching the criteria.")
+            print(data)
+            return jsonify({
+                'status': 'success',
+                'data': data,
+                'count': count
+            })

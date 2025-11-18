@@ -5,9 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Détails Voiture - Brand</title>
-    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
-    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+
 </head>
 
 <body id="page-top">
@@ -110,7 +111,7 @@
         </a>
     </div>
 
-    <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="../static/assets/js/bs-init.js"></script>
     <script src="../static/assets/js/theme.js"></script>
 </body>

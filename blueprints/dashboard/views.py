@@ -29,3 +29,7 @@ class DashboardViews :
         @self.admin_bp.route('/ajout-voiture')
         def ajout_admin_page():
             return render_template('ajout-voiture.html')
+
+        @self.admin_bp.route('/ajout-voiture/<int:eid>')
+        def ajout_voiture_avec_id(eid):
+            return render_template('ajout-voiture.html', employe_id=eid)
