@@ -26,7 +26,7 @@
                             <p class="text-primary m-0 fw-bold">Informations sur le véhicule</p>
                         </div>
                         <div class="card-body">
-                            <form method="POST" enctype="multipart/form-data">
+                            <form  onsubmit="return false;">
                                 <div class="row mb-3">
                                     <div class="col-md-4">
                                         <label class="form-label" for="model"><strong>Modèle</strong></label>
@@ -63,10 +63,10 @@
                                 </div>
 
                                 <div class="row mb-3">
-                                    <div class="col-md-4">
+                                    <!--<div class="col-md-4">
                                         <label class="form-label" for="acquisition_date"><strong>Date d'acquisition</strong></label>
                                         <input class="form-control" type="date" id="acquisition_date" name="acquisition_date">
-                                    </div>
+                                    </div>-->
                                     <div class="col-md-4">
                                         <label class="form-label" for="registration_date"><strong>Date d'immatriculation</strong></label>
                                         <input class="form-control" type="date" id="registration_date" name="registration_date">
@@ -89,7 +89,9 @@
                                 </div>
 
                                 <div class="text-end">
-                                    <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-save"></i> Enregistrer</button>
+                                    <button class="btn btn-primary btn-sm" type="button" onclick="enregistrerVoiture()">
+    <i class="fas fa-save"></i> Enregistrer
+</button>
                                     <button class="btn btn-secondary btn-sm" type="reset"><i class="fas fa-undo"></i> Réinitialiser</button>
                                 </div>
                             </form>
@@ -112,8 +114,11 @@
     </div>
 
 <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="../static/assets/js/bs-init.js"></script>
-    <script src="../static/assets/js/theme.js"></script>
+<script src="{{ url_for('static', filename='js/car.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </body>
 
 </html>

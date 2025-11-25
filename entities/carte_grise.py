@@ -12,6 +12,7 @@ class Carte_grise:
     def __dict__(self):
         return {
             'id': self.id,
+
             'model': self.model,
             'year': self.year,
             'plate_number': self.plate_number,

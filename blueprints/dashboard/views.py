@@ -1,4 +1,4 @@
-import self
+
 from flask import blueprints, render_template, redirect, session, jsonify, request, url_for,render_template
 from entities.admin import Admin
 from blueprints.auth.views import AuthViews
@@ -17,6 +17,10 @@ class DashboardViews :
         @self.admin_bp.route('/employe')
         def employe_page():
             return render_template('employe.html')
+
+        @self.admin_bp.route('/voiture')
+        def voiture_page():
+            return render_template('voiture.html')
 
         @self.admin_bp.route('/profile')
         def profile_page():
