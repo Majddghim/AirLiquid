@@ -48,7 +48,7 @@ async function enregistrerVoiture() {
         });
 
         setTimeout(() => {
-            window.location.href = "/dashboard/voiture";
+            window.location.href = "/dashboard/cars";
         }, 2000);
 
     } catch (error) {

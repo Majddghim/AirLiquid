@@ -4,14 +4,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Voitures - Dashboard</title>
+    <title>Table - Brand</title>
     <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
 </head>
 
-<body id="page-top" onload="initPage()">
+<body id="page-top">
 <div id="wrapper">
 
     {% include 'elements/side-bar/side-bar.html' %}
@@ -25,67 +25,69 @@
 
             <div class="container-fluid">
 
-                <!-- Title + Add Car Button -->
+                <!-- Title + Add Employee Button -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-dark mb-0">Liste des Voitures</h3>
+                    <h3 class="text-dark mb-0">Team</h3>
 
-                    <a href="/dashboard/ajout-voiture" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Ajouter Voiture
+                    <a href="/dashboard/ajout-employe" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter Employé
                     </a>
                 </div>
 
                 <div class="card shadow">
                     <div class="card-header py-3">
-                        <p class="text-primary m-0 fw-bold">Informations des voitures</p>
+                        <p class="text-primary m-0 fw-bold">Employee Info</p>
                     </div>
 
                     <div class="card-body">
 
                         <div class="row">
 
+
                             <div class="col-md-12">
                                 <div class="dataTables_filter" id="dataTable_filter">
                                     <label class="form-label">
-                                        <input type="search" class="form-control form-control-sm" id="search_by_name" placeholder="Rechercher...">
+                                        <input type="search" class="form-control form-control-sm" id="search_by_name"
+                                               placeholder="Search">
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Cars Table -->
-                        <div class="table-responsive table mt-2" id="dataTable-1" role="grid">
 
+
+
+                        <div class="table-responsive table mt-2" id="dataTable-1" role="grid"
+                             aria-describedby="dataTable_info">
                             <table class="table my-0" id="dataTable">
-
-                                <thead>
+                                {% for p in data %}
                                 <tr>
-                                    <th>Modèle</th>
-                                    <th>Année</th>
-                                    <th>Matricule</th>
-                                    <th>Propriétaire</th>
-                                    <th>N° Châssis</th>
-                                    <th>Status</th>
-                                    <th>Date d'enregistrement</th>
-                                    <th>Date d'expiration</th>
-                                </tr>
-                                </thead>
+                                    <td>{{ p.first_name }} {{ p.last_name }}</td>
+                                    <td>{{ p.email }}</td>
+                                    <td>{{ p.phone }}</td>
+                                    <td>{{ p.position }}</td>
+                                    <td>{{ p.date_joined }}</td>
+                                {% endfor %}
 
                                 <tbody>
-    {% for car in voitures %}
-        <tr>
-            <td>{{ car.model }}</td>
-            <td>{{ car.year }}</td>
-            <td>{{ car.plate_number }}</td>
-            <td>{{ car.owner_name }}</td>
-            <td>{{ car.chassis_number }}</td>
-            <td>{{ car.status }}</td>
-            <td>{{ car.registration_date }}</td>
-            <td>{{ car.expiration_date }}</td>
-        </tr>
-    {% endfor %}
-</tbody>
+
+                                </tbody>
 
                             </table>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 align-self-center">
+                                <p id="dataTable_info" class="dataTables_info">Showing 1 to 10 of 27</p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                                    <ul class="pagination" id="data-pagination">
+
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
 
                     </div>
@@ -111,7 +113,9 @@
 <script src="../static/assets/js/bs-init.js"></script>
 <script src="../static/assets/js/theme.js"></script>
 <script src="../static/js/elements/Notifications.js"></script>
-<script src="../static/js/script.js"></script>
+
+<script src="../static/js/empl.js"></script>
+
 
 </body>
 </html>

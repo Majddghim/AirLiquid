@@ -49,7 +49,9 @@ class employe:
 
             return {'status': 'success', 'message': 'Employe ajouté avec succès'}
 
-        @self.employe_bp.route('/get-employes', methods=['GET'])
+
+
+        """
         def get_employes():
             search_by_name = request.args.get('search_by_name', '').strip().lower()
             page = request.args.get('page', 1)
@@ -72,4 +74,11 @@ class employe:
                 'status': 'success',
                 'data': data,
                 'count': count
-            })
+            })"""
+
+        @self.employe_bp.route('/get-employes', methods=['GET'])
+        def get_employes():
+            data = self.EmployeService.get_all_employes()
+            if data is None or len(data) == 0:
+                return jsonify({'status': 'failed', 'message': 'No employes found'})
+            return jsonify({'status': 'success', 'data': data})

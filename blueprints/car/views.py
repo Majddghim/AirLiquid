@@ -1,5 +1,5 @@
 from services.voiture import VoitureService
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 
 
 class CarViews:
@@ -37,47 +37,22 @@ class CarViews:
                 return {'status': 'failed', 'message': "Le numéro d'immatriculation est requis"}
             if not status:
                 return {'status': 'failed', 'message': 'Le statut est requis'}
-            if not acquisition_date:
-                return {'status': 'failed', 'message': "La date d’acquisition est requise"}
+
 
             # Appel service
-            voiture_id = self.VoitureService.ajouter_voiture(
+            voiture_id = self.VoitureService.ajouter_carte_grise(
                 model=model,
                 year=year,
                 plate_number=plate_number,
                 owner_name=owner_name,
                 chassis_number=chassis_number,
                 status=status,
-                acquisition_date=acquisition_date,
                 registration_date=registration_date,
                 expiration_date=expiration_date,
-                notes=notes,
-                carte_grise=carte_grise
             )
 
             return {'status': 'success', 'message': 'Voiture ajoutée avec succès', 'voiture_id': voiture_id}
 
-        @self.car_bp.route('/get-cars', methods=['GET'])
-        def get_cars():
-            # search_by_name = request.args.get('search_by_name', '').strip().lower()
-            page = request.args.get('page', 1)
-            limit = request.args.get('limit', 10)
-            # print(f"Search by name: {search_by_name}, Page: {page}, Limit: {limit}")
-            try:
-                page = int(page)
-                limit = int(limit)
-            except ValueError:
-                return jsonify({'status': 'failed', 'message': 'Page and limit must be integers'})
-            begin = (page - 1) * limit
-            data, count = self.VoitureService.get_cars(number=limit,
-                                                       begin=begin, dict_form=True)
 
-            if data is not None and len(data) == 0:
-                return jsonify({'status': 'failed', 'message': data})
-            print(f"Retrieved  cars out of {count} matching the criteria.")
-            print(data)
-            return jsonify({
-                'status': 'success',
-                'data': data,
-                'count': count
-            })
+
+

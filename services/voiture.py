@@ -143,3 +143,23 @@ class VoitureService:
             )
             voitures.append(voiture)
         return voitures
+
+    def get_all_carte_grises(self):
+        con, cursor = self.db_tools.find_connection()
+        query = "SELECT id, model, year, plate_number, owner_name, chassis_number, registration_date, expiration_date FROM carte_grise"
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cartes_grises = []
+        for cg_data in result:
+            carte_grise = Carte_grise(
+                id=cg_data['id'],
+                model=cg_data['model'],
+                year=cg_data['year'],
+                plate_number=cg_data['plate_number'],
+                owner_name=cg_data['owner_name'],
+                chassis_number=cg_data['chassis_number'],
+                registration_date=cg_data['registration_date'],
+                expiration_date=cg_data['expiration_date']
+            )
+            cartes_grises.append(carte_grise)
+        return cartes_grises

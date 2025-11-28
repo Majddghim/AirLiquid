@@ -285,7 +285,7 @@ async function enregistrerEmploye() {
         showConfirmButton: false,
         timer: 1800   // SweetAlert closes after 1.8 seconds
     }).then(() => {
-        window.location.href = "/dashboard/employe";
+        window.location.href = "/dashboard/liste-employes";
     });
 
 
