@@ -163,3 +163,26 @@ class VoitureService:
             )
             cartes_grises.append(carte_grise)
         return cartes_grises
+
+    def get_carte_grise_by_owner_name(self, owner_name):
+        con, cursor = self.db_tools.find_connection()
+        query = (f"SELECT id, model, `year`, plate_number, owner_name, chassis_number, registration_date, expiration_date, status"
+                 f" FROM carte_grise WHERE id = '{owner_name}'")
+        print(query)
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cartes_grises = []
+        for cg_data in result:
+            carte_grise = Carte_grise(
+                id=cg_data['id'],
+                model=cg_data['model'],
+                year=cg_data['year'],
+                status=cg_data['status'],
+                plate_number=cg_data['plate_number'],
+                owner_name=cg_data['owner_name'],
+                chassis_number=cg_data['chassis_number'],
+                registration_date=cg_data['registration_date'],
+                expiration_date=cg_data['expiration_date']
+            )
+            cartes_grises.append(carte_grise)
+        return cartes_grises

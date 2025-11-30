@@ -62,6 +62,7 @@
                             <table class="table my-0" id="dataTable">
                                 {% for p in data %}
                                 <tr>
+                                    <td><p onclick="navigator.clipboard.writeText(this.textContent);alert('copié')">{{ p.id }}</p></td>
                                     <td>{{ p.first_name }} {{ p.last_name }}</td>
                                     <td>{{ p.email }}</td>
                                     <td>{{ p.phone }}</td>

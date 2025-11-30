@@ -21,6 +21,7 @@ function login_request(email, password) {
                 notifs.error("Erreur d'authentification", response.message);
             }
         }
-    };
+        }
+
     xhr.send(JSON.stringify({email: email, password: password}));
 }

@@ -1,5 +1,5 @@
 class Carte_grise:
-    def __init__(self, id , model , year, plate_number , owner_name , chassis_number , registration_date , expiration_date):
+    def __init__(self, id , model , year, plate_number , owner_name , chassis_number , registration_date , expiration_date, status=None):
         self.id = id
         self.model = model
         self.year = year
@@ -8,6 +8,7 @@ class Carte_grise:
         self.chassis_number = chassis_number
         self.registration_date = registration_date
         self.expiration_date = expiration_date
+        self.status = status
 
     def __dict__(self):
         return {
@@ -19,5 +20,6 @@ class Carte_grise:
             'owner_name': self.owner_name,
             'chassis_number': self.chassis_number,
             'registration_date': self.registration_date,
-            'expiration_date': self.expiration_date
+            'expiration_date': self.expiration_date,
+            'status': self.status
         }
