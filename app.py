@@ -6,7 +6,17 @@ from blueprints.dashboard import dashboard_bp
 from blueprints.employer import employe_bp
 from blueprints.guest import guest_bp
 
+import datetime
+from flask.json.provider import DefaultJSONProvider
+
+class CustomJSONProvider(DefaultJSONProvider):
+    def default(self, obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        return super().default(obj)
+
 app = Flask(__name__)
+app.json = CustomJSONProvider(app)
 app.secret_key = 'xxx'
 
 # Initialize and register blueprints
@@ -28,8 +38,8 @@ def login():
 
 @app.route('/dashboard')
 def index():
-    return render_template('dashboard.html')
+    return redirect(url_for('dashboard.admin_dashboard'))
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0", port=5000, debug=True)

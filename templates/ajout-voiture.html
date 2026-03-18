@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Détails Voiture - Brand</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
 
 </head>
 
@@ -20,104 +22,174 @@
                     {% include 'elements/header/header.html' %}
                 </nav>
                 <div class="container-fluid">
-                    <h3 class="text-dark mb-4">Détails du véhicule</h3>
+                    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-dark mb-0">Gestion du Parc Automobile</h3>
+                        <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="/dashboard/cars">
+                            <i class="fas fa-list fa-sm text-white-50"></i>&nbsp; Liste des véhicules
+                        </a>
+                    </div>
+
+                    <!-- Improved Scan Section -->
+                    <div class="card shadow mb-4 border-start-primary py-2 overflow-hidden">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-7 ps-4">
+                                    <div class="text-uppercase text-primary fw-bold text-xs mb-1">
+                                        <span>Remplissage Automatique</span>
+                                    </div>
+                                    <div class="h4 mb-2 fw-bold text-gray-800">Intelligence Artificielle <span
+                                            class="badge bg-al-blue badge-pill">Nouveau</span></div>
+                                    <p class="text-muted small mb-4">Téléchargez le scan ou la photo de la carte grise.
+                                        Notre IA extraira automatiquement les données techniques du véhicule.</p>
+
+                                    <div class="input-group mb-3 bg-light p-2 rounded">
+                                        <input class="form-control form-control-sm border-0 bg-light" type="file"
+                                            id="carte_grise_scan" accept="image/*,.pdf">
+                                        <button class="btn btn-primary rounded shadow-sm px-4" type="button"
+                                            id="scanBtn" onclick="scannerCarteGrise()">
+                                            <i class="fas fa-magic me-2"></i> Analyser
+                                        </button>
+                                    </div>
+                                    <div id="scan-loader" class="mt-2" style="display: none;">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                        <span class="ms-2 text-primary fw-bold small">Extraction intelligente en
+                                            cours...</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-md-5 d-none d-md-flex justify-content-center align-items-center opacity-25">
+                                    <i class="fas fa-id-card fa-8x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <p class="text-primary m-0 fw-bold">Informations sur le véhicule</p>
+                        <div class="card-header py-3 bg-white">
+                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-edit me-2"></i>Fiche Technique du
+                                Véhicule</h6>
                         </div>
                         <div class="card-body">
-                            <form  onsubmit="return false;">
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="model"><strong>Modèle</strong></label>
-                                        <input class="form-control" type="text" id="model" name="model" placeholder="Ex: Clio 5">
+                            <form id="voitureForm" onsubmit="return false;">
+                                <div class="row">
+                                    <div class="col-lg-7 border-end pe-lg-4">
+                                        <h6 class="heading-small text-muted mb-4">SPÉCIFICATIONS TECHNIQUES</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label mb-1"><strong>Modèle / Marque</strong></label>
+                                                <input class="form-control bg-light border-0" type="text" id="model"
+                                                    placeholder="Ex: Peugeot Partner">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label mb-1"><strong>Immatriculation</strong></label>
+                                                <input class="form-control bg-light border-0 fw-bold text-primary"
+                                                    type="text" id="plate_number" placeholder="123 TU 4567">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label mb-1"><strong>Année</strong></label>
+                                                <input class="form-control bg-light border-0" type="number" id="year"
+                                                    placeholder="2024">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1"><strong>Propriétaire (Carte
+                                                    Grise)</strong></label>
+                                            <input class="form-control bg-light border-0" type="text" id="owner_name"
+                                                placeholder="Nom complet figurant sur le document">
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="form-label mb-1"><strong>Numéro de Châssis
+                                                    (VIN)</strong></label>
+                                            <input class="form-control bg-light border-0" type="text"
+                                                id="chassis_number" placeholder="Ex: VN7890BC...">
+                                        </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="year"><strong>Année</strong></label>
-                                        <input class="form-control" type="number" id="year" name="year" placeholder="Ex: 2020">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="plate_number"><strong>Numéro d'immatriculation</strong></label>
-                                        <input class="form-control" type="text" id="plate_number" name="plate_number" placeholder="Ex: 123 TU 4567">
+
+                                    <div class="col-lg-5 ps-lg-4 mt-4 mt-lg-0">
+                                        <h6 class="heading-small text-muted mb-4">GESTION & ADMINISTRATION</h6>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1"><strong>Statut Actuel</strong></label>
+                                            <select class="form-select bg-light border-0" id="status">
+                                                <option value="Disponible">Opérationnel / Disponible</option>
+                                                <option value="En Service">En Service</option>
+                                                <option value="Maintenance">En Maintenance</option>
+                                                <option value="Hors Service">Hors Service</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1 text-success small fw-bold">DATE PREMIÈRE
+                                                CIRCULATION</label>
+                                            <input class="form-control bg-light border-0" type="date"
+                                                id="registration_date">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1 text-danger small fw-bold">EXPIRATION CARTE
+                                                GRISE</label>
+                                            <input class="form-control bg-light border-0" type="date"
+                                                id="expiration_date">
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="form-label mb-1 small fw-bold text-muted">DATE
+                                                D'ACQUISITION</label>
+                                            <input class="form-control bg-light border-0" type="date"
+                                                id="acquisition_date">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="owner_name"><strong>Nom du propriétaire</strong></label>
-                                        <input class="form-control" type="text" id="owner_name" name="owner_name" placeholder="Ex: Ahmed Ben Ali">
+                                <hr class="my-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1 text-xs"><strong>Scanner de la Carte Grise
+                                                (Archive)</strong></label>
+                                        <div class="custom-file-upload border rounded p-2 bg-light text-center">
+                                            <input class="form-control form-control-sm border-0 bg-transparent"
+                                                type="file" id="carte_grise">
+                                        </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="chassis_number"><strong>Numéro de châssis</strong></label>
-                                        <input class="form-control" type="text" id="chassis_number" name="chassis_number" placeholder="Ex: VF1ABCD1234567890">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="status"><strong>Statut</strong></label>
-                                        <select class="form-select" id="status" name="status">
-                                            <option value="">Sélectionner...</option>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="maintenance">En maintenance</option>
-                                        </select>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1 text-xs"><strong>Notes &
+                                                Observations</strong></label>
+                                        <textarea class="form-control bg-light border-0" id="notes" rows="1"></textarea>
                                     </div>
                                 </div>
 
-                                <div class="row mb-3">
-                                    <!--<div class="col-md-4">
-                                        <label class="form-label" for="acquisition_date"><strong>Date d'acquisition</strong></label>
-                                        <input class="form-control" type="date" id="acquisition_date" name="acquisition_date">
-                                    </div>-->
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="registration_date"><strong>Date d'immatriculation</strong></label>
-                                        <input class="form-control" type="date" id="registration_date" name="registration_date">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="expiration_date"><strong>Date d'expiration</strong></label>
-                                        <input class="form-control" type="date" id="expiration_date" name="expiration_date">
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="notes"><strong>Notes</strong></label>
-                                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Ajoutez des remarques..."></textarea>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label class="form-label" for="carte_grise"><strong>Carte grise</strong></label>
-                                    <input class="form-control" type="file" id="carte_grise" name="carte_grise" accept=".pdf,.jpg,.jpeg,.png">
-                                    <small class="form-text text-muted">Formats acceptés : PDF, JPG, PNG</small>
-                                </div>
-
-                                <div class="text-end">
-                                    <button class="btn btn-primary btn-sm" type="button" onclick="enregistrerVoiture()">
-    <i class="fas fa-save"></i> Enregistrer
-</button>
-                                    <button class="btn btn-secondary btn-sm" type="reset"><i class="fas fa-undo"></i> Réinitialiser</button>
+                                <div class="text-end mt-4">
+                                    <button class="btn btn-link text-muted me-3 text-decoration-none"
+                                        type="reset">Annuler</button>
+                                    <button class="btn btn-primary px-5 py-2 shadow" type="button"
+                                        onclick="enregistrerVoiture()">
+                                        <i class="fas fa-check-circle me-2"></i>Confirmer l'ajout
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <footer class="bg-white sticky-footer">
-                <div class="container my-auto">
-                    <div class="text-center my-auto copyright">
-                        <span>Copyright © Brand 2025</span>
-                    </div>
-                </div>
-            </footer>
         </div>
-        <a class="border rounded d-inline scroll-to-top" href="#page-top">
-            <i class="fas fa-angle-up"></i>
-        </a>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © Brand 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
     </div>
 
-<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/car.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/car.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
 
 </body>
 

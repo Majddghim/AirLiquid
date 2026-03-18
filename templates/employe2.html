@@ -5,118 +5,139 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Table - Brand</title>
-    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
-    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
 <body id="page-top">
-<div id="wrapper">
+    <div id="wrapper">
 
-    {% include 'elements/side-bar/side-bar.html' %}
+        {% include 'elements/side-bar/side-bar.html' %}
 
-    <div class="d-flex flex-column" id="content-wrapper">
-        <div id="content">
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
 
-            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
-                {% include 'elements/header/header.html' %}
-            </nav>
+                <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                    {% include 'elements/header/header.html' %}
+                </nav>
 
-            <div class="container-fluid">
+                <div class="container-fluid">
 
-                <!-- Title + Add Employee Button -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-dark mb-0">Team</h3>
+                    <!-- Title + Add Employee Button -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-dark mb-0">Team</h3>
 
-                    <a href="/dashboard/ajout-employe" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Ajouter Employé
-                    </a>
-                </div>
-
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <p class="text-primary m-0 fw-bold">Employee Info</p>
+                        <a href="/dashboard/ajout-employe" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Ajouter Employé
+                        </a>
                     </div>
 
-                    <div class="card-body">
-
-                        <div class="row">
-
-
-                            <div class="col-md-12">
-                                <div class="dataTables_filter" id="dataTable_filter">
-                                    <label class="form-label">
-                                        <input type="search" class="form-control form-control-sm" id="search_by_name"
-                                               placeholder="Search">
-                                    </label>
+                    <div class="card shadow border-0">
+                        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-users-cog me-2"></i>Gestion des
+                                Collaborateurs</h6>
+                            <div class="dataTables_filter d-none d-md-block" id="dataTable_filter">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-0"><i
+                                            class="fas fa-search text-muted"></i></span>
+                                    <input type="search" class="form-control form-control-sm bg-light border-0"
+                                        id="search_by_name" placeholder="Chercher un employé...">
                                 </div>
                             </div>
                         </div>
 
-
-
-
-                        <div class="table-responsive table mt-2" id="dataTable-1" role="grid"
-                             aria-describedby="dataTable_info">
-                            <table class="table my-0" id="dataTable">
-                                {% for p in data %}
-                                <tr>
-                                    <td><p onclick="navigator.clipboard.writeText(this.textContent);alert('copié')">{{ p.id }}</p></td>
-                                    <td>{{ p.first_name }} {{ p.last_name }}</td>
-                                    <td>{{ p.email }}</td>
-                                    <td>{{ p.phone }}</td>
-                                    <td>{{ p.position }}</td>
-                                    <td>{{ p.date_joined }}</td>
-                                {% endfor %}
-
-                                <tbody>
-
-                                </tbody>
-
-                            </table>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info">Showing 1 to 10 of 27</p>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="dataTable">
+                                    <thead class="table-light">
+                                        <tr class="text-xs text-uppercase text-muted">
+                                            <th class="ps-4">Collaborateur</th>
+                                            <th>Coordonnées</th>
+                                            <th>Poste / Département</th>
+                                            <th>Statut de Flotte</th>
+                                            <th class="text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for p in data %}
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-soft-primary p-2 rounded-circle me-3 text-center"
+                                                        style="width: 40px; height: 40px; background: #eef4ff;">
+                                                        <span class="fw-bold text-primary">{{ (p.prenom[0] if p.prenom
+                                                            else 'E')|upper }}{{ (p.nom[0] if p.nom else 'P')|upper
+                                                            }}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-dark">{{ p.prenom }} {{ p.nom }}</div>
+                                                        <div class="text-xs text-muted">ID: #{{ p.id }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="text-sm">
+                                                    <div><i class="far fa-envelope me-1 text-muted"></i>{{ p.email }}
+                                                    </div>
+                                                    <div class="text-muted small"><i
+                                                            class="fas fa-phone-alt me-1"></i>{{ p.telephone }}</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-sm">{{ p.poste }}</div>
+                                                <div class="badge bg-light text-primary border-0">{{ p.departement or
+                                                    'Général' }}</div>
+                                            </td>
+                                            <td>
+                                                <!-- Assuming logic for car assignment here -->
+                                                <button class="btn btn-sm btn-soft-success rounded-pill px-3"
+                                                    onclick='window.location.href="/dashboard/ajout-voiture/${p.id}"'
+                                                    style="font-size: 0.7rem; background: #e6fffa; color: #008080; border: none;">
+                                                    <i class="fas fa-car-side me-1"></i>Assigner Véhicule
+                                                </button>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary border-0 rounded-circle me-1"
+                                                        title="Modifier"><i class="fas fa-edit"></i></button>
+                                                    <button class="btn btn-outline-danger border-0 rounded-circle"
+                                                        title="Supprimer"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
-
-                            <div class="col-md-6">
-                                <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                                    <ul class="pagination" id="data-pagination">
-
-                                    </ul>
-                                </nav>
-                            </div>
                         </div>
+                    </div>
 
+                </div>
+            </div>
+
+            <footer class="bg-white sticky-footer">
+                <div class="container my-auto">
+                    <div class="text-center my-auto copyright">
+                        <span>Copyright © Brand 2025</span>
                     </div>
                 </div>
+            </footer>
 
-            </div>
         </div>
 
-        <footer class="bg-white sticky-footer">
-            <div class="container my-auto">
-                <div class="text-center my-auto copyright">
-                    <span>Copyright © Brand 2025</span>
-                </div>
-            </div>
-        </footer>
-
+        <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
     </div>
 
-    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
-</div>
-
-<script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
-<script src="../static/assets/js/bs-init.js"></script>
-<script src="../static/assets/js/theme.js"></script>
-<script src="../static/js/elements/Notifications.js"></script>
-
-<script src="../static/js/empl.js"></script>
+    <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/empl.js') }}"></script>
 
 
 </body>
+
 </html>

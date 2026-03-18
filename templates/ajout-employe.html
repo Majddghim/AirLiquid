@@ -5,9 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Détails Employé - Brand</title>
-    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
-    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
 <body id="page-top">
@@ -19,53 +21,114 @@
                     {% include 'elements/header/header.html' %}
                 </nav>
                 <div class="container-fluid">
-                    <h3 class="text-dark mb-4">Détails de l'employé</h3>
+                    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-dark mb-0">Gestion du Personnel</h3>
+                        <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button"
+                            href="/dashboard/liste-employes">
+                            <i class="fas fa-list fa-sm text-white-50"></i>&nbsp; Liste des employés
+                        </a>
+                    </div>
+
+                    <div class="card shadow border-start-primary mb-4 p-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="bg-light p-3 rounded-circle">
+                                        <i class="fas fa-user-plus fa-2x text-primary"></i>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5 class="text-primary fw-bold mb-1">Nouveau Collaborateur</h5>
+                                    <p class="text-muted small mb-0">Veuillez renseigner les informations officielles de
+                                        l'employé pour l'archivage et l'affectation de flotte.</p>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge bg-al-blue px-3 py-2">Section RH</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <p class="text-primary m-0 fw-bold">Informations sur l'employé</p>
+                        <div class="card-header py-3 bg-white">
+                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-file-invoice me-2"></i>Dossier
+                                Administratif</h6>
                         </div>
                         <div class="card-body">
                             <form id="employeForm" onsubmit="return false;">
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="first_name"><strong>Prénom</strong></label>
-                                        <input class="form-control" type="text" id="nom" name="first_name" placeholder="Ex: Ahmed">
+                                <div class="row">
+                                    <div class="col-lg-6 border-end pe-lg-4">
+                                        <h6 class="heading-small text-muted mb-4">ÉTAT CIVIL</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label mb-1"><strong>Prénom</strong> <span
+                                                        class="text-danger">*</span></label>
+                                                <input class="form-control bg-light border-0" type="text" id="prenom"
+                                                    placeholder="Ex: Ahmed">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label mb-1"><strong>Nom</strong> <span
+                                                        class="text-danger">*</span></label>
+                                                <input class="form-control bg-light border-0" type="text" id="nom"
+                                                    placeholder="Ex: Ben Salah">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1"><strong>Adresse Email Pro</strong> <span
+                                                    class="text-danger">*</span></label>
+                                            <input class="form-control bg-light border-0" type="email" id="email"
+                                                placeholder="prenom.nom@airliquide.com">
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="form-label mb-1"><strong>Numéro de Téléphone</strong> <span
+                                                    class="text-danger">*</span></label>
+                                            <input class="form-control bg-light border-0" type="tel" id="telephone"
+                                                placeholder="+216 -- --- ---">
+                                        </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="last_name"><strong>Nom</strong></label>
-                                        <input class="form-control" type="text" id="prenom" name="last_name" placeholder="Ex: Ben Ali">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="department"><strong>Département</strong></label>
-                                        <input class="form-control" type="text" id="departement" name="department" placeholder="Ex: Informatique">
+
+                                    <div class="col-lg-6 ps-lg-4 mt-4 mt-lg-0">
+                                        <h6 class="heading-small text-muted mb-4">CARRIÈRE & DÉPARTEMENT</h6>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1"><strong>Département</strong></label>
+                                            <select class="form-select bg-light border-0" id="departement">
+                                                <option value="Logistique" selected>Logistique</option>
+                                                <option value="Ressources Humaines">Ressources Humaines</option>
+                                                <option value="Maintenance">Services Techniques</option>
+                                                <option value="Administration">Direction Administrative</option>
+                                                <option value="Ventes">Département Commercial</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1"><strong>Poste Occupé</strong></label>
+                                            <input class="form-control bg-light border-0" type="text" id="poste"
+                                                placeholder="Ex: Responsable Qualité">
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="form-label mb-1"><strong>Date de recrutement</strong></label>
+                                            <input class="form-control bg-light border-0" type="date" id="created_at">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="position"><strong>Poste</strong></label>
-                                        <input class="form-control" type="text" id="poste" name="position" placeholder="Ex: Développeur Backend">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="email"><strong>Email</strong></label>
-                                        <input class="form-control" type="email" id="email" name="email" placeholder="Ex: ahmed.benali@example.com">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="phone"><strong>Téléphone</strong></label>
-                                        <input class="form-control" type="tel" id="phone" name="phone" placeholder="Ex: +216 55 123 456">
+                                <div class="bg-light p-3 rounded mt-4 mb-4 border-start border-al-blue"
+                                    style="border-left-width: 4px !important;">
+                                    <div class="d-flex align-items-center text-primary">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <span class="small fw-bold">Note : L'activation de l'accès se fera
+                                            automatiquement après validation.</span>
                                     </div>
                                 </div>
 
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="created_at"><strong>Date d'ajout</strong></label>
-                                        <input class="form-control" type="date" id="created_at" name="created_at">
-                                    </div>
-                                </div>
+                                <hr class="my-4">
 
                                 <div class="text-end">
-                                    <button class="btn btn-primary btn-sm"  onclick="enregistrerEmploye()"><i class="fas fa-save"></i> Enregistrer</button>
-                                    <button class="btn btn-secondary btn-sm" type="reset"><i class="fas fa-undo"></i> Réinitialiser</button>
+                                    <button class="btn btn-link text-muted me-3 text-decoration-none"
+                                        type="reset">Réinitialiser</button>
+                                    <button class="btn btn-primary px-5 py-2 shadow" type="button"
+                                        onclick="enregistrerEmploye()">
+                                        <i class="fas fa-user-check me-2"></i>Valider le recrutement
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -86,10 +149,12 @@
         </a>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script src="{{ url_for('static', filename='js/empl.js') }}"></script>
-    <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../static/assets/js/bs-init.js"></script>
-    <script src="../static/assets/js/theme.js"></script>
+    <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
 </body>
 
 </html>

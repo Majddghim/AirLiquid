@@ -5,116 +5,125 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Table - Brand</title>
-    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
-    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
 <body id="page-top" onload="initPage()">
-<div id="wrapper">
+    <div id="wrapper">
 
-    {% include 'elements/side-bar/side-bar.html' %}
+        {% include 'elements/side-bar/side-bar.html' %}
 
-    <div class="d-flex flex-column" id="content-wrapper">
-        <div id="content">
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
 
-            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
-                {% include 'elements/header/header.html' %}
-            </nav>
+                <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                    {% include 'elements/header/header.html' %}
+                </nav>
 
-            <div class="container-fluid">
+                <div class="container-fluid">
 
-                <!-- Title + Add Employee Button -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-dark mb-0">Team</h3>
+                    <!-- Title + Add Employee Button -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-dark mb-0">Team</h3>
 
-                    <a href="/dashboard/ajout-employe" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Ajouter Employé
-                    </a>
-                </div>
-
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <p class="text-primary m-0 fw-bold">Employee Info</p>
+                        <a href="/dashboard/ajout-employe" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Ajouter Employé
+                        </a>
                     </div>
 
-                    <div class="card-body">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <p class="text-primary m-0 fw-bold">Employee Info</p>
+                        </div>
 
-                        <div class="row">
+                        <div class="card-body">
+
+                            <div class="row">
 
 
-                            <div class="col-md-12">
-                                <div class="dataTables_filter" id="dataTable_filter">
-                                    <label class="form-label">
-                                        <input type="search" class="form-control form-control-sm" id="search_by_name" placeholder="Search">
-                                    </label>
+                                <div class="col-md-12">
+                                    <div class="dataTables_filter" id="dataTable_filter">
+                                        <label class="form-label">
+                                            <input type="search" class="form-control form-control-sm"
+                                                id="search_by_name" placeholder="Search">
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Employee Table -->
-                        <div id="inner-loading" class="row">
-                            <div class="d-flex justify-content-center align-items-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+                            <!-- Employee Table -->
+                            <div id="inner-loading" class="row">
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
 
-                        <div class="table-responsive table mt-2" id="dataTable-1" role="grid"
-                             aria-describedby="dataTable_info">
-                            <table class="table my-0" id="dataTable">
+                            <div class="table-responsive table mt-2" id="dataTable-1" role="grid"
+                                aria-describedby="dataTable_info">
+                                <table class="table my-0" id="dataTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom Complet</th>
+                                            <th>Poste</th>
+                                            <th>Téléphone</th>
+                                            <th>Date d'ajout</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
 
+                                    </tbody>
 
-                                <tbody>
-
-                                </tbody>
-
-                            </table>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info">Showing 1 to 10 of 27</p>
+                                </table>
                             </div>
 
-                            <div class="col-md-6">
-                                <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                                    <ul class="pagination" id="data-pagination">
+                            <div class="row">
+                                <div class="col-md-6 align-self-center">
+                                    <p id="dataTable_info" class="dataTables_info">Showing 1 to 10 of 27</p>
+                                </div>
 
-                                    </ul>
-                                </nav>
+                                <div class="col-md-6">
+                                    <nav
+                                        class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                                        <ul class="pagination" id="data-pagination">
+
+                                        </ul>
+                                    </nav>
+                                </div>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
-                </div>
 
+                </div>
             </div>
+
+            <footer class="bg-white sticky-footer">
+                <div class="container my-auto">
+                    <div class="text-center my-auto copyright">
+                        <span>Copyright © Brand 2025</span>
+                    </div>
+                </div>
+            </footer>
+
         </div>
 
-        <footer class="bg-white sticky-footer">
-            <div class="container my-auto">
-                <div class="text-center my-auto copyright">
-                    <span>Copyright © Brand 2025</span>
-                </div>
-            </div>
-        </footer>
-
+        <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
     </div>
 
-    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
-</div>
-
-<script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
-<script src="../static/assets/js/bs-init.js"></script>
-<script src="../static/assets/js/theme.js"></script>
-<script src="../static/js/elements/Notifications.js"></script>
-<script src="../static/js/script.js"></script>
-<script src="../static/js/empl.js"></script>
+    <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/empl.js') }}"></script>
 
 
 </body>
+
 </html>

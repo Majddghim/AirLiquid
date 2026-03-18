@@ -6,7 +6,7 @@ class DatabaseTools:
                     self.hostname = 'localhost'
                     self.user = 'root'
                     self.pwd = ''
-                    self.db = 'parking'
+                    self.db = 'airliquide_flotte'
                     self.port = 3306
 
                 def find_connection(self):

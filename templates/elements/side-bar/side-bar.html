@@ -1,17 +1,58 @@
 <nav class="navbar align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0 navbar-dark">
-            <div class="container-fluid d-flex flex-column p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
-                    <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
-                    <div class="sidebar-brand-text mx-3"><span>AirLiquid</span></div>
-                </a>
-                <hr class="sidebar-divider my-0">
-                <ul class="navbar-nav text-light" id="accordionSidebar">
-                    <li class="nav-item"><a class="nav-link active" href="/dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/profile"><i class="fas fa-user"></i><span>Profile</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/liste-employes"><i class="fas fa-table"></i><span>employe</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/ajout-employe"><i class="fas fa-table"></i><span>ajout employe</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/ajout-voiture"><i class="fas fa-table"></i><span>ajout voituure</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/cars"><i class="fas fa-table"></i><span>voiture</span></a></li>
-                </ul>
-                <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
+    <div class="container-fluid d-flex flex-column p-0">
+        <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="/dashboard">
+            <div class="sidebar-brand-icon">
+                <i class="fas fa-wind"></i>
             </div>
-        </nav>
+            <div class="sidebar-brand-text mx-3">
+                <span>AIR LIQUIDE<span class="text-danger">.</span></span>
+            </div>
+        </a>
+        <hr class="sidebar-divider my-0">
+        <ul class="navbar-nav text-light" id="accordionSidebar">
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard">
+                    <i class="fas fa-chart-line"></i><span>Tableau de Bord</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Ressources Humaines</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard/liste-employes">
+                    <i class="fas fa-users"></i><span>Liste des Employés</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard/ajout-employe">
+                    <i class="fas fa-user-plus"></i><span>Nouvel Employé</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Parc Automobile</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard/cars">
+                    <i class="fas fa-car-side"></i><span>Gestion de Flotte</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard/ajout-voiture">
+                    <i class="fas fa-plus-circle"></i><span>Nouveau Véhicule</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard/profile">
+                    <i class="fas fa-user-cog"></i><span>Mon Profil</span>
+                </a>
+            </li>
+        </ul>
+        <div class="text-center d-none d-md-inline">
+            <button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button>
+        </div>
+    </div>
+</nav>

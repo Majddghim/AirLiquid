@@ -4,10 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Fleet Dashboard</title>
-    <link rel="stylesheet" href="../static/assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
-    <link rel="stylesheet" href="../static/assets/fonts/fontawesome-all.min.css">
+    <title>Air Liquide - Fleet Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
 <body id="page-top">
@@ -29,12 +31,12 @@
                     <div class="row">
 
                         <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-primary py-2">
+                            <div class="card shadow border-start-primary py-2">
                                 <div class="card-body">
                                     <div class="row g-0 align-items-center">
                                         <div class="col me-2">
                                             <div class="text-uppercase text-primary fw-bold text-xs mb-1">
-                                                <span>Total Vehicles</span>
+                                                <span>Total Véhicules</span>
                                             </div>
                                             <div class="text-dark fw-bold h5 mb-0"><span>120</span></div>
                                         </div>
@@ -54,7 +56,8 @@
                                             </div>
                                             <div class="text-dark fw-bold h5 mb-0"><span>85</span></div>
                                         </div>
-                                        <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i></div>
+                                        <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -112,7 +115,8 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-area">
-                                        <canvas data-bss-chart='{"type":"line","data":{"labels":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],"datasets":[{"label":"Vehicles in Service","fill":true,"data":["40","45","50","55","53","60","58","65"],"backgroundColor":"rgba(78, 115, 223, 0.05)","borderColor":"rgba(78, 115, 223, 1)"}]}}'></canvas>
+                                        <canvas
+                                            data-bss-chart='{"type":"line","data":{"labels":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],"datasets":[{"label":"Vehicles in Service","fill":true,"data":["40","45","50","55","53","60","58","65"],"backgroundColor":"rgba(78, 115, 223, 0.05)","borderColor":"rgba(78, 115, 223, 1)"}]}}'></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -125,7 +129,8 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-area">
-                                        <canvas data-bss-chart='{"type":"doughnut","data":{"labels":["Cars","Trucks","Motorcycles"],"datasets":[{"backgroundColor":["#4e73df","#1cc88a","#36b9cc"],"data":["60","35","25"]}]}}'></canvas>
+                                        <canvas
+                                            data-bss-chart='{"type":"doughnut","data":{"labels":["Cars","Trucks","Motorcycles"],"datasets":[{"backgroundColor":["#4e73df","#1cc88a","#36b9cc"],"data":["60","35","25"]}]}}'></canvas>
                                     </div>
                                     <div class="text-center small mt-4">
                                         <span class="me-2"><i class="fas fa-circle text-primary"></i> Cars</span>
@@ -162,7 +167,8 @@
                                     <div class="progress mb-4">
                                         <div class="progress-bar bg-info" style="width: 80%;"></div>
                                     </div>
-                                    <h4 class="small fw-bold">Tire Replacement<span class="float-end">Complete</span></h4>
+                                    <h4 class="small fw-bold">Tire Replacement<span class="float-end">Complete</span>
+                                    </h4>
                                     <div class="progress mb-4">
                                         <div class="progress-bar bg-success" style="width: 100%;"></div>
                                     </div>

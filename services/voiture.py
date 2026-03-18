@@ -10,179 +10,160 @@ class VoitureService:
     def get_voiture_by_id(self, voiture_id):
         con, cursor = self.db_tools.find_connection()
         query = """
-        SELECT c.id AS car_id, c.employee_id, c.carte_grise_id, c.acquisition_date, c.status, c.notes,
-               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, cg.registration_date, cg.expiration_date
+        SELECT c.id, c.status, c.acquisition_date, c.notes, c.created_at, c.updated_at,
+               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, 
+               cg.registration_date, cg.expiration_date, cg.file_path
         FROM cars c
-        JOIN carte_grises cg ON c.carte_grise_id = cg.id
+        LEFT JOIN carte_grises cg ON c.id = cg.car_id
         WHERE c.id = %s
         """
         cursor.execute(query, (voiture_id,))
         result = cursor.fetchall()
+        con.close()
         if result:
-            voiture_data = result[0]
-            carte_grise = Carte_grise(
-                id=voiture_data['carte_grise_id'],
-                model=voiture_data['model'],
-                year=voiture_data['year'],
-                plate_number=voiture_data['plate_number'],
-                owner_name=voiture_data['owner_name'],
-                chassis_number=voiture_data['chassis_number'],
-                registration_date=voiture_data['registration_date'],
-                expiration_date=voiture_data['expiration_date']
-            )
-            return Car(
-                id=voiture_data['car_id'],
-                employee_id=voiture_data['employee_id'],
-                carte_grise_id=carte_grise,
-                acquisition_date=voiture_data['acquisition_date'],
-                status=voiture_data['status'],
-                notes=voiture_data['notes']
-            )
+            data = result[0]
+            # We return a flattened dict for the UI
+            return data
         return None
 
-    def ajouter_carte_grise(self, model, year, plate_number, owner_name, chassis_number, status, registration_date,
-                            expiration_date):
+    def check_plate_exists(self, plate_number):
         con, cursor = self.db_tools.find_connection()
-        query = """
-        INSERT INTO carte_grise (model, year, plate_number, owner_name, chassis_number, status, registration_date, expiration_date)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query,
-                       (model, year, plate_number, owner_name, chassis_number, status, registration_date,
-                        expiration_date))
-        con.commit()
-        return cursor.lastrowid
+        try:
+            query = "SELECT car_id FROM carte_grises WHERE plate_number = %s"
+            cursor.execute(query, (plate_number,))
+            result = cursor.fetchone()
+            return result is not None
+        finally:
+            con.close()
 
-    def ajouter_voiture(self, employee_id, carte_grise_id, acquisition_date, status, notes):
+    def ajouter_voiture(self, model, year, plate_number, owner_name, chassis_number, status, 
+                        registration_date, expiration_date, acquisition_date, notes, file_path=None):
+        
+        # 0. Check for duplicate plate before doing anything
+        if self.check_plate_exists(plate_number):
+            raise Exception(f"Une voiture avec le matricule '{plate_number}' existe déjà.")
+
+        # Sanitize inputs: convert empty strings to None for optional SQL fields
+        registration_date = registration_date if registration_date else None
+        expiration_date = expiration_date if expiration_date else None
+        acquisition_date = acquisition_date if acquisition_date else None
+        year = int(year) if year else 0
+
         con, cursor = self.db_tools.find_connection()
-        query = """
-        INSERT INTO cars (employee_id, carte_grise_id, acquisition_date, status, notes)
-        VALUES (%s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (employee_id, carte_grise_id, acquisition_date, status, notes))
-        con.commit()
-        return cursor.lastrowid
+        try:
+            # Disable autocommit to ensure real transaction
+            con.autocommit(False)
+            
+            # 1. Insert into cars
+            query_car = """
+            INSERT INTO cars (status, acquisition_date, notes)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(query_car, (status, acquisition_date, notes))
+            car_id = cursor.lastrowid
+
+            # 2. Insert into carte_grises
+            query_cg = """
+            INSERT INTO carte_grises (car_id, model, year, plate_number, owner_name, chassis_number, 
+                                     registration_date, expiration_date, file_path)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query_cg, (car_id, model, year, plate_number, owner_name, chassis_number, 
+                                     registration_date, expiration_date, file_path))
+            
+            con.commit()
+            return car_id
+        except Exception as e:
+            con.rollback()
+            print(f"Transaction Error: {e}")
+            raise e
+        finally:
+            con.close()
+
+
 
     def supprimer_voiture(self, voiture_id):
         con, cursor = self.db_tools.find_connection()
+        # cascades should handle carte_grises and car_assignments
         query = "DELETE FROM cars WHERE id = %s"
         cursor.execute(query, (voiture_id,))
         con.commit()
-        return cursor.rowcount
+        count = cursor.rowcount
+        con.close()
+        return count
 
     def mettre_a_jour_statut_voiture(self, voiture_id, new_status):
         con, cursor = self.db_tools.find_connection()
         query = "UPDATE cars SET status = %s WHERE id = %s"
         cursor.execute(query, (new_status, voiture_id))
         con.commit()
-        return cursor.rowcount
-
-    def lister_voitures_par_employe(self, employee_id):
-        con, cursor = self.db_tools.find_connection()
-        query = """
-        SELECT c.id AS car_id, c.employee_id, c.carte_grise_id, c.acquisition_date, c.status, c.notes,
-               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, cg.registration_date, cg.expiration_date
-        FROM cars c
-        JOIN carte_grises cg ON c.carte_grise_id = cg.id
-        WHERE c.employee_id = %s
-        """
-        cursor.execute(query, (employee_id,))
-        result = cursor.fetchall()
-        voitures = []
-        for voiture_data in result:
-            carte_grise = Carte_grise(
-                id=voiture_data['carte_grise_id'],
-                model=voiture_data['model'],
-                year=voiture_data['year'],
-                plate_number=voiture_data['plate_number'],
-                owner_name=voiture_data['owner_name'],
-                chassis_number=voiture_data['chassis_number'],
-                registration_date=voiture_data['registration_date'],
-                expiration_date=voiture_data['expiration_date']
-            )
-            voiture = Car(
-                id=voiture_data['car_id'],
-                employee_id=voiture_data['employee_id'],
-                carte_grise_id=carte_grise,
-                acquisition_date=voiture_data['acquisition_date'],
-                status=voiture_data['status'],
-                notes=voiture_data['notes']
-            )
-            voitures.append(voiture)
-        return voitures
+        count = cursor.rowcount
+        con.close()
+        return count
 
     def get_all_voitures(self):
         con, cursor = self.db_tools.find_connection()
         query = """
-        SELECT c.id AS car_id, c.employee_id, c.carte_grise_id, c.acquisition_date, c.status, c.notes,
-               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, cg.registration_date, cg.expiration_date
+        SELECT c.id, c.status, c.acquisition_date, c.notes, c.created_at, c.updated_at,
+               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, 
+               cg.registration_date, cg.expiration_date
         FROM cars c
-        JOIN carte_grises cg ON c.carte_grise_id = cg.id
+        LEFT JOIN carte_grises cg ON c.id = cg.car_id
         """
         cursor.execute(query)
         result = cursor.fetchall()
-        voitures = []
-        for voiture_data in result:
-            carte_grise = Carte_grise(
-                id=voiture_data['carte_grise_id'],
-                model=voiture_data['model'],
-                year=voiture_data['year'],
-                plate_number=voiture_data['plate_number'],
-                owner_name=voiture_data['owner_name'],
-                chassis_number=voiture_data['chassis_number'],
-                registration_date=voiture_data['registration_date'],
-                expiration_date=voiture_data['expiration_date']
-            )
-            voiture = Car(
-                id=voiture_data['car_id'],
-                employee_id=voiture_data['employee_id'],
-                carte_grise_id=carte_grise,
-                acquisition_date=voiture_data['acquisition_date'],
-                status=voiture_data['status'],
-                notes=voiture_data['notes']
-            )
-            voitures.append(voiture)
-        return voitures
+        con.close()
+        return result if result else []
 
-    def get_all_carte_grises(self):
+    def get_voitures_paginated(self, search_by_name='', limit=10, offset=0):
         con, cursor = self.db_tools.find_connection()
-        query = "SELECT id, model, year, plate_number, owner_name, chassis_number, registration_date, expiration_date FROM carte_grise"
-        cursor.execute(query)
+        condition = "1=1"
+        params = []
+        if search_by_name:
+            condition = "(cg.model LIKE %s OR cg.plate_number LIKE %s OR cg.owner_name LIKE %s)"
+            search_param = f"%{search_by_name}%"
+            params.extend([search_param, search_param, search_param])
+        
+        query = f"""
+        SELECT c.id, c.status, c.acquisition_date, c.notes, c.created_at, c.updated_at,
+               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, 
+               cg.registration_date, cg.expiration_date
+        FROM cars c
+        LEFT JOIN carte_grises cg ON c.id = cg.car_id
+        WHERE {condition}
+        ORDER BY c.created_at DESC
+        LIMIT %s OFFSET %s
+        """
+        params.extend([limit, offset])
+        
+        cursor.execute(query, tuple(params))
         result = cursor.fetchall()
-        cartes_grises = []
-        for cg_data in result:
-            carte_grise = Carte_grise(
-                id=cg_data['id'],
-                model=cg_data['model'],
-                year=cg_data['year'],
-                plate_number=cg_data['plate_number'],
-                owner_name=cg_data['owner_name'],
-                chassis_number=cg_data['chassis_number'],
-                registration_date=cg_data['registration_date'],
-                expiration_date=cg_data['expiration_date']
-            )
-            cartes_grises.append(carte_grise)
-        return cartes_grises
+        
+        # Count query
+        count_query = f"""
+        SELECT COUNT(c.id) as total
+        FROM cars c
+        LEFT JOIN carte_grises cg ON c.id = cg.car_id
+        WHERE {condition}
+        """
+        cursor.execute(count_query, tuple(params[:-2]))
+        total_count = cursor.fetchone()['total']
+        
+        con.close()
+        return result if result else [], total_count
 
-    def get_carte_grise_by_owner_name(self, owner_name):
+    def lister_voitures_par_employe(self, employee_id):
         con, cursor = self.db_tools.find_connection()
-        query = (f"SELECT id, model, `year`, plate_number, owner_name, chassis_number, registration_date, expiration_date, status"
-                 f" FROM carte_grise WHERE id = '{owner_name}'")
-        print(query)
-        cursor.execute(query)
+        query = """
+        SELECT c.id, c.status, c.acquisition_date, c.notes, c.created_at, c.updated_at,
+               cg.model, cg.year, cg.plate_number, cg.owner_name, cg.chassis_number, 
+               cg.registration_date, cg.expiration_date
+        FROM cars c
+        JOIN car_assignments ca ON c.id = ca.car_id
+        LEFT JOIN carte_grises cg ON c.id = cg.car_id
+        WHERE ca.employee_id = %s AND ca.end_date IS NULL
+        """
+        cursor.execute(query, (employee_id,))
         result = cursor.fetchall()
-        cartes_grises = []
-        for cg_data in result:
-            carte_grise = Carte_grise(
-                id=cg_data['id'],
-                model=cg_data['model'],
-                year=cg_data['year'],
-                status=cg_data['status'],
-                plate_number=cg_data['plate_number'],
-                owner_name=cg_data['owner_name'],
-                chassis_number=cg_data['chassis_number'],
-                registration_date=cg_data['registration_date'],
-                expiration_date=cg_data['expiration_date']
-            )
-            cartes_grises.append(carte_grise)
-        return cartes_grises
+        con.close()
+        return result if result else []

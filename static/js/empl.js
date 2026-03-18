@@ -6,12 +6,17 @@ var page = 1; // Current page number
 let debounceTimer;
 let controller = null;
 
-document.querySelector("#search_by_name").addEventListener("input", function () {
-    prepare_search_link(1); // Reset to page 1 on new search
-});
+const searchInput = document.querySelector("#search_by_name");
+if (searchInput) {
+    searchInput.addEventListener("input", function () {
+        prepare_search_link(1); // Reset to page 1 on new search
+    });
+}
 
 
 function initPage() {
+    const table = document.getElementById('dataTable');
+    if (!table) return; // Not on list page
     enter_loading_mode();
     load_page(search_link);
 }
@@ -54,7 +59,7 @@ function load_page(search_link) {
         controller = new AbortController();
         enter_div_loading_mode('dataTable');
 
-        fetch('/employe/' + search_link, {signal: controller.signal})
+        fetch('/employe/' + search_link, { signal: controller.signal })
             .then(res => {
                 if (!res.ok) throw new Error("Network response failed");
                 return res.json();
@@ -86,39 +91,95 @@ function load_page(search_link) {
                 if (err.name !== "AbortError") {
                     console.error("Search error:", err);
                 }
-                try{quit_loading_mode()}
-                catch (e){};
+                try { quit_loading_mode() }
+                catch (e) { };
             });
     }, 300);
 }
 
 
 function load_table_data(data) {
+    const table = document.getElementById('dataTable');
     if (data.length === 0) {
-        // notifs.warn('Aucune catégorie trouvée.');
-        let division_table = document.getElementById('dataTable');
-        division_table.innerHTML = "<tr><td colspan='4'>Aucun élement trouvée.</td></tr>";
+        table.innerHTML = `
+            <thead class="table-light">
+                <tr class="text-xs text-uppercase text-muted">
+                    <th class="ps-4">Collaborateur</th>
+                    <th>Coordonnées</th>
+                    <th>Poste</th>
+                    <th>Statut Flotte</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-user-slash fa-2x mb-2 d-block opacity-25"></i>Aucun collaborateur trouvé</td></tr>
+            </tbody>`;
         return;
     }
-    header = "<thead><tr><th>Name</th><th>Position</th><th>Phone</th><th>Start Date</th><th>Voiture</th><th>Action</th></tr></thead>";
-    footer = "<tfoot><tr><th>Name</th><th>Position</th><th>Phone</th><th>Start Date</th>Action<th></tr></tfoot>";
-    body = [];
 
-    data.forEach(employe => {
-        body.push(
-            `<tr >
-                <td>${employe.first_name} ${employe.last_name}</td>
-                <td>${employe.position}</td>
-                <td>${employe.phone}</td>
-                <td>${employe.created_at}</td>
-                <td><button class="btn btn-success btn-sm" onclick='window.location.href="/dashboard/ajout-voiture/${employe.id}"'=>Assigner voiture</button></td>
-                <td><button class='btn btn-outline-secondary' onclick=''>Modifier</button>
-                <button class='btn btn-outline-danger' onclick=''>Supprimer</button></td>
-            </tr>`
-        );
+    const header = `
+        <thead class="table-light">
+            <tr class="text-xs text-uppercase text-muted">
+                <th class="ps-4">Collaborateur</th>
+                <th>Coordonnées</th>
+                <th>Poste / Département</th>
+                <th>Statut de Flotte</th>
+                <th class="text-end pe-4">Actions</th>
+            </tr>
+        </thead>`;
+
+    const footer = ""; // Removing legacy footer for cleaner look
+    const body = data.map(employe => {
+        const initials = `${(employe.prenom || 'E')[0]}${(employe.nom || 'P')[0]}`.toUpperCase();
+        return `
+            <tr>
+                <td class="ps-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-2 rounded-circle me-3 text-center" style="width: 40px; height: 40px; line-height: 24px;">
+                            <span class="fw-bold text-primary small">${initials}</span>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">${escapeHtml(employe.prenom)} ${escapeHtml(employe.nom)}</div>
+                            <div class="text-xs text-muted">ID: #00${employe.id}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="text-sm">
+                        <div class="text-dark"><i class="far fa-envelope me-2 text-muted"></i>${escapeHtml(employe.email)}</div>
+                        <div class="text-muted extra-small"><i class="fas fa-phone-alt me-2"></i>${escapeHtml(employe.telephone || 'Non renseigné')}</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-bold text-sm text-dark">${escapeHtml(employe.poste || 'Employé')}</div>
+                    <div class="text-xs text-primary fw-bold text-uppercase">Siège Social</div>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-light border-primary text-primary rounded-pill px-3 shadow-none" onclick='window.location.href="/dashboard/ajout-voiture/${employe.id}"' style="font-size: 0.7rem; border-width:1px">
+                        <i class="fas fa-car-side me-1"></i>Affectation
+                    </button>
+                </td>
+                <td class="text-end pe-4">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary border-0 rounded-circle me-1" title="Modifier"><i class="fas fa-user-edit"></i></button>
+                        <button class="btn btn-outline-danger border-0 rounded-circle" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
+            </tr>`;
     });
 
     prepare_table(header, footer, body, division_table);
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    return text
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
@@ -155,7 +216,7 @@ function add_request(name, description) {
             }
         }
     };
-    var data = JSON.stringify({name: name, description: description});
+    var data = JSON.stringify({ name: name, description: description });
     xhr.send(data);
 }
 
@@ -191,7 +252,7 @@ function update_request(id, name, description) {
             }
         }
     };
-    var data = JSON.stringify({name: name, description: description});
+    var data = JSON.stringify({ name: name, description: description });
     xhr.send(data);
 }
 
@@ -257,15 +318,21 @@ function delete_request(id) {
 
 
 async function enregistrerEmploye() {
+    console.log("enregistrerEmploye called");
+    const getV = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : "";
+    };
+
     // Get form data
     const data = {
-        nom: document.getElementById("nom").value.trim(),
-        prenom: document.getElementById("prenom").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        telephone: document.getElementById("phone").value.trim(),
-        poste: document.getElementById("poste").value.trim(),
-        departement: document.getElementById("departement").value.trim(),
-        created_at: document.getElementById("created_at").value
+        nom: getV("nom"),
+        prenom: getV("prenom"),
+        email: getV("email"),
+        telephone: getV("telephone"), // Using the ID from HTML
+        poste: getV("poste"),
+        departement: getV("departement"),
+        created_at: getV("created_at")
     };
 
     try {
@@ -278,15 +345,15 @@ async function enregistrerEmploye() {
         const result = await response.json();
 
         if (result.status === "success") {
-    Swal.fire({
-        icon: "success",
-        title: "Employé ajouté",
-        text: result.message,
-        showConfirmButton: false,
-        timer: 1800   // SweetAlert closes after 1.8 seconds
-    }).then(() => {
-        window.location.href = "/dashboard/liste-employes";
-    });
+            Swal.fire({
+                icon: "success",
+                title: "Employé ajouté",
+                text: result.message,
+                showConfirmButton: false,
+                timer: 1800   // SweetAlert closes after 1.8 seconds
+            }).then(() => {
+                window.location.href = "/dashboard/liste-employes";
+            });
 
 
 

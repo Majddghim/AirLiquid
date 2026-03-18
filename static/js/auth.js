@@ -18,10 +18,11 @@ function login_request(email, password) {
 
             } else {
                 loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
                 notifs.error("Erreur d'authentification", response.message);
             }
         }
-        }
+    }
 
-    xhr.send(JSON.stringify({email: email, password: password}));
+    xhr.send(JSON.stringify({ email: email, password: password }));
 }

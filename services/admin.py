@@ -8,31 +8,40 @@ class AdminService:
 
     def get_admin_by_email(self, email):
         con, cursor = self.db_tools.find_connection()
-        query = "SELECT id, username, password_hash AS password, email FROM admins WHERE email = %s"
+        query = "SELECT id, username, email, password_hash, status, created_at FROM admins WHERE email = %s"
         cursor.execute(query, (email,))
         result = cursor.fetchall()
+        con.close()
         if result:
             admin_data = result[0]
             return Admin(
                 id=admin_data['id'],
                 username=admin_data['username'],
-                password=admin_data['password'],
-                email=admin_data['email']
+                email=admin_data['email'],
+                password_hash=admin_data['password_hash'],
+                status=admin_data['status'],
+                created_at=admin_data['created_at']
             )
         return None
 
     def get_employe_by_email(self, email):
         con, cursor = self.db_tools.find_connection()
-        query = "SELECT id, first_name, last_name,email, pwd AS password, email FROM employees WHERE email = %s"
+        # Note: New schema doesn't have a password field for employees. 
+        # Using placeholder or adjusting if needed.
+        query = "SELECT id, nom, prenom, email, telephone, poste, departement, status FROM employees WHERE email = %s"
         cursor.execute(query, (email,))
         result = cursor.fetchall()
+        con.close()
         if result:
-            admin_data = result[0]
+            emp_data = result[0]
             return {
-                'id': admin_data['id'],
-                'username': admin_data['first_name'] + ' ' + admin_data['last_name'],
-                'password': admin_data['password'],
-                'email': admin_data['email']
+                'id': emp_data['id'],
+                'username': emp_data['prenom'] + ' ' + emp_data['nom'],
+                'email': emp_data['email'],
+                'telephone': emp_data['telephone'],
+                'poste': emp_data['poste'],
+                'departement': emp_data['departement'],
+                'status': emp_data['status']
             }
 
         return None
@@ -48,6 +57,5 @@ if __name__ == '__main__':
         print(f"ID: {admin.id}")
         print(f"Username: {admin.username}")
         print(f"Email: {admin.email}")
-        print(f"Password (hash): {admin.password}")
     else:
         print("❌ No admin found with that email.")

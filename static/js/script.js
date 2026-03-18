@@ -9,6 +9,18 @@ var show_div_id = ''
 var entite = ''
 var notifs = new Notifications()
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return "";
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
+}
+
 
 function enter_loading_mode() {
     big_div = document.getElementsByClassName('container-fluid')[0];
@@ -72,11 +84,11 @@ function next_page_backend(p) {
     prepare_search_link(p)
 }
 
-function load_backend_pagination(pages, current_page, nombre_totale, len) {
+function load_backend_pagination(pages, current_page, nombre_totale, len, limit = 20) {
     var pagination = document.getElementById("data-pagination");
     pagination.innerHTML = ""
     if (nombre_totale === 0) {
-        load_pagination_backend_status(20, nombre_totale, current_page, len)
+        load_pagination_backend_status(limit, nombre_totale, current_page, len)
         return;
     }
     disable_prev = ''
@@ -96,7 +108,7 @@ function load_backend_pagination(pages, current_page, nombre_totale, len) {
         disable_next = 'disabled'
     }
     pagination.innerHTML += `<li class="page-item"><button class="page-link ${disable_next}" onclick="next_page_backend(${current_page + 1})" aria-label="Next" ><span aria-hidden="true">»</span></button></li>`
-    load_pagination_backend_status(20, nombre_totale, current_page, len)
+    load_pagination_backend_status(limit, nombre_totale, current_page, len)
 }
 
 function load_pagination_backend_status(dt, nombre_totale, current_page, len) {
@@ -106,7 +118,7 @@ function load_pagination_backend_status(dt, nombre_totale, current_page, len) {
     if (nombre_totale === 0) {
         return;
     }
-    pagination.innerHTML += `Affichage de ${dt * (current_page - 1) + 1} à ${(dt * current_page) - (20 - len)} sur ${nombre_totale} `
+    pagination.innerHTML += `Affichage de ${dt * (current_page - 1) + 1} à ${(dt * current_page) - (dt - len)} sur ${nombre_totale} `
 }
 
 function open_details_window(name) {

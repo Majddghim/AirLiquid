@@ -42,7 +42,7 @@ class employe:
                 return {'status': 'failed', 'message': 'Date de creation est requis'}
 
             empl = self.EmployeService.get_employe_by_email(email)
-            if empl is not None:
+            if empl:
                 return {'status': 'failed', 'message': 'Employe avec cet email existe déjà'}
 
             self.EmployeService.add_employe(nom, prenom, departement, poste, email, telephone, created)
@@ -51,34 +51,27 @@ class employe:
 
 
 
-        """
+        @self.employe_bp.route('/get-employes', methods=['GET'])
         def get_employes():
             search_by_name = request.args.get('search_by_name', '').strip().lower()
             page = request.args.get('page', 1)
-            limit = request.args.get('limit', 10)
-            print(f"Search by name: {search_by_name}, Page: {page}, Limit: {limit}")
+            limit = request.args.get('limit', 7) # Match frontend division_table default
+            
             try:
                 page = int(page)
                 limit = int(limit)
             except ValueError:
                 return jsonify({'status': 'failed', 'message': 'Page and limit must be integers'})
+            
             begin = (page - 1) * limit
             data, count = self.EmployeService.get_employe_by_name(search_by_name, number=limit,
                                                                                  begin=begin, dict_form=True)
 
-            if data is not None and  len(data) == 0  :
-                return jsonify({'status': 'failed', 'message': data})
-            print(f"Retrieved {len(data)} employes out of {count} matching the criteria.")
-            print(data)
+            if data is None or (isinstance(data, list) and len(data) == 0):
+                return jsonify({'status': 'failed', 'message': 'No employees found', 'data': [], 'count': 0})
+            
             return jsonify({
                 'status': 'success',
                 'data': data,
                 'count': count
-            })"""
-
-        @self.employe_bp.route('/get-employes', methods=['GET'])
-        def get_employes():
-            data = self.EmployeService.get_all_employes()
-            if data is None or len(data) == 0:
-                return jsonify({'status': 'failed', 'message': 'No employes found'})
-            return jsonify({'status': 'success', 'data': data})
+            })
