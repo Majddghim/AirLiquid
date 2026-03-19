@@ -54,11 +54,12 @@ class CarViews:
                     notes=notes,
                     file_path=file_path
                 )
-                
+
                 # If we have a file_path, we should update the carte_grises table or pass it to service
                 # For now, let's assume the service handles it or we'll update it.
-                
-                return jsonify({'status': 'success', 'message': 'Voiture ajoutée avec succès', 'voiture_id': voiture_id})
+
+                return jsonify(
+                    {'status': 'success', 'message': 'Voiture ajoutée avec succès', 'voiture_id': voiture_id})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)})
 
@@ -66,7 +67,7 @@ class CarViews:
         def extract_data():
             if 'file' not in request.files:
                 return jsonify({'status': 'failed', 'message': 'Pas de fichier document trouvé'})
-            
+
             file = request.files['file']
             if file.filename == '':
                 return jsonify({'status': 'failed', 'message': 'Le fichier est vide'})
@@ -84,7 +85,7 @@ class CarViews:
             }
 
             import time
-            time.sleep(1.5) # Simulate processing time
+            time.sleep(1.5)  # Simulate processing time
 
             return jsonify({
                 'status': 'success',
@@ -97,7 +98,7 @@ class CarViews:
             search_by_name = request.args.get('search_by_name', '').strip()
             page = request.args.get('page', 1, type=int)
             limit = request.args.get('limit', 10, type=int)
-            
+
             try:
                 offset = (page - 1) * limit
                 voitures, total_count = self.VoitureService.get_voitures_paginated(
@@ -106,12 +107,21 @@ class CarViews:
                     offset=offset
                 )
                 return jsonify({
-                    'status': 'success', 
-                    'data': voitures, 
+                    'status': 'success',
+                    'data': voitures,
                     'count': total_count
                 })
             except Exception as e:
                 import traceback
                 print(traceback.format_exc())
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.car_bp.route('/get-all-voitures', methods=['GET'])
+        def get_all_voitures():
+            try:
+                voitures = self.VoitureService.get_all_voitures()
+                return jsonify({'status': 'success', 'data': voitures})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
 

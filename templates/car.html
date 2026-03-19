@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
-<body id="page-top" onload="initPage()">
+<body id="page-top" >
     <div id="wrapper">
 
         {% include 'elements/side-bar/side-bar.html' %}
@@ -64,7 +64,7 @@
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="carsTableBody">
                                         <!-- Loaded dynamically by car.js -->
                                     </tbody>
                                 </table>
@@ -111,5 +111,7 @@
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
+
+
 
 </html>

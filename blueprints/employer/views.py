@@ -49,29 +49,34 @@ class employe:
 
             return {'status': 'success', 'message': 'Employe ajouté avec succès'}
 
-
-
         @self.employe_bp.route('/get-employes', methods=['GET'])
         def get_employes():
             search_by_name = request.args.get('search_by_name', '').strip().lower()
             page = request.args.get('page', 1)
-            limit = request.args.get('limit', 7) # Match frontend division_table default
-            
+            limit = request.args.get('limit', 7)  # Match frontend division_table default
+
             try:
                 page = int(page)
                 limit = int(limit)
             except ValueError:
                 return jsonify({'status': 'failed', 'message': 'Page and limit must be integers'})
-            
+
             begin = (page - 1) * limit
             data, count = self.EmployeService.get_employe_by_name(search_by_name, number=limit,
-                                                                                 begin=begin, dict_form=True)
+                                                                  begin=begin, dict_form=True)
 
             if data is None or (isinstance(data, list) and len(data) == 0):
                 return jsonify({'status': 'failed', 'message': 'No employees found', 'data': [], 'count': 0})
-            
+
             return jsonify({
                 'status': 'success',
                 'data': data,
                 'count': count
             })
+
+        @self.employe_bp.route('/get-all-employes', methods=['GET'])
+        def get_all_employes():
+            data = self.EmployeService.get_all_employes()
+            if data is None or (isinstance(data, list) and len(data) == 0):
+                return jsonify({'status': 'failed', 'message': 'No employees found', 'data': []})
+            return jsonify({'status': 'success', 'data': data})
