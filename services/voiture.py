@@ -13,7 +13,7 @@ class VoitureService:
 
     def get_voiture_by_id(self, voiture_id):
         con, cursor = self.db_tools.find_connection()
-        query = """
+        cursor.execute("""
         SELECT c.id, c.plate_number, c.brand, c.current_cg_id,
                c.status, c.acquisition_date, c.notes, c.created_at, c.updated_at,
                cg.model, cg.year, cg.owner_name, cg.chassis_number,
@@ -22,8 +22,7 @@ class VoitureService:
         FROM cars c
         LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
         WHERE c.id = %s
-        """
-        cursor.execute(query, (voiture_id,))
+        """, (voiture_id,))
         result = cursor.fetchone()
         con.close()
         return result
@@ -89,11 +88,6 @@ class VoitureService:
         return count
 
     def get_all_voitures(self):
-        """
-        UPDATED: also checks whether each car has all 3 required documents.
-        Returns dossier_complet = True only when assurance + vignette + visite_technique
-        all have at least one row for that car.
-        """
         con, cursor = self.db_tools.find_connection()
         cursor.execute("""
         SELECT
@@ -123,7 +117,6 @@ class VoitureService:
                 row.pop('has_visite')
             )
             result.append(row)
-
         return result
 
     def get_voitures_paginated(self, search_by_name='', limit=10, offset=0):
@@ -345,5 +338,76 @@ class VoitureService:
         except Exception as e:
             con.rollback()
             raise e
+        finally:
+            con.close()
+
+    # ------------------------------------------------------------------ #
+    # CAR DETAIL — fetches everything in one call                         #
+    # ------------------------------------------------------------------ #
+
+    def get_car_detail(self, car_id):
+        """
+        Returns a dict with:
+        - car: all car + carte grise fields
+        - documents: { assurance, vignette, visite } — most recent of each
+        - affectation: current active assignment with employee info
+        """
+        con, cursor = self.db_tools.find_connection()
+        try:
+            # car + carte grise
+            cursor.execute("""
+                SELECT c.id, c.plate_number, c.brand, c.status,
+                       c.acquisition_date, c.notes, c.created_at,
+                       cg.model, cg.year, cg.owner_name, cg.chassis_number,
+                       cg.puissance_fiscale, cg.carburant,
+                       cg.registration_date, cg.expiration_date, cg.file_path AS cg_file
+                FROM cars c
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE c.id = %s
+            """, (car_id,))
+            car = cursor.fetchone()
+            if not car:
+                return None
+
+            # most recent assurance
+            cursor.execute("""
+                SELECT id, insurer, policy_number, start_date, end_date, status, file_path
+                FROM insurances WHERE car_id = %s ORDER BY end_date DESC LIMIT 1
+            """, (car_id,))
+            assurance = cursor.fetchone()
+
+            # most recent vignette
+            cursor.execute("""
+                SELECT id, year, expiration_date, montant, status, file_path
+                FROM vignettes WHERE car_id = %s ORDER BY expiration_date DESC LIMIT 1
+            """, (car_id,))
+            vignette = cursor.fetchone()
+
+            # most recent visite technique
+            cursor.execute("""
+                SELECT id, expiration_date, montant, status, file_path
+                FROM visite_technique WHERE car_id = %s ORDER BY expiration_date DESC LIMIT 1
+            """, (car_id,))
+            visite = cursor.fetchone()
+
+            # active affectation
+            cursor.execute("""
+                SELECT ca.start_date, ca.notes,
+                       e.id AS employee_id, e.nom, e.prenom, e.poste, e.departement
+                FROM car_assignments ca
+                JOIN employees e ON ca.employee_id = e.id
+                WHERE ca.car_id = %s AND ca.end_date IS NULL
+            """, (car_id,))
+            affectation = cursor.fetchone()
+
+            return {
+                'car':         dict(car),
+                'documents': {
+                    'assurance': dict(assurance) if assurance else None,
+                    'vignette':  dict(vignette)  if vignette  else None,
+                    'visite':    dict(visite)     if visite    else None,
+                },
+                'affectation': dict(affectation) if affectation else None,
+            }
         finally:
             con.close()

@@ -1,287 +1,265 @@
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Air Liquide - Fleet Dashboard</title>
+    <title>Dashboard - ALT Fleet</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
 <body id="page-top">
-    <div id="wrapper">
-        {% include 'elements/side-bar/side-bar.html' %}
-        <div class="d-flex flex-column" id="content-wrapper">
-            <div id="content">
-                <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
-                    {% include 'elements/header/header.html' %}
-                </nav>
-                <div class="container-fluid">
-                    <div class="d-sm-flex justify-content-between align-items-center mb-4">
-                        <h3 class="text-dark mb-0">Fleet Dashboard</h3>
-                        <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="#">
-                            <i class="fas fa-plus fa-sm text-white-50"></i> Add Vehicle
-                        </a>
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid">
+
+                <!-- Title + period filter -->
+                <div class="d-sm-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-dark mb-0">Dashboard</h3>
+                    <div class="d-flex align-items-center gap-2">
+                        <select class="form-select form-select-sm bg-light border-0" id="period_preset" onchange="onPeriodPreset(this.value)" style="width:160px;">
+                            <option value="this_month">Ce mois-ci</option>
+                            <option value="this_year" selected>Cette année</option>
+                            <option value="last_year">Année dernière</option>
+                            <option value="custom">Période personnalisée</option>
+                        </select>
+                        <div id="custom_dates" class="d-none d-flex gap-2">
+                            <input type="date" class="form-control form-control-sm bg-light border-0" id="date_from" style="width:140px;">
+                            <input type="date" class="form-control form-control-sm bg-light border-0" id="date_to"   style="width:140px;">
+                            <button class="btn btn-primary btn-sm px-3" onclick="reloadExpenses()">OK</button>
+                        </div>
                     </div>
-
-                    <div class="row">
-
-                        <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-start-primary py-2">
-                                <div class="card-body">
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col me-2">
-                                            <div class="text-uppercase text-primary fw-bold text-xs mb-1">
-                                                <span>Total Véhicules</span>
-                                            </div>
-                                            <div class="text-dark fw-bold h5 mb-0"><span>120</span></div>
-                                        </div>
-                                        <div class="col-auto"><i class="fas fa-car fa-2x text-gray-300"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-success py-2">
-                                <div class="card-body">
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col me-2">
-                                            <div class="text-uppercase text-success fw-bold text-xs mb-1">
-                                                <span>Available Vehicles</span>
-                                            </div>
-                                            <div class="text-dark fw-bold h5 mb-0"><span>85</span></div>
-                                        </div>
-                                        <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-info py-2">
-                                <div class="card-body">
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col me-2">
-                                            <div class="text-uppercase text-info fw-bold text-xs mb-1">
-                                                <span>Maintenance Progress</span>
-                                            </div>
-                                            <div class="row g-0 align-items-center">
-                                                <div class="col-auto">
-                                                    <div class="text-dark fw-bold h5 mb-0 me-3"><span>50%</span></div>
-                                                </div>
-                                                <div class="col">
-                                                    <div class="progress progress-sm">
-                                                        <div class="progress-bar bg-info" style="width: 50%;"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-auto"><i class="fas fa-tools fa-2x text-gray-300"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-xl-3 mb-4">
-                            <div class="card shadow border-left-warning py-2">
-                                <div class="card-body">
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col me-2">
-                                            <div class="text-uppercase text-warning fw-bold text-xs mb-1">
-                                                <span>Active Drivers</span>
-                                            </div>
-                                            <div class="text-dark fw-bold h5 mb-0"><span>28</span></div>
-                                        </div>
-                                        <div class="col-auto"><i class="fas fa-id-card fa-2x text-gray-300"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-lg-7 col-xl-8">
-                            <div class="card shadow mb-4">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="text-primary fw-bold m-0">Vehicle Status Overview</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas
-                                            data-bss-chart='{"type":"line","data":{"labels":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],"datasets":[{"label":"Vehicles in Service","fill":true,"data":["40","45","50","55","53","60","58","65"],"backgroundColor":"rgba(78, 115, 223, 0.05)","borderColor":"rgba(78, 115, 223, 1)"}]}}'></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-5 col-xl-4">
-                            <div class="card shadow mb-4">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="text-primary fw-bold m-0">Fleet Categories</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas
-                                            data-bss-chart='{"type":"doughnut","data":{"labels":["Cars","Trucks","Motorcycles"],"datasets":[{"backgroundColor":["#4e73df","#1cc88a","#36b9cc"],"data":["60","35","25"]}]}}'></canvas>
-                                    </div>
-                                    <div class="text-center small mt-4">
-                                        <span class="me-2"><i class="fas fa-circle text-primary"></i> Cars</span>
-                                        <span class="me-2"><i class="fas fa-circle text-success"></i> Trucks</span>
-                                        <span class="me-2"><i class="fas fa-circle text-info"></i> Motorcycles</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-lg-6 mb-4">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="text-primary fw-bold m-0">Maintenance Projects</h6>
-                                </div>
-                                <div class="card-body">
-                                    <h4 class="small fw-bold">Engine Check<span class="float-end">20%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-danger" style="width: 20%;"></div>
-                                    </div>
-                                    <h4 class="small fw-bold">Brake Fix<span class="float-end">40%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-warning" style="width: 40%;"></div>
-                                    </div>
-                                    <h4 class="small fw-bold">Body Repair<span class="float-end">60%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-primary" style="width: 60%;"></div>
-                                    </div>
-                                    <h4 class="small fw-bold">Oil Change<span class="float-end">80%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-info" style="width: 80%;"></div>
-                                    </div>
-                                    <h4 class="small fw-bold">Tire Replacement<span class="float-end">Complete</span>
-                                    </h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-success" style="width: 100%;"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="text-primary fw-bold m-0">Vehicle Reminders</h6>
-                                </div>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col me-2">
-                                                <h6 class="mb-0"><strong>Insurance Renewal</strong></h6>
-                                                <span class="text-xs">12 Jan 2025</span>
-                                            </div>
-                                            <div class="col-auto">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col me-2">
-                                                <h6 class="mb-0"><strong>License Check</strong></h6>
-                                                <span class="text-xs">15 Jan 2025</span>
-                                            </div>
-                                            <div class="col-auto">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="col">
-                            <div class="row">
-
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card text-white bg-primary shadow">
-                                        <div class="card-body">
-                                            <p class="m-0">In Service</p>
-                                            <p class="text-white-50 small m-0">Operational</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card text-white bg-success shadow">
-                                        <div class="card-body">
-                                            <p class="m-0">Available</p>
-                                            <p class="text-white-50 small m-0">Ready</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card text-white bg-info shadow">
-                                        <div class="card-body">
-                                            <p class="m-0">In Maintenance</p>
-                                            <p class="text-white-50 small m-0">Being repaired</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card text-white bg-warning shadow">
-                                        <div class="card-body">
-                                            <p class="m-0">Pending Inspection</p>
-                                            <p class="text-white-50 small m-0">Await check</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-6 mb-4">
-                                    <div class="card text-white bg-danger shadow">
-                                        <div class="card-body">
-                                            <p class="m-0">Decommissioned</p>
-                                            <p class="text-white-50 small m-0">Inactive</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
                 </div>
+
+                <!-- ================================================ -->
+                <!-- ROW 1: Fleet KPIs                                  -->
+                <!-- ================================================ -->
+                <div class="row mb-2">
+                    <div class="col-md-6 col-xl-3 mb-4">
+                        <div class="card shadow border-start-primary py-2">
+                            <div class="card-body">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col me-2">
+                                        <div class="text-uppercase text-primary fw-bold text-xs mb-1">Total Véhicules</div>
+                                        <div class="text-dark fw-bold h5 mb-0" id="kpi_total">—</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-car fa-2x text-gray-300"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3 mb-4">
+                        <div class="card shadow border-start-success py-2">
+                            <div class="card-body">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col me-2">
+                                        <div class="text-uppercase text-success fw-bold text-xs mb-1">Opérationnels</div>
+                                        <div class="text-dark fw-bold h5 mb-0" id="kpi_active">—</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3 mb-4">
+                        <div class="card shadow border-start-warning py-2">
+                            <div class="card-body">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col me-2">
+                                        <div class="text-uppercase text-warning fw-bold text-xs mb-1">En Maintenance</div>
+                                        <div class="text-dark fw-bold h5 mb-0" id="kpi_maintenance">—</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-tools fa-2x text-gray-300"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3 mb-4">
+                        <div class="card shadow border-start-danger py-2">
+                            <div class="card-body">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col me-2">
+                                        <div class="text-uppercase text-danger fw-bold text-xs mb-1">Dossiers incomplets</div>
+                                        <div class="text-dark fw-bold h5 mb-0" id="kpi_incomplete">—</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-folder-open fa-2x text-gray-300"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- ROW 2: Expense KPIs                               -->
+                <!-- ================================================ -->
+                <div class="row mb-2">
+                    <div class="col-12 mb-2">
+                        <p class="text-muted text-xs fw-bold text-uppercase mb-0">
+                            <i class="fas fa-filter me-1"></i>
+                            Dépenses pour la période sélectionnée
+                        </p>
+                    </div>
+                    <div class="col-md-6 col-xl mb-4">
+                        <div class="card shadow border-0 h-100">
+                            <div class="card-body py-3">
+                                <div class="text-xs text-muted fw-bold text-uppercase mb-1">Maintenance</div>
+                                <div class="fw-bold h5 text-dark mb-0" id="exp_maintenance">—</div>
+                                <div class="text-xs text-muted mt-1">factures vérifiées</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl mb-4">
+                        <div class="card shadow border-0 h-100">
+                            <div class="card-body py-3">
+                                <div class="text-xs text-muted fw-bold text-uppercase mb-1">Sinistres</div>
+                                <div class="fw-bold h5 text-dark mb-0" id="exp_sinistres">—</div>
+                                <div class="text-xs text-muted mt-1">réparations</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl mb-4">
+                        <div class="card shadow border-0 h-100">
+                            <div class="card-body py-3">
+                                <div class="text-xs text-muted fw-bold text-uppercase mb-1">Carburant</div>
+                                <div class="fw-bold h5 text-dark mb-0" id="exp_carburant">—</div>
+                                <div class="text-xs text-muted mt-1">Shell fleet card</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl mb-4">
+                        <div class="card shadow border-0 h-100">
+                            <div class="card-body py-3">
+                                <div class="text-xs text-muted fw-bold text-uppercase mb-1">Vignettes + Visites</div>
+                                <div class="fw-bold h5 text-dark mb-0" id="exp_admin">—</div>
+                                <div class="text-xs text-muted mt-1">taxes & contrôles</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl mb-4">
+                        <div class="card shadow border-0 h-100 bg-primary bg-opacity-10">
+                            <div class="card-body py-3">
+                                <div class="text-xs text-primary fw-bold text-uppercase mb-1">Total général</div>
+                                <div class="fw-bold h5 text-primary mb-0" id="exp_total">—</div>
+                                <div class="text-xs text-muted mt-1">toutes catégories</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- ROW 3: Charts                                      -->
+                <!-- ================================================ -->
+                <div class="row mb-4">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow border-0 h-100">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="text-primary fw-bold m-0">Dépenses mensuelles</h6>
+                                <div class="d-flex gap-2 small">
+                                    <span><span class="badge bg-primary me-1">&nbsp;</span>Maintenance</span>
+                                    <span><span class="badge bg-danger me-1">&nbsp;</span>Sinistres</span>
+                                    <span><span class="badge bg-warning me-1">&nbsp;</span>Carburant</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="monthlyChart" height="120"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow border-0 h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="text-primary fw-bold m-0">Répartition des dépenses</h6>
+                            </div>
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                                <canvas id="donutChart" height="200"></canvas>
+                                <div class="text-center small mt-3" id="donut_legend"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- ROW 4: Top 5 most expensive cars                  -->
+                <!-- ================================================ -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow border-0">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="text-primary fw-bold m-0">
+                                    <i class="fas fa-trophy me-2 text-warning"></i>Top 5 véhicules les plus coûteux
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr class="text-xs text-uppercase text-muted">
+                                                <th class="ps-3">#</th>
+                                                <th>Véhicule</th>
+                                                <th>Immatriculation</th>
+                                                <th class="text-end">Maintenance</th>
+                                                <th class="text-end">Carburant</th>
+                                                <th class="text-end pe-3">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="top_cars_body">
+                                            <tr><td colspan="6" class="text-center py-4 text-muted">Chargement...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- ROW 5: Alerts                                      -->
+                <!-- ================================================ -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow border-0">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="text-primary fw-bold m-0">
+                                    <i class="fas fa-bell me-2"></i>Alertes actives
+                                </h6>
+                                <span class="badge bg-danger rounded-pill" id="alerts_count">0</span>
+                            </div>
+                            <div class="card-body p-0" id="alerts_list">
+                                <div class="text-center py-4 text-muted">Chargement...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-
-            <footer class="bg-white sticky-footer">
-                <div class="container my-auto">
-                    <div class="text-center my-auto copyright">
-                        <span>Copyright © Fleet Manager 2025</span>
-                    </div>
-                </div>
-            </footer>
-
         </div>
 
-        <a class="border rounded d-inline scroll-to-top" href="#page-top">
-            <i class="fas fa-angle-up"></i>
-        </a>
-
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
     </div>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
 
-    <script src="../static/assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../static/assets/js/chart.min.js"></script>
-    <script src="../static/assets/js/bs-init.js"></script>
-    <script src="../static/assets/js/theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
 </body>
-
 </html>

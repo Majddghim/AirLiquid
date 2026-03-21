@@ -2,7 +2,7 @@ import time
 import os
 from services.voiture import VoitureService
 from services.employe import EmployeService
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 
 
@@ -107,6 +107,24 @@ class CarViews:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
         # ------------------------------------------------------------------ #
+        # CAR DETAIL PAGE                                                      #
+        # ------------------------------------------------------------------ #
+
+        @self.car_bp.route('/detail/<int:car_id>', methods=['GET'])
+        def detail(car_id):
+            return render_template('car-detail.html')
+
+        @self.car_bp.route('/detail-data/<int:car_id>', methods=['GET'])
+        def detail_data(car_id):
+            try:
+                data = self.VoitureService.get_car_detail(car_id)
+                if not data:
+                    return jsonify({'status': 'failed', 'message': 'Voiture introuvable'}), 404
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # ------------------------------------------------------------------ #
         # SCAN FLOW                                                            #
         # ------------------------------------------------------------------ #
 
@@ -182,9 +200,7 @@ class CarViews:
 
         @self.car_bp.route('/scan-document/<int:car_id>', methods=['POST'])
         def scan_document(car_id):
-            """Mock OCR for all document types."""
             doc_type = request.form.get('doc_type')
-
             if doc_type == 'assurance':
                 mock = {
                     "insurer":       "STAR Assurance",
@@ -193,25 +209,16 @@ class CarViews:
                     "end_date":      "2025-12-31"
                 }
             elif doc_type == 'vignette':
-                mock = {
-                    "year":            "2025",
-                    "montant":         "180.00",
-                    "expiration_date": "2025-12-31"
-                }
+                mock = {"year": "2025", "montant": "180.00", "expiration_date": "2025-12-31"}
             elif doc_type == 'visite':
-                mock = {
-                    "montant":         "45.00",
-                    "expiration_date": "2027-06-30"
-                }
+                mock = {"montant": "45.00", "expiration_date": "2027-06-30"}
             else:
                 return jsonify({'status': 'failed', 'message': 'Type de document inconnu'})
-
             time.sleep(1)
             return jsonify({'status': 'success', 'extracted_data': mock})
 
         @self.car_bp.route('/save-document/<int:car_id>/<doc_type>', methods=['POST'])
         def save_document(car_id, doc_type):
-            """Saves a scanned document to the correct table."""
             try:
                 file_path = None
                 if 'file' in request.files:
@@ -283,7 +290,7 @@ class CarViews:
                 employee_id = request.form.get('employee_id')
                 start_date  = request.form.get('start_date')
                 notes       = request.form.get('notes') or None
-                admin_id    = 1  # replace with session admin id
+                admin_id    = 1
 
                 if not employee_id or not start_date:
                     return jsonify({'status': 'failed', 'message': 'Employé et date de début sont obligatoires'})

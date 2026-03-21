@@ -134,7 +134,9 @@ async function confirmerVoiture() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // OPEN AFFECTATION MODAL
 
-async function ouvrirModalAffectation(carId, carLabel) {
+async function ouvrirModalAffectation(event, carId, carLabel) {
+
+    event.stopPropagation(); // prevent row click from firing
 
     document.getElementById("affectation_car_id").value       = carId;
     document.getElementById("affectation_car_label").innerText = carLabel;
@@ -269,7 +271,6 @@ async function loadCars() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // RENDER TABLE
-// CHANGED: folder icon only shown when dossier_complet === false
 
 function renderTable() {
 
@@ -299,13 +300,14 @@ function renderTable() {
         // folder icon only shown when dossier is incomplete
         const dossierBtn = car.dossier_complet ? '' : `
             <a href="/car/dossier?car_id=${car.id}"
+                onclick="event.stopPropagation()"
                 class="btn btn-outline-warning border-0 rounded-circle me-1"
                 title="Compléter le dossier">
                 <i class="fas fa-folder-open"></i>
             </a>`;
 
         return `
-        <tr>
+        <tr style="cursor:pointer;" onclick="window.location.href='/car/detail/${car.id}'">
             <td>
                 <div class="d-flex align-items-center">
                     <div class="bg-light p-2 rounded me-3 text-center" style="width:40px">
@@ -350,13 +352,17 @@ function renderTable() {
                     ${dossierBtn}
                     <button class="btn btn-outline-success border-0 rounded-circle me-1"
                         title="Affecter un employé"
-                        onclick="ouvrirModalAffectation(${car.id}, '${carLabel}')">
+                        onclick="ouvrirModalAffectation(event, ${car.id}, '${carLabel}')">
                         <i class="fas fa-user-tag"></i>
                     </button>
-                    <button class="btn btn-outline-primary border-0 rounded-circle me-1" title="Modifier">
+                    <button class="btn btn-outline-primary border-0 rounded-circle me-1"
+                        title="Modifier"
+                        onclick="event.stopPropagation()">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-outline-danger border-0 rounded-circle" title="Supprimer">
+                    <button class="btn btn-outline-danger border-0 rounded-circle"
+                        title="Supprimer"
+                        onclick="event.stopPropagation()">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
