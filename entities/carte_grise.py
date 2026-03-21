@@ -1,8 +1,10 @@
 class Carte_grise:
-    def __init__(self, id, car_id, model, year, plate_number, owner_name, chassis_number, 
-                 registration_date=None, expiration_date=None, file_path=None, 
-                 extraction_status='pending', extracted_json=None, verified_by_admin_id=None, 
-                 verified_at=None, verification_notes=None, created_at=None, updated_at=None):
+    def __init__(self, id, car_id, model, year, plate_number, owner_name, chassis_number,
+                 puissance_fiscale=None, carburant=None,
+                 registration_date=None, expiration_date=None, file_path=None,
+                 extraction_status='pending', extracted_json=None,
+                 verified_by_admin_id=None, verified_at=None,
+                 verification_notes=None, created_at=None, updated_at=None):
         self.id = id
         self.car_id = car_id
         self.model = model
@@ -10,6 +12,8 @@ class Carte_grise:
         self.plate_number = plate_number
         self.owner_name = owner_name
         self.chassis_number = chassis_number
+        self.puissance_fiscale = puissance_fiscale
+        self.carburant = carburant
         self.registration_date = registration_date
         self.expiration_date = expiration_date
         self.file_path = file_path
@@ -21,7 +25,7 @@ class Carte_grise:
         self.created_at = created_at
         self.updated_at = updated_at
 
-    def __dict__(self):
+    def to_dict(self):
         return {
             'id': self.id,
             'car_id': self.car_id,
@@ -30,6 +34,8 @@ class Carte_grise:
             'plate_number': self.plate_number,
             'owner_name': self.owner_name,
             'chassis_number': self.chassis_number,
+            'puissance_fiscale': self.puissance_fiscale,
+            'carburant': self.carburant,
             'registration_date': self.registration_date,
             'expiration_date': self.expiration_date,
             'file_path': self.file_path,

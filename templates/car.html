@@ -6,13 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Voitures - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
 
-<body id="page-top" >
+<body id="page-top">
     <div id="wrapper">
 
         {% include 'elements/side-bar/side-bar.html' %}
@@ -26,10 +25,8 @@
 
                 <div class="container-fluid">
 
-                    <!-- Title + Add Car Button -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h3 class="text-dark mb-0">Liste des Voitures</h3>
-
                         <a href="/dashboard/ajout-voiture" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Ajouter Voiture
                         </a>
@@ -37,12 +34,14 @@
 
                     <div class="card shadow border-0">
                         <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-car me-2"></i>Gestion de la Flotte
+                            <h6 class="text-primary fw-bold m-0">
+                                <i class="fas fa-car me-2"></i>Gestion de la Flotte
                             </h6>
                             <div class="dataTables_filter d-none d-md-block" id="dataTable_filter">
                                 <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0"><i
-                                            class="fas fa-search"></i></span>
+                                    <span class="input-group-text bg-light border-0">
+                                        <i class="fas fa-search"></i>
+                                    </span>
                                     <input type="search" class="form-control form-control-sm bg-light border-0"
                                         id="search_by_name" placeholder="Recherche rapide...">
                                 </div>
@@ -50,7 +49,6 @@
                         </div>
 
                         <div class="card-body">
-                            <!-- Cars Table -->
                             <div class="table-responsive" id="dataTable-container" role="grid">
                                 <table class="table table-hover align-middle my-0" id="dataTable">
                                     <thead class="table-light">
@@ -64,23 +62,17 @@
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="carsTableBody">
-                                        <!-- Loaded dynamically by car.js -->
-                                    </tbody>
+                                    <tbody id="carsTableBody"></tbody>
                                 </table>
                             </div>
 
-                            <!-- Pagination Controls -->
                             <div class="row mt-4">
                                 <div class="col-md-6 align-self-center">
                                     <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite"></p>
                                 </div>
                                 <div class="col-md-6">
-                                    <nav
-                                        class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                                        <ul class="pagination" id="data-pagination">
-                                            <!-- Pagination buttons injected by script.js -->
-                                        </ul>
+                                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                                        <ul class="pagination" id="data-pagination"></ul>
                                     </nav>
                                 </div>
                             </div>
@@ -93,25 +85,84 @@
             <footer class="bg-white sticky-footer">
                 <div class="container my-auto">
                     <div class="text-center my-auto copyright">
-                        <span>Copyright © Brand 2025</span>
+                        <span>Copyright © ALT 2025</span>
                     </div>
                 </div>
             </footer>
-
         </div>
 
         <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- AFFECTATION MODAL                                             -->
+    <!-- ============================================================ -->
+    <div class="modal fade" id="affectationModal" tabindex="-1"
+        aria-labelledby="affectationModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold text-primary" id="affectationModalLabel">
+                            <i class="fas fa-user-tag me-2"></i>Affecter un Employé
+                        </h5>
+                        <p class="text-muted small mb-0" id="affectation_car_label"></p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body px-4">
+
+                    <!-- Warning if car already assigned -->
+                    <div id="affectation_warning" class="alert alert-warning border-0 d-flex align-items-center py-2 mb-3" style="display:none !important;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span class="small" id="affectation_warning_text"></span>
+                    </div>
+
+                    <input type="hidden" id="affectation_car_id">
+
+                    <div class="mb-3">
+                        <label class="form-label mb-1"><strong>Employé</strong></label>
+                        <select class="form-select bg-light border-0" id="affectation_employee_id">
+                            <option value="">-- Sélectionner un employé --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label mb-1 text-success small fw-bold">DATE DE DÉBUT</label>
+                        <input class="form-control bg-light border-0" type="date" id="affectation_start_date">
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label mb-1 text-xs"><strong>Notes</strong></label>
+                        <textarea class="form-control bg-light border-0" id="affectation_notes" rows="2"
+                            placeholder="Optionnel..."></textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none"
+                        data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary px-4 py-2 shadow"
+                        onclick="affecterVoiture()">
+                        <i class="fas fa-check-circle me-2"></i>Confirmer l'affectation
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- END AFFECTATION MODAL -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/car.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
 </body>
-
-
-
 </html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Dossier Véhicule - ALT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+    <style>
+        .step-indicator { display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+        .step-item { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; }
+        .step-item:not(:last-child)::after { content: ''; position: absolute; top: 20px; left: 60%; width: 80%; height: 2px; background: #dee2e6; z-index: 0; }
+        .step-item.done:not(:last-child)::after { background: #198754; }
+        .step-circle { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; z-index: 1; border: 2px solid #dee2e6; background: white; color: #adb5bd; }
+        .step-item.active .step-circle { border-color: #0d6efd; background: #0d6efd; color: white; }
+        .step-item.done .step-circle { border-color: #198754; background: #198754; color: white; }
+        .step-label { font-size: 11px; font-weight: 600; margin-top: 6px; color: #adb5bd; text-align: center; }
+        .step-item.active .step-label { color: #0d6efd; }
+        .step-item.done .step-label { color: #198754; }
+        .doc-upload-zone { border: 2px dashed #dee2e6; border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all .2s; background: #f8f9fa; }
+        .doc-upload-zone:hover { border-color: #0d6efd; background: #e8f0fe; }
+        .doc-upload-zone.has-file { border-color: #198754; background: #e8f5e9; }
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
+        .summary-item { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; }
+        .summary-item.done { background: #e8f5e9; }
+        .summary-item.skipped { background: #f8f9fa; }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="text-dark mb-0">Compléter le Dossier</h3>
+                        <p class="text-muted small mb-0" id="car_subtitle">Chargement...</p>
+                    </div>
+                    <a href="/dashboard/cars" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-list me-1"></i> Liste des véhicules
+                    </a>
+                </div>
+
+                <!-- Step Indicator -->
+                <div class="card shadow border-0 mb-4">
+                    <div class="card-body py-4">
+                        <div class="step-indicator">
+                            <div class="step-item done" id="step-ind-1">
+                                <div class="step-circle"><i class="fas fa-check"></i></div>
+                                <div class="step-label">Carte Grise</div>
+                            </div>
+                            <div class="step-item" id="step-ind-2">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">Assurance</div>
+                            </div>
+                            <div class="step-item" id="step-ind-3">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Vignette</div>
+                            </div>
+                            <div class="step-item" id="step-ind-4">
+                                <div class="step-circle">4</div>
+                                <div class="step-label">Visite Technique</div>
+                            </div>
+                            <div class="step-item" id="step-ind-5">
+                                <div class="step-circle">5</div>
+                                <div class="step-label">Terminé</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- STEP 1: Carte Grise summary                       -->
+                <!-- ================================================ -->
+                <div class="step-panel" id="panel-1">
+                    <div class="card shadow border-0 mb-4">
+                        <div class="card-header py-3 bg-white">
+                            <h6 class="text-success fw-bold m-0">
+                                <i class="fas fa-check-circle me-2"></i>Carte Grise — Enregistrée
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="cg_summary"></div>
+                            <div class="text-end mt-3">
+                                <button class="btn btn-primary px-5" onclick="goToStep(2)">
+                                    Suivant <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- STEP 2: Assurance                                 -->
+                <!-- ================================================ -->
+                <div class="step-panel" id="panel-2">
+                    <div class="card shadow border-0 mb-4">
+                        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary fw-bold m-0">
+                                <i class="fas fa-shield-alt me-2"></i>Assurance
+                            </h6>
+                            <span class="badge bg-warning text-dark">Requis</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-start">
+                                <div class="col-md-5 mb-4 mb-md-0">
+                                    <label class="form-label fw-bold small mb-2">Scanner le document</label>
+                                    <div class="doc-upload-zone" id="assurance_zone" onclick="document.getElementById('assurance_file').click()">
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted small mb-1">Cliquez pour sélectionner</p>
+                                        <p class="text-muted text-xs">PDF ou image</p>
+                                        <input type="file" id="assurance_file" accept="image/*,.pdf" class="d-none" onchange="onFileSelected('assurance')">
+                                    </div>
+                                    <div id="assurance_file_name" class="text-success small mt-2" style="display:none;">
+                                        <i class="fas fa-file me-1"></i><span></span>
+                                    </div>
+                                    <button class="btn btn-primary w-100 mt-3" onclick="scanDocument('assurance')" id="assurance_scan_btn" disabled>
+                                        <i class="fas fa-magic me-2"></i>Analyser avec IA
+                                    </button>
+                                    <div id="assurance_loader" class="text-center mt-2" style="display:none;">
+                                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                                        <span class="ms-2 small text-primary">Extraction en cours...</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold small mb-2">Données extraites — à vérifier</label>
+                                    <div class="mb-3">
+                                        <label class="form-label mb-1 small">Assureur</label>
+                                        <input class="form-control bg-light border-0" type="text" id="assurance_insurer" placeholder="Ex: STAR Assurance">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label mb-1 small">Numéro de police</label>
+                                        <input class="form-control bg-light border-0" type="text" id="assurance_policy_number" placeholder="Ex: STAR-CLIO-2025">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label mb-1 text-success small fw-bold">DATE DÉBUT</label>
+                                            <input class="form-control bg-light border-0" type="date" id="assurance_start_date">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label mb-1 text-danger small fw-bold">DATE FIN</label>
+                                            <input class="form-control bg-light border-0" type="date" id="assurance_end_date">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-link text-muted text-decoration-none" onclick="goToStep(1)">
+                                    <i class="fas fa-arrow-left me-1"></i> Retour
+                                </button>
+                                <div>
+                                    <button class="btn btn-outline-secondary me-2" onclick="skipStep('assurance', 3)">
+                                        Passer <i class="fas fa-forward ms-1"></i>
+                                    </button>
+                                    <button class="btn btn-primary px-5" onclick="saveDocument('assurance', 3)">
+                                        Enregistrer <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- STEP 3: Vignette                                  -->
+                <!-- ================================================ -->
+                <div class="step-panel" id="panel-3">
+                    <div class="card shadow border-0 mb-4">
+                        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary fw-bold m-0">
+                                <i class="fas fa-receipt me-2"></i>Vignette
+                            </h6>
+                            <span class="badge bg-warning text-dark">Requis</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-start">
+                                <div class="col-md-5 mb-4 mb-md-0">
+                                    <label class="form-label fw-bold small mb-2">Scanner le document</label>
+                                    <div class="doc-upload-zone" id="vignette_zone" onclick="document.getElementById('vignette_file').click()">
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted small mb-1">Cliquez pour sélectionner</p>
+                                        <p class="text-muted text-xs">PDF ou image</p>
+                                        <input type="file" id="vignette_file" accept="image/*,.pdf" class="d-none" onchange="onFileSelected('vignette')">
+                                    </div>
+                                    <div id="vignette_file_name" class="text-success small mt-2" style="display:none;">
+                                        <i class="fas fa-file me-1"></i><span></span>
+                                    </div>
+                                    <button class="btn btn-primary w-100 mt-3" onclick="scanDocument('vignette')" id="vignette_scan_btn" disabled>
+                                        <i class="fas fa-magic me-2"></i>Analyser avec IA
+                                    </button>
+                                    <div id="vignette_loader" class="text-center mt-2" style="display:none;">
+                                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                                        <span class="ms-2 small text-primary">Extraction en cours...</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold small mb-2">Données extraites — à vérifier</label>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label mb-1 small">Année</label>
+                                            <input class="form-control bg-light border-0" type="number" id="vignette_year" placeholder="2025">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label mb-1 small">Montant (DT)</label>
+                                            <input class="form-control bg-light border-0" type="number" step="0.01" id="vignette_montant" placeholder="180.00">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label mb-1 text-danger small fw-bold">DATE EXPIRATION</label>
+                                        <input class="form-control bg-light border-0" type="date" id="vignette_expiration_date">
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-link text-muted text-decoration-none" onclick="goToStep(2)">
+                                    <i class="fas fa-arrow-left me-1"></i> Retour
+                                </button>
+                                <div>
+                                    <button class="btn btn-outline-secondary me-2" onclick="skipStep('vignette', 4)">
+                                        Passer <i class="fas fa-forward ms-1"></i>
+                                    </button>
+                                    <button class="btn btn-primary px-5" onclick="saveDocument('vignette', 4)">
+                                        Enregistrer <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- STEP 4: Visite Technique                          -->
+                <!-- ================================================ -->
+                <div class="step-panel" id="panel-4">
+                    <div class="card shadow border-0 mb-4">
+                        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary fw-bold m-0">
+                                <i class="fas fa-tools me-2"></i>Visite Technique
+                            </h6>
+                            <span class="badge bg-warning text-dark">Requis</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-start">
+                                <div class="col-md-5 mb-4 mb-md-0">
+                                    <label class="form-label fw-bold small mb-2">Scanner le document</label>
+                                    <div class="doc-upload-zone" id="visite_zone" onclick="document.getElementById('visite_file').click()">
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted small mb-1">Cliquez pour sélectionner</p>
+                                        <p class="text-muted text-xs">PDF ou image</p>
+                                        <input type="file" id="visite_file" accept="image/*,.pdf" class="d-none" onchange="onFileSelected('visite')">
+                                    </div>
+                                    <div id="visite_file_name" class="text-success small mt-2" style="display:none;">
+                                        <i class="fas fa-file me-1"></i><span></span>
+                                    </div>
+                                    <button class="btn btn-primary w-100 mt-3" onclick="scanDocument('visite')" id="visite_scan_btn" disabled>
+                                        <i class="fas fa-magic me-2"></i>Analyser avec IA
+                                    </button>
+                                    <div id="visite_loader" class="text-center mt-2" style="display:none;">
+                                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                                        <span class="ms-2 small text-primary">Extraction en cours...</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold small mb-2">Données extraites — à vérifier</label>
+                                    <div class="mb-3">
+                                        <label class="form-label mb-1 small">Montant (DT)</label>
+                                        <input class="form-control bg-light border-0" type="number" step="0.01" id="visite_montant" placeholder="Ex: 45.00">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label mb-1 text-danger small fw-bold">DATE EXPIRATION</label>
+                                        <input class="form-control bg-light border-0" type="date" id="visite_expiration_date">
+                                    </div>
+                                    <div class="alert alert-info border-0 small py-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        La date d'expiration est variable selon l'âge du véhicule.
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-link text-muted text-decoration-none" onclick="goToStep(3)">
+                                    <i class="fas fa-arrow-left me-1"></i> Retour
+                                </button>
+                                <div>
+                                    <button class="btn btn-outline-secondary me-2" onclick="skipStep('visite', 5)">
+                                        Passer <i class="fas fa-forward ms-1"></i>
+                                    </button>
+                                    <button class="btn btn-primary px-5" onclick="saveDocument('visite', 5)">
+                                        Enregistrer <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- STEP 5: Completion summary                        -->
+                <!-- ================================================ -->
+                <div class="step-panel" id="panel-5">
+                    <div class="card shadow border-0 mb-4">
+                        <div class="card-header py-3 bg-white">
+                            <h6 class="text-success fw-bold m-0">
+                                <i class="fas fa-check-circle me-2"></i>Dossier complété
+                            </h6>
+                        </div>
+                        <div class="card-body">
+
+                            <div class="text-center mb-4">
+                                <i class="fas fa-car fa-3x text-primary mb-3"></i>
+                                <h5 class="fw-bold" id="summary_car_title"></h5>
+                                <p class="text-muted small">Voici le récapitulatif des documents enregistrés pour ce véhicule.</p>
+                            </div>
+
+                            <div id="summary_list"></div>
+
+                            <div class="alert alert-info border-0 small mt-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Vous pouvez affecter ce véhicule à un employé depuis la liste des véhicules.
+                            </div>
+
+                            <div class="text-end mt-4">
+                                <a href="/dashboard/cars" class="btn btn-success px-5 py-2 shadow">
+                                    <i class="fas fa-list me-2"></i>Aller à la liste des véhicules
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dossier.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+</body>
+</html>

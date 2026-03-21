@@ -4,13 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Détails Voiture - Brand</title>
+    <title>Ajout Voiture - ALT</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
-
 </head>
 
 <body id="page-top">
@@ -22,6 +20,7 @@
                     {% include 'elements/header/header.html' %}
                 </nav>
                 <div class="container-fluid">
+
                     <div class="d-sm-flex justify-content-between align-items-center mb-4">
                         <h3 class="text-dark mb-0">Gestion du Parc Automobile</h3>
                         <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="/dashboard/cars">
@@ -29,7 +28,7 @@
                         </a>
                     </div>
 
-                    <!-- Improved Scan Section -->
+                    <!-- Scan Card -->
                     <div class="card shadow mb-4 border-start-primary py-2 overflow-hidden">
                         <div class="card-body">
                             <div class="row align-items-center">
@@ -37,135 +36,37 @@
                                     <div class="text-uppercase text-primary fw-bold text-xs mb-1">
                                         <span>Remplissage Automatique</span>
                                     </div>
-                                    <div class="h4 mb-2 fw-bold text-gray-800">Intelligence Artificielle <span
-                                            class="badge bg-al-blue badge-pill">Nouveau</span></div>
-                                    <p class="text-muted small mb-4">Téléchargez le scan ou la photo de la carte grise.
-                                        Notre IA extraira automatiquement les données techniques du véhicule.</p>
-
+                                    <div class="h4 mb-2 fw-bold text-gray-800">
+                                        Intelligence Artificielle
+                                        <span class="badge bg-al-blue badge-pill">Nouveau</span>
+                                    </div>
+                                    <p class="text-muted small mb-4">
+                                        Téléchargez le scan ou la photo de la carte grise.
+                                        Notre IA extraira automatiquement les données techniques du véhicule.
+                                        Une fenêtre de vérification s'ouvrira pour confirmer les données avant l'enregistrement.
+                                    </p>
                                     <div class="input-group mb-3 bg-light p-2 rounded">
-                                        <input class="form-control form-control-sm border-0 bg-light" type="file"
-                                            id="carte_grise_scan" accept="image/*,.pdf">
-                                        <button class="btn btn-primary rounded shadow-sm px-4" type="button"
-                                            id="scanBtn" onclick="scannerCarteGrise()">
+                                        <input class="form-control form-control-sm border-0 bg-light"
+                                            type="file" id="carte_grise_scan" accept="image/*,.pdf">
+                                        <button class="btn btn-primary rounded shadow-sm px-4"
+                                            type="button" id="scanBtn" onclick="scannerCarteGrise()">
                                             <i class="fas fa-magic me-2"></i> Analyser
                                         </button>
                                     </div>
                                     <div id="scan-loader" class="mt-2" style="display: none;">
                                         <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                        <span class="ms-2 text-primary fw-bold small">Extraction intelligente en
-                                            cours...</span>
+                                        <span class="ms-2 text-primary fw-bold small">
+                                            Extraction intelligente en cours...
+                                        </span>
                                     </div>
                                 </div>
-                                <div
-                                    class="col-md-5 d-none d-md-flex justify-content-center align-items-center opacity-25">
+                                <div class="col-md-5 d-none d-md-flex justify-content-center align-items-center opacity-25">
                                     <i class="fas fa-id-card fa-8x text-primary"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 bg-white">
-                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-edit me-2"></i>Fiche Technique du
-                                Véhicule</h6>
-                        </div>
-                        <div class="card-body">
-                            <form id="voitureForm" onsubmit="return false;">
-                                <div class="row">
-                                    <div class="col-lg-7 border-end pe-lg-4">
-                                        <h6 class="heading-small text-muted mb-4">SPÉCIFICATIONS TECHNIQUES</h6>
-                                        <div class="row mb-3">
-                                            <div class="col-md-12 mb-3">
-                                                <label class="form-label mb-1"><strong>Modèle / Marque</strong></label>
-                                                <input class="form-control bg-light border-0" type="text" id="model"
-                                                    placeholder="Ex: Peugeot Partner">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label mb-1"><strong>Immatriculation</strong></label>
-                                                <input class="form-control bg-light border-0 fw-bold text-primary"
-                                                    type="text" id="plate_number" placeholder="123 TU 4567">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label mb-1"><strong>Année</strong></label>
-                                                <input class="form-control bg-light border-0" type="number" id="year"
-                                                    placeholder="2024">
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label class="form-label mb-1"><strong>Propriétaire (Carte
-                                                    Grise)</strong></label>
-                                            <input class="form-control bg-light border-0" type="text" id="owner_name"
-                                                placeholder="Nom complet figurant sur le document">
-                                        </div>
-                                        <div class="mb-0">
-                                            <label class="form-label mb-1"><strong>Numéro de Châssis
-                                                    (VIN)</strong></label>
-                                            <input class="form-control bg-light border-0" type="text"
-                                                id="chassis_number" placeholder="Ex: VN7890BC...">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-5 ps-lg-4 mt-4 mt-lg-0">
-                                        <h6 class="heading-small text-muted mb-4">GESTION & ADMINISTRATION</h6>
-                                        <div class="mb-3">
-                                            <label class="form-label mb-1"><strong>Statut Actuel</strong></label>
-                                            <select class="form-select bg-light border-0" id="status">
-                                                <option value="Disponible">Opérationnel / Disponible</option>
-                                                <option value="En Service">En Service</option>
-                                                <option value="Maintenance">En Maintenance</option>
-                                                <option value="Hors Service">Hors Service</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label mb-1 text-success small fw-bold">DATE PREMIÈRE
-                                                CIRCULATION</label>
-                                            <input class="form-control bg-light border-0" type="date"
-                                                id="registration_date">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label mb-1 text-danger small fw-bold">EXPIRATION CARTE
-                                                GRISE</label>
-                                            <input class="form-control bg-light border-0" type="date"
-                                                id="expiration_date">
-                                        </div>
-                                        <div class="mb-0">
-                                            <label class="form-label mb-1 small fw-bold text-muted">DATE
-                                                D'ACQUISITION</label>
-                                            <input class="form-control bg-light border-0" type="date"
-                                                id="acquisition_date">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <hr class="my-4">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label mb-1 text-xs"><strong>Scanner de la Carte Grise
-                                                (Archive)</strong></label>
-                                        <div class="custom-file-upload border rounded p-2 bg-light text-center">
-                                            <input class="form-control form-control-sm border-0 bg-transparent"
-                                                type="file" id="carte_grise">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label mb-1 text-xs"><strong>Notes &
-                                                Observations</strong></label>
-                                        <textarea class="form-control bg-light border-0" id="notes" rows="1"></textarea>
-                                    </div>
-                                </div>
-
-                                <div class="text-end mt-4">
-                                    <button class="btn btn-link text-muted me-3 text-decoration-none"
-                                        type="reset">Annuler</button>
-                                    <button class="btn btn-primary px-5 py-2 shadow" type="button"
-                                        onclick="enregistrerVoiture()">
-                                        <i class="fas fa-check-circle me-2"></i>Confirmer l'ajout
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -173,15 +74,180 @@
         <footer class="bg-white sticky-footer">
             <div class="container my-auto">
                 <div class="text-center my-auto copyright">
-                    <span>Copyright © Brand 2025</span>
+                    <span>Copyright © ALT 2025</span>
                 </div>
             </div>
         </footer>
     </div>
-    <a class="border rounded d-inline scroll-to-top" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+
+    <!-- ============================================================ -->
+    <!-- REVIEW MODAL                                                   -->
+    <!-- ============================================================ -->
+    <div class="modal fade" id="reviewModal" tabindex="-1"
+        aria-labelledby="reviewModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold text-primary" id="reviewModalLabel">
+                            <i class="fas fa-id-card me-2"></i>Vérification de la Carte Grise
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Vérifiez et corrigez les données extraites par l'IA avant de confirmer.
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="px-4 pt-3">
+                    <div class="alert alert-primary border-0 d-flex align-items-center py-2" role="alert">
+                        <i class="fas fa-robot me-2"></i>
+                        <span class="small">
+                            Données extraites automatiquement — veuillez vérifier avant de confirmer.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="modal-body px-4">
+                    <form id="reviewForm" onsubmit="return false;">
+
+                        <input type="hidden" id="modal_cg_id">
+
+                        <div class="row">
+
+                            <!-- Left: technical fields from carte grise -->
+                            <div class="col-lg-7 border-end pe-lg-4">
+                                <h6 class="heading-small text-muted mb-3">SPÉCIFICATIONS TECHNIQUES</h6>
+
+                                <div class="row mb-2">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label mb-1"><strong>Modèle</strong></label>
+                                        <input class="form-control bg-light border-0" type="text"
+                                            id="modal_model" placeholder="Ex: Peugeot Partner">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1"><strong>Immatriculation</strong></label>
+                                        <input class="form-control bg-light border-0 fw-bold text-primary"
+                                            type="text" id="modal_plate_number" placeholder="123 TU 4567">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1"><strong>Année</strong></label>
+                                        <input class="form-control bg-light border-0" type="number"
+                                            id="modal_year" placeholder="2024">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label mb-1"><strong>Propriétaire</strong></label>
+                                    <input class="form-control bg-light border-0" type="text"
+                                        id="modal_owner_name" placeholder="Nom figurant sur le document">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label mb-1"><strong>Numéro de Châssis (VIN)</strong></label>
+                                    <input class="form-control bg-light border-0" type="text"
+                                        id="modal_chassis_number" placeholder="Ex: VN7890BC...">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1"><strong>Puissance fiscale (CV)</strong></label>
+                                        <input class="form-control bg-light border-0" type="number"
+                                            id="modal_puissance_fiscale" placeholder="Ex: 7">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1"><strong>Carburant</strong></label>
+                                        <select class="form-select bg-light border-0" id="modal_carburant">
+                                            <option value="">-- Sélectionner --</option>
+                                            <option value="essence">Essence</option>
+                                            <option value="diesel">Diesel</option>
+                                            <option value="hybride">Hybride</option>
+                                            <option value="electrique">Électrique</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1 text-success small fw-bold">DATE PREMIÈRE CIRCULATION</label>
+                                        <input class="form-control bg-light border-0" type="date"
+                                            id="modal_registration_date">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1 text-danger small fw-bold">EXPIRATION CARTE GRISE</label>
+                                        <input class="form-control bg-light border-0" type="date"
+                                            id="modal_expiration_date">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: car admin fields -->
+                            <div class="col-lg-5 ps-lg-4 mt-4 mt-lg-0">
+                                <h6 class="heading-small text-muted mb-3">GESTION & ADMINISTRATION</h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label mb-1"><strong>Marque</strong></label>
+                                    <input class="form-control bg-light border-0" type="text"
+                                        id="modal_brand" placeholder="Ex: Peugeot">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label mb-1"><strong>Statut</strong></label>
+                                    <select class="form-select bg-light border-0" id="modal_status">
+                                        <option value="active">Opérationnel / Disponible</option>
+                                        <option value="maintenance">En Maintenance</option>
+                                        <option value="inactive">Hors Service</option>
+                                        <option value="retired">Retiré</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label mb-1 small fw-bold text-muted">DATE D'ACQUISITION</label>
+                                    <input class="form-control bg-light border-0" type="date"
+                                        id="modal_acquisition_date">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label mb-1 text-xs"><strong>Notes & Observations</strong></label>
+                                    <textarea class="form-control bg-light border-0"
+                                        id="modal_notes" rows="3"></textarea>
+                                </div>
+
+                                <div id="modal_doc_preview" class="mb-3" style="display:none;">
+                                    <label class="form-label mb-1 text-xs"><strong>Document scanné</strong></label>
+                                    <div class="bg-light rounded p-2 text-center">
+                                        <a id="modal_doc_link" href="#" target="_blank"
+                                            class="text-primary text-decoration-none small">
+                                            <i class="fas fa-file-alt me-1"></i> Voir le document
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <span class="text-muted small me-auto">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Référence : <strong>#<span id="modal_cg_id_display"></span></strong>
+                    </span>
+                    <button type="button" class="btn btn-link text-muted text-decoration-none"
+                        data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary px-5 py-2 shadow"
+                        onclick="confirmerVoiture()">
+                        <i class="fas fa-check-circle me-2"></i>Confirmer la création
+                    </button>
+                </div>
+
+            </div>
+        </div>
     </div>
+    <!-- END MODAL -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
@@ -190,7 +256,5 @@
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
-
 </body>
-
 </html>
