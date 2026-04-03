@@ -341,6 +341,25 @@ class VoitureService:
         finally:
             con.close()
 
+    def get_brands(self):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("SELECT id, name FROM car_brands ORDER BY name ASC")
+            return cursor.fetchall()
+        finally:
+            con.close()
+
+    def get_models_by_brand(self, brand_id):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute(
+                "SELECT id, name FROM car_models WHERE brand_id = %s ORDER BY name ASC",
+                (brand_id,)
+            )
+            return cursor.fetchall()
+        finally:
+            con.close()
+
     # ------------------------------------------------------------------ #
     # CAR DETAIL — fetches everything in one call                         #
     # ------------------------------------------------------------------ #

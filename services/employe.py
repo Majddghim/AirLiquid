@@ -89,12 +89,12 @@ class EmployeService:
             limit = f"LIMIT {str(begin)}, {str(number)}"
         count_res = self.get_count_employe_something(
             f"( nom LIKE '%{search_by_name}%' OR prenom LIKE '%{search_by_name}%' )")
-        
+
         employes = self.get_employe_by_something(
-            f"( nom LIKE '%{search_by_name}%' OR prenom LIKE '%{search_by_name}%' )", 
+            f"( nom LIKE '%{search_by_name}%' OR prenom LIKE '%{search_by_name}%' )",
             limit=limit,
             dict_form=dict_form)
-        
+
         return employes, count_res[1]['num'] if count_res[0] == 'success' else 0
 
     def get_count_employe_something(self, condition):
@@ -113,3 +113,26 @@ class EmployeService:
             return 'success', data
         except Exception as e:
             return 'failed', str(e)
+
+    # ------------------------------------------------------------------ #
+    # DÉPARTEMENTS & POSTES                                                #
+    # ------------------------------------------------------------------ #
+
+    def get_departements(self):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("SELECT id, name FROM departements ORDER BY name ASC")
+            return cursor.fetchall()
+        finally:
+            con.close()
+
+    def get_postes_by_departement(self, departement_id):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute(
+                "SELECT id, name FROM postes WHERE departement_id = %s ORDER BY name ASC",
+                (departement_id,)
+            )
+            return cursor.fetchall()
+        finally:
+            con.close()

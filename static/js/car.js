@@ -1,4 +1,119 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
+// BRANDS & MODELS — cascading dropdowns
+// allBrands is cached after first load so we can match OCR text against it
+
+let allBrands = [];
+
+async function loadBrands() {
+    try {
+        const res  = await fetch('/car/get-brands');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        allBrands = data.data; // cache for OCR matching
+
+        const select = document.getElementById('modal_brand_id');
+        select.innerHTML = '<option value="">-- Sélectionner --</option>';
+        allBrands.forEach(b => {
+            const opt    = document.createElement('option');
+            opt.value    = b.id;
+            opt.text     = b.name;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('loadBrands error:', e);
+    }
+}
+
+async function loadModels(brandId, preselect = null) {
+    const modelSelect = document.getElementById('modal_model');
+
+    if (!brandId) {
+        modelSelect.innerHTML = '<option value="">-- Sélectionner la marque --</option>';
+        return;
+    }
+
+    modelSelect.innerHTML = '<option value="">Chargement...</option>';
+
+    try {
+        const res  = await fetch(`/car/get-models/${brandId}`);
+        const data = await res.json();
+
+        modelSelect.innerHTML = '<option value="">-- Sélectionner le modèle --</option>';
+
+        if (data.status === 'success') {
+            data.data.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.name;
+                opt.text  = m.name;
+                modelSelect.appendChild(opt);
+            });
+        }
+
+        // auto-select if a model name was provided from OCR
+        if (preselect) {
+            const lower = preselect.toLowerCase();
+            const match = Array.from(modelSelect.options).find(
+                o => o.value.toLowerCase() === lower
+            );
+            if (match) {
+                modelSelect.value = match.value;
+            } else {
+                // model not in list → add it as custom option and select it
+                const opt    = document.createElement('option');
+                opt.value    = preselect;
+                opt.text     = preselect;
+                opt.selected = true;
+                modelSelect.appendChild(opt);
+            }
+        }
+
+    } catch (e) {
+        console.error('loadModels error:', e);
+        modelSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+    }
+}
+
+// called by the brand dropdown onchange
+async function onBrandChange() {
+    const brandId = document.getElementById('modal_brand_id').value;
+    await loadModels(brandId);
+}
+
+// called after OCR scan — matches brand name and pre-selects brand + model
+async function setBrandAndModelFromOcr(ocrModelString) {
+    if (!ocrModelString) return;
+
+    // OCR returns e.g. "Peugeot Partner" → split on first space
+    const parts     = ocrModelString.trim().split(' ');
+    const brandName = parts[0];                    // "Peugeot"
+    const modelName = parts.slice(1).join(' ');    // "Partner"
+
+    // find matching brand in cached list (case-insensitive)
+    const brand = allBrands.find(
+        b => b.name.toLowerCase() === brandName.toLowerCase()
+    );
+
+    const brandSelect = document.getElementById('modal_brand_id');
+
+    if (brand) {
+        brandSelect.value = brand.id;
+        await loadModels(brand.id, modelName);
+    } else {
+        // brand not in DB — add as custom option
+        const opt    = document.createElement('option');
+        opt.value    = '';
+        opt.text     = brandName;
+        opt.selected = true;
+        brandSelect.appendChild(opt);
+
+        // still try to load a custom model name
+        const modelSelect = document.getElementById('modal_model');
+        modelSelect.innerHTML = `<option value="${modelName}" selected>${modelName}</option>`;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 // SCAN CARTE GRISE
 
 async function scannerCarteGrise() {
@@ -23,7 +138,6 @@ async function scannerCarteGrise() {
     formData.append("file", fileInput.files[0]);
 
     try {
-
         const response = await fetch("/car/upload-cg", { method: "POST", body: formData });
         const result   = await response.json();
 
@@ -35,15 +149,18 @@ async function scannerCarteGrise() {
         const data = result.extracted_data;
         const cgId = result.cg_id;
 
-        document.getElementById("modal_cg_id").value            = cgId;
-        document.getElementById("modal_cg_id_display").innerText = cgId;
+        document.getElementById("modal_cg_id").value             = cgId;
+        document.getElementById("modal_cg_id_display").innerText  = cgId;
 
+        // load brands first (needed for OCR matching)
+        await loadBrands();
+
+        // fill simple fields
         const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el && val !== undefined && val !== null) el.value = val;
         };
 
-        setVal("modal_model",             data.model);
         setVal("modal_plate_number",      data.plate_number);
         setVal("modal_year",              data.year);
         setVal("modal_owner_name",        data.owner_name);
@@ -55,9 +172,9 @@ async function scannerCarteGrise() {
         const carburantEl = document.getElementById("modal_carburant");
         if (carburantEl && data.carburant) carburantEl.value = data.carburant;
 
+        // auto-select brand + model from OCR string e.g. "Peugeot Partner"
         if (data.model) {
-            const brandEl = document.getElementById("modal_brand");
-            if (brandEl) brandEl.value = data.model.split(" ")[0];
+            await setBrandAndModelFromOcr(data.model);
         }
 
         if (result.file_path) {
@@ -80,24 +197,41 @@ async function scannerCarteGrise() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// CONFIRM CAR CREATION — redirect to dossier page
+// CONFIRM CAR CREATION
 
 async function confirmerVoiture() {
 
     const cgId = document.getElementById("modal_cg_id")?.value;
     if (!cgId) return;
 
-    const getVal = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : "";
+    };
+
+    // get brand name from selected option text
+    const brandSelect  = document.getElementById('modal_brand_id');
+    const brandName    = brandSelect.options[brandSelect.selectedIndex]?.text || '';
+    const modelName    = getVal('modal_model');
+
+    if (!brandName || brandName === '-- Sélectionner --') {
+        Swal.fire({ icon: "warning", title: "Marque manquante", text: "Veuillez sélectionner une marque." });
+        return;
+    }
+    if (!modelName) {
+        Swal.fire({ icon: "warning", title: "Modèle manquant", text: "Veuillez sélectionner un modèle." });
+        return;
+    }
 
     const formData = new FormData();
-    formData.append("model",             getVal("modal_model"));
+    formData.append("brand",             brandName);
+    formData.append("model",             modelName);
     formData.append("year",              getVal("modal_year"));
     formData.append("plate_number",      getVal("modal_plate_number"));
     formData.append("owner_name",        getVal("modal_owner_name"));
     formData.append("chassis_number",    getVal("modal_chassis_number"));
     formData.append("puissance_fiscale", getVal("modal_puissance_fiscale"));
     formData.append("carburant",         getVal("modal_carburant"));
-    formData.append("brand",             getVal("modal_brand"));
     formData.append("status",            getVal("modal_status"));
     formData.append("acquisition_date",  getVal("modal_acquisition_date"));
     formData.append("registration_date", getVal("modal_registration_date"));
@@ -105,7 +239,6 @@ async function confirmerVoiture() {
     formData.append("notes",             getVal("modal_notes"));
 
     try {
-
         const response = await fetch(`/car/confirm/${cgId}`, { method: "POST", body: formData });
         const result   = await response.json();
 
@@ -136,32 +269,23 @@ async function confirmerVoiture() {
 
 async function ouvrirModalAffectation(event, carId, carLabel) {
 
-    event.stopPropagation(); // prevent row click from firing
+    event.stopPropagation();
 
     document.getElementById("affectation_car_id").value       = carId;
     document.getElementById("affectation_car_label").innerText = carLabel;
-
-    document.getElementById("affectation_employee_id").value = "";
-    document.getElementById("affectation_start_date").value  = "";
-    document.getElementById("affectation_notes").value       = "";
-
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("affectation_start_date").value = today;
-
-    const warning = document.getElementById("affectation_warning");
-    warning.style.display = "none";
+    document.getElementById("affectation_employee_id").value  = "";
+    document.getElementById("affectation_notes").value        = "";
+    document.getElementById("affectation_start_date").value   = new Date().toISOString().split("T")[0];
+    document.getElementById("affectation_warning").style.display = "none";
 
     try {
-
         const empRes  = await fetch("/car/get-employes-list");
         const empData = await empRes.json();
-
-        const select = document.getElementById("affectation_employee_id");
+        const select  = document.getElementById("affectation_employee_id");
         select.innerHTML = '<option value="">-- Sélectionner un employé --</option>';
-
         if (empData.status === "success") {
             empData.data.forEach(e => {
-                const opt = document.createElement("option");
+                const opt       = document.createElement("option");
                 opt.value       = e.id;
                 opt.textContent = `${e.prenom} ${e.nom} — ${e.poste} (${e.departement})`;
                 select.appendChild(opt);
@@ -170,15 +294,13 @@ async function ouvrirModalAffectation(event, carId, carLabel) {
 
         const affRes  = await fetch(`/car/get-affectation/${carId}`);
         const affData = await affRes.json();
-
         if (affData.status === "success" && affData.assigned) {
             const a = affData.data;
-            warning.style.display = "flex";
+            document.getElementById("affectation_warning").style.display = "flex";
             document.getElementById("affectation_warning_text").innerText =
                 `Ce véhicule est actuellement affecté à ${a.prenom} ${a.nom}. Une nouvelle affectation mettra fin à l'actuelle.`;
             select.value = a.employee_id;
         }
-
     } catch (error) {
         console.error("Erreur chargement modal affectation:", error);
     }
@@ -211,7 +333,6 @@ async function affecterVoiture() {
     formData.append("notes",       notes);
 
     try {
-
         const response = await fetch(`/car/affecter/${carId}`, { method: "POST", body: formData });
         const result   = await response.json();
 
@@ -222,7 +343,6 @@ async function affecterVoiture() {
         } else {
             Swal.fire({ icon: "error", title: "Erreur", text: result.message, confirmButtonColor: "#d33" });
         }
-
     } catch (error) {
         console.error("Erreur réseau :", error);
         Swal.fire({ icon: "error", title: "Erreur interne", text: "Une erreur s'est produite." });
@@ -250,20 +370,14 @@ const rowsPerPage = 5;
 // LOAD CARS
 
 async function loadCars() {
-
     const tbody = document.querySelector("#dataTable tbody");
     if (!tbody) return;
-
     try {
-
         const response = await fetch("/car/get-all-voitures");
         const result   = await response.json();
-
         if (result.status !== "success") { console.error("Error loading cars:", result.message); return; }
-
         cars = Array.isArray(result.data) ? result.data : [];
         renderTable();
-
     } catch (error) {
         console.error("Erreur interne :", error);
     }
@@ -273,7 +387,6 @@ async function loadCars() {
 // RENDER TABLE
 
 function renderTable() {
-
     const tbody = document.querySelector("#dataTable tbody");
     if (!tbody) return;
 
@@ -295,9 +408,7 @@ function renderTable() {
         else if (status === 'retired')     statusBadge = '<span class="badge bg-dark shadow-sm">Retiré</span>';
         else                               statusBadge = `<span class="badge bg-secondary shadow-sm">${escapeHtml(car.status || 'N/A')}</span>`;
 
-        const carLabel = `${escapeHtml(car.model || 'Véhicule')} — ${escapeHtml(car.plate_number || '')}`;
-
-        // folder icon only shown when dossier is incomplete
+        const carLabel   = `${escapeHtml(car.model || 'Véhicule')} — ${escapeHtml(car.plate_number || '')}`;
         const dossierBtn = car.dossier_complet ? '' : `
             <a href="/car/dossier?car_id=${car.id}"
                 onclick="event.stopPropagation()"
@@ -379,13 +490,10 @@ function renderTable() {
 // PAGINATION
 
 function renderPagination() {
-
     const pagination = document.getElementById("data-pagination");
     if (!pagination) return;
-
     pagination.innerHTML = "";
     const totalPages = Math.ceil(cars.length / rowsPerPage);
-
     for (let i = 1; i <= totalPages; i++) {
         const active = i === currentPage ? "active" : "";
         pagination.innerHTML += `

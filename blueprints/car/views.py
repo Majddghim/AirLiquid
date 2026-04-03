@@ -163,19 +163,19 @@ class CarViews:
         def confirm_car(cg_id):
             try:
                 form_data = {
-                    'plate_number': request.form.get('plate_number'),
-                    'brand': request.form.get('brand'),
-                    'status': request.form.get('status', 'active'),
+                    'plate_number':     request.form.get('plate_number'),
+                    'brand':            request.form.get('brand'),
+                    'model':            request.form.get('model'),
+                    'status':           request.form.get('status', 'active'),
                     'acquisition_date': request.form.get('acquisition_date'),
-                    'notes': request.form.get('notes'),
-                    'model': request.form.get('model'),
-                    'year': request.form.get('year'),
-                    'owner_name': request.form.get('owner_name'),
-                    'chassis_number': request.form.get('chassis_number'),
-                    'puissance_fiscale': request.form.get('puissance_fiscale'),
-                    'carburant': request.form.get('carburant'),
-                    'registration_date': request.form.get('registration_date'),
-                    'expiration_date': request.form.get('expiration_date'),
+                    'notes':            request.form.get('notes'),
+                    'year':             request.form.get('year'),
+                    'owner_name':       request.form.get('owner_name'),
+                    'chassis_number':   request.form.get('chassis_number'),
+                    'puissance_fiscale':request.form.get('puissance_fiscale'),
+                    'carburant':        request.form.get('carburant'),
+                    'registration_date':request.form.get('registration_date'),
+                    'expiration_date':  request.form.get('expiration_date'),
                 }
                 car_id = self.VoitureService.confirm_car_creation(cg_id, form_data)
                 return jsonify({
@@ -302,3 +302,23 @@ class CarViews:
                 return jsonify({'status': 'success', 'message': 'Véhicule affecté avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)})
+
+        # ------------------------------------------------------------------ #
+        # BRANDS & MODELS                                                      #
+        # ------------------------------------------------------------------ #
+
+        @self.car_bp.route('/get-brands', methods=['GET'])
+        def get_brands():
+            try:
+                brands = self.VoitureService.get_brands()
+                return jsonify({'status': 'success', 'data': brands})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.car_bp.route('/get-models/<int:brand_id>', methods=['GET'])
+        def get_models(brand_id):
+            try:
+                models = self.VoitureService.get_models_by_brand(brand_id)
+                return jsonify({'status': 'success', 'data': models})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Détails Employé - Brand</title>
+    <title>Détails Employé - ALT</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
@@ -51,59 +49,60 @@
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3 bg-white">
-                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-file-invoice me-2"></i>Dossier
-                                Administratif</h6>
+                            <h6 class="text-primary fw-bold m-0">
+                                <i class="fas fa-file-invoice me-2"></i>Dossier Administratif
+                            </h6>
                         </div>
                         <div class="card-body">
                             <form id="employeForm" onsubmit="return false;">
                                 <div class="row">
+
+                                    <!-- Left: état civil -->
                                     <div class="col-lg-6 border-end pe-lg-4">
                                         <h6 class="heading-small text-muted mb-4">ÉTAT CIVIL</h6>
                                         <div class="row mb-3">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label mb-1"><strong>Prénom</strong> <span
-                                                        class="text-danger">*</span></label>
-                                                <input class="form-control bg-light border-0" type="text" id="prenom"
-                                                    placeholder="Ex: Ahmed">
+                                                <label class="form-label mb-1"><strong>Prénom</strong> <span class="text-danger">*</span></label>
+                                                <input class="form-control bg-light border-0" type="text" id="prenom" placeholder="Ex: Ahmed">
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label mb-1"><strong>Nom</strong> <span
-                                                        class="text-danger">*</span></label>
-                                                <input class="form-control bg-light border-0" type="text" id="nom"
-                                                    placeholder="Ex: Ben Salah">
+                                                <label class="form-label mb-1"><strong>Nom</strong> <span class="text-danger">*</span></label>
+                                                <input class="form-control bg-light border-0" type="text" id="nom" placeholder="Ex: Ben Salah">
                                             </div>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label mb-1"><strong>Adresse Email Pro</strong> <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label mb-1"><strong>Adresse Email Pro</strong> <span class="text-danger">*</span></label>
                                             <input class="form-control bg-light border-0" type="email" id="email"
                                                 placeholder="prenom.nom@airliquide.com">
                                         </div>
                                         <div class="mb-0">
-                                            <label class="form-label mb-1"><strong>Numéro de Téléphone</strong> <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label mb-1"><strong>Numéro de Téléphone</strong> <span class="text-danger">*</span></label>
                                             <input class="form-control bg-light border-0" type="tel" id="telephone"
                                                 placeholder="+216 -- --- ---">
                                         </div>
                                     </div>
 
+                                    <!-- Right: carrière -->
                                     <div class="col-lg-6 ps-lg-4 mt-4 mt-lg-0">
                                         <h6 class="heading-small text-muted mb-4">CARRIÈRE & DÉPARTEMENT</h6>
+
+                                        <!-- Département dropdown -->
                                         <div class="mb-3">
-                                            <label class="form-label mb-1"><strong>Département</strong></label>
-                                            <select class="form-select bg-light border-0" id="departement">
-                                                <option value="Logistique" selected>Logistique</option>
-                                                <option value="Ressources Humaines">Ressources Humaines</option>
-                                                <option value="Maintenance">Services Techniques</option>
-                                                <option value="Administration">Direction Administrative</option>
-                                                <option value="Ventes">Département Commercial</option>
+                                            <label class="form-label mb-1"><strong>Département</strong> <span class="text-danger">*</span></label>
+                                            <select class="form-select bg-light border-0" id="departement_id"
+                                                onchange="onDepartementChange()">
+                                                <option value="">-- Sélectionner --</option>
                                             </select>
                                         </div>
+
+                                        <!-- Poste dropdown (loads after département selected) -->
                                         <div class="mb-3">
-                                            <label class="form-label mb-1"><strong>Poste Occupé</strong></label>
-                                            <input class="form-control bg-light border-0" type="text" id="poste"
-                                                placeholder="Ex: Responsable Qualité">
+                                            <label class="form-label mb-1"><strong>Poste Occupé</strong> <span class="text-danger">*</span></label>
+                                            <select class="form-select bg-light border-0" id="poste">
+                                                <option value="">-- Sélectionner le département --</option>
+                                            </select>
                                         </div>
+
                                         <div class="mb-0">
                                             <label class="form-label mb-1"><strong>Date de recrutement</strong></label>
                                             <input class="form-control bg-light border-0" type="date" id="created_at">
@@ -115,8 +114,7 @@
                                     style="border-left-width: 4px !important;">
                                     <div class="d-flex align-items-center text-primary">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        <span class="small fw-bold">Note : L'activation de l'accès se fera
-                                            automatiquement après validation.</span>
+                                        <span class="small fw-bold">Note : L'activation de l'accès se fera automatiquement après validation.</span>
                                     </div>
                                 </div>
 
@@ -124,7 +122,7 @@
 
                                 <div class="text-end">
                                     <button class="btn btn-link text-muted me-3 text-decoration-none"
-                                        type="reset">Réinitialiser</button>
+                                        type="reset" onclick="resetForm()">Réinitialiser</button>
                                     <button class="btn btn-primary px-5 py-2 shadow" type="button"
                                         onclick="enregistrerEmploye()">
                                         <i class="fas fa-user-check me-2"></i>Valider le recrutement
@@ -139,7 +137,7 @@
             <footer class="bg-white sticky-footer">
                 <div class="container my-auto">
                     <div class="text-center my-auto copyright">
-                        <span>Copyright © Brand 2025</span>
+                        <span>Copyright © ALT 2025</span>
                     </div>
                 </div>
             </footer>
@@ -148,6 +146,7 @@
             <i class="fas fa-angle-up"></i>
         </a>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
@@ -156,5 +155,4 @@
     <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
 </body>
-
 </html>

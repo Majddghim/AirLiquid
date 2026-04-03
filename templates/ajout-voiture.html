@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
@@ -118,16 +117,28 @@
 
                         <div class="row">
 
-                            <!-- Left: technical fields from carte grise -->
+                            <!-- Left: technical fields -->
                             <div class="col-lg-7 border-end pe-lg-4">
                                 <h6 class="heading-small text-muted mb-3">SPÉCIFICATIONS TECHNIQUES</h6>
 
                                 <div class="row mb-2">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label mb-1"><strong>Modèle</strong></label>
-                                        <input class="form-control bg-light border-0" type="text"
-                                            id="modal_model" placeholder="Ex: Peugeot Partner">
+                                    <!-- Marque -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1"><strong>Marque</strong></label>
+                                        <select class="form-select bg-light border-0" id="modal_brand_id"
+                                            onchange="onBrandChange()">
+                                            <option value="">-- Sélectionner --</option>
+                                        </select>
                                     </div>
+
+                                    <!-- Modèle -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label mb-1"><strong>Modèle</strong></label>
+                                        <select class="form-select bg-light border-0" id="modal_model">
+                                            <option value="">-- Sélectionner la marque --</option>
+                                        </select>
+                                    </div>
+
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label mb-1"><strong>Immatriculation</strong></label>
                                         <input class="form-control bg-light border-0 fw-bold text-primary"
@@ -184,15 +195,9 @@
                                 </div>
                             </div>
 
-                            <!-- Right: car admin fields -->
+                            <!-- Right: admin fields -->
                             <div class="col-lg-5 ps-lg-4 mt-4 mt-lg-0">
                                 <h6 class="heading-small text-muted mb-3">GESTION & ADMINISTRATION</h6>
-
-                                <div class="mb-3">
-                                    <label class="form-label mb-1"><strong>Marque</strong></label>
-                                    <input class="form-control bg-light border-0" type="text"
-                                        id="modal_brand" placeholder="Ex: Peugeot">
-                                </div>
 
                                 <div class="mb-3">
                                     <label class="form-label mb-1"><strong>Statut</strong></label>
@@ -225,7 +230,6 @@
                                         </a>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </form>

@@ -1,22 +1,21 @@
 var enitity_name = "Employée";
 var data = [];
 var division_table = 7;
-var search_link = 'get-employes?page=1&limit=' + division_table; // Default search link
-var page = 1; // Current page number
+var search_link = 'get-employes?page=1&limit=' + division_table;
+var page = 1;
 let debounceTimer;
 let controller = null;
 
 const searchInput = document.querySelector("#search_by_name");
 if (searchInput) {
     searchInput.addEventListener("input", function () {
-        prepare_search_link(1); // Reset to page 1 on new search
+        prepare_search_link(1);
     });
 }
 
-
 function initPage() {
     const table = document.getElementById('dataTable');
-    if (!table) return; // Not on list page
+    if (!table) return;
     enter_loading_mode();
     load_page(search_link);
 }
@@ -27,21 +26,18 @@ function prepare_search_link(p = 1) {
     if (search_by_name && search_by_name.trim() !== '') {
         search_link += '&search_by_name=' + encodeURIComponent(search_by_name.trim());
     }
-    page = p; // Update the current page number
+    page = p;
     load_page(search_link);
 }
 
 function quit_div_loading_mode(s) {
-
     let div = document.querySelector("#" + s);
     div.hidden = false;
     let loading = document.getElementById("inner-loading");
-
     loading.hidden = true;
 }
 
 function enter_div_loading_mode(s) {
-
     let div = document.querySelector("#" + s);
     div.hidden = true;
     let loading = document.querySelector("#inner-loading");
@@ -50,12 +46,8 @@ function enter_div_loading_mode(s) {
 
 function load_page(search_link) {
     clearTimeout(debounceTimer);
-
     debounceTimer = setTimeout(() => {
-        // Cancel previous request if ongoing
-        if (controller) {
-            controller.abort();
-        }
+        if (controller) controller.abort();
         controller = new AbortController();
         enter_div_loading_mode('dataTable');
 
@@ -71,13 +63,10 @@ function load_page(search_link) {
                     load_table_data(data);
                     let pages_count = Math.ceil(response.count / division_table);
                     load_backend_pagination(pages_count, page, response.count, response.data.length);
-                    try {
-                        quit_loading_mode();
-                    } catch (e) {
-                    }
+                    try { quit_loading_mode(); } catch (e) {}
                 } else {
                     if (response.status === 'failed') {
-                        notifs.warn('Aucune employe trouvée.');
+                        notifs.warn('Aucune employé trouvé.');
                         load_table_data([]);
                         load_backend_pagination(1, page, 0, 0);
                     } else {
@@ -85,18 +74,13 @@ function load_page(search_link) {
                     }
                     quit_div_loading_mode('dataTable');
                 }
-
             })
             .catch(err => {
-                if (err.name !== "AbortError") {
-                    console.error("Search error:", err);
-                }
-                try { quit_loading_mode() }
-                catch (e) { };
+                if (err.name !== "AbortError") console.error("Search error:", err);
+                try { quit_loading_mode(); } catch (e) {}
             });
     }, 300);
 }
-
 
 function load_table_data(data) {
     const table = document.getElementById('dataTable');
@@ -106,13 +90,15 @@ function load_table_data(data) {
                 <tr class="text-xs text-uppercase text-muted">
                     <th class="ps-4">Collaborateur</th>
                     <th>Coordonnées</th>
-                    <th>Poste</th>
-                    <th>Statut Flotte</th>
+                    <th>Poste / Département</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-user-slash fa-2x mb-2 d-block opacity-25"></i>Aucun collaborateur trouvé</td></tr>
+                <tr><td colspan="4" class="text-center py-5 text-muted">
+                    <i class="fas fa-user-slash fa-2x mb-2 d-block opacity-25"></i>
+                    Aucun collaborateur trouvé
+                </td></tr>
             </tbody>`;
         return;
     }
@@ -123,19 +109,18 @@ function load_table_data(data) {
                 <th class="ps-4">Collaborateur</th>
                 <th>Coordonnées</th>
                 <th>Poste / Département</th>
-                <th>Statut de Flotte</th>
                 <th class="text-end pe-4">Actions</th>
             </tr>
         </thead>`;
 
-    const footer = ""; // Removing legacy footer for cleaner look
     const body = data.map(employe => {
         const initials = `${(employe.prenom || 'E')[0]}${(employe.nom || 'P')[0]}`.toUpperCase();
         return `
             <tr>
                 <td class="ps-4">
                     <div class="d-flex align-items-center">
-                        <div class="bg-light p-2 rounded-circle me-3 text-center" style="width: 40px; height: 40px; line-height: 24px;">
+                        <div class="bg-light p-2 rounded-circle me-3 text-center"
+                            style="width:40px; height:40px; line-height:24px;">
                             <span class="fw-bold text-primary small">${initials}</span>
                         </div>
                         <div>
@@ -146,234 +131,183 @@ function load_table_data(data) {
                 </td>
                 <td>
                     <div class="text-sm">
-                        <div class="text-dark"><i class="far fa-envelope me-2 text-muted"></i>${escapeHtml(employe.email)}</div>
-                        <div class="text-muted extra-small"><i class="fas fa-phone-alt me-2"></i>${escapeHtml(employe.telephone || 'Non renseigné')}</div>
+                        <div class="text-dark">
+                            <i class="far fa-envelope me-2 text-muted"></i>${escapeHtml(employe.email)}
+                        </div>
+                        <div class="text-muted extra-small">
+                            <i class="fas fa-phone-alt me-2"></i>${escapeHtml(employe.telephone || 'Non renseigné')}
+                        </div>
                     </div>
                 </td>
                 <td>
-                    <div class="fw-bold text-sm text-dark">${escapeHtml(employe.poste || 'Employé')}</div>
-                    <div class="text-xs text-primary fw-bold text-uppercase">Siège Social</div>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-light border-primary text-primary rounded-pill px-3 shadow-none" onclick='window.location.href="/dashboard/ajout-voiture/${employe.id}"' style="font-size: 0.7rem; border-width:1px">
-                        <i class="fas fa-car-side me-1"></i>Affectation
-                    </button>
+                    <div class="fw-bold text-sm text-dark">${escapeHtml(employe.poste || '—')}</div>
+                    <div class="text-xs text-primary fw-bold text-uppercase">${escapeHtml(employe.departement || '—')}</div>
                 </td>
                 <td class="text-end pe-4">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary border-0 rounded-circle me-1" title="Modifier"><i class="fas fa-user-edit"></i></button>
-                        <button class="btn btn-outline-danger border-0 rounded-circle" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                        <button class="btn btn-outline-primary border-0 rounded-circle me-1" title="Modifier">
+                            <i class="fas fa-user-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger border-0 rounded-circle" title="Supprimer">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 </td>
             </tr>`;
     });
 
-    prepare_table(header, footer, body, division_table);
+    prepare_table(header, "", body, division_table);
 }
 
 function escapeHtml(text) {
     if (!text) return "";
-    return text
-        .toString()
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return text.toString()
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-
 
 function prepare_table(header, footer, body, division_table) {
-    get_data_ready_load_table("dataTable", header, footer, body, division_table)
-    // get_data_ready_pagination("data-pagination", data.length, division_table, "dataTable_info_marque", enitity_name)
+    get_data_ready_load_table("dataTable", header, footer, body, division_table);
 }
 
-function add_request_verification() {
-    let name = document.getElementById('name').value;
-    let description = document.getElementById('description').value;
-    if (name === '' || description === '') {
-        notifs.warn('Veuillez remplir tous les champs.');
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DÉPARTEMENTS & POSTES — cascading dropdowns
+
+let allDepartements = [];
+
+async function loadDepartements() {
+    try {
+        const res  = await fetch('/employe/get-departements');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        allDepartements = data.data;
+
+        const select = document.getElementById('departement_id');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Sélectionner --</option>';
+        allDepartements.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.text  = d.name;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('loadDepartements error:', e);
+    }
+}
+
+async function onDepartementChange() {
+    const departementId = document.getElementById('departement_id').value;
+    const posteSelect   = document.getElementById('poste');
+
+    if (!departementId) {
+        posteSelect.innerHTML = '<option value="">-- Sélectionner le département --</option>';
         return;
     }
-    add_request(name, description);
-}
 
-function add_request(name, description) {
-    let btn = document.getElementById('action-btn');
-    btn.disabled = true;
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/skill-category/add-skill-category', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            if (response.status === 'success') {
-                notifs.success('Catégorie ajoutée avec succès.');
-                openPageDashboardSkillCategory();
-            } else {
-                btn.disabled = false;
-                notifs.error('Erreur : ' + response.message);
-            }
+    posteSelect.innerHTML = '<option value="">Chargement...</option>';
+
+    try {
+        const res  = await fetch(`/employe/get-postes/${departementId}`);
+        const data = await res.json();
+
+        posteSelect.innerHTML = '<option value="">-- Sélectionner le poste --</option>';
+        if (data.status === 'success') {
+            data.data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.name;
+                opt.text  = p.name;
+                posteSelect.appendChild(opt);
+            });
         }
-    };
-    var data = JSON.stringify({ name: name, description: description });
-    xhr.send(data);
-}
-
-function openUpdatePage(id) {
-    openPageUpdateSkillCategory(id);
-}
-
-function update_request_verification(id) {
-    let name = document.getElementById('name').value;
-    let description = document.getElementById('description').value;
-    if (name === '' || description === '') {
-        notifs.warn('Veuillez remplir tous les champs.');
-        return;
-    }
-    update_request(id, name, description);
-}
-
-function update_request(id, name, description) {
-    let btn = document.getElementById('action-btn');
-    btn.disabled = true;
-    var xhr = new XMLHttpRequest();
-    xhr.open('PUT', '/skill-category/update-skill-category/' + id, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            if (response.status === 'success') {
-                notifs.success('Catégorie mise à jour avec succès.');
-                openPageDashboardSkillCategory();
-            } else {
-                btn.disabled = false;
-                notifs.error('Erreur : ' + response.message);
-            }
-        }
-    };
-    var data = JSON.stringify({ name: name, description: description });
-    xhr.send(data);
-}
-
-function delete_request(id) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('DELETE', '/skill-category/delete-skill-category/' + id, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                if (response.status === 'success') {
-                    notifs.success('Catégorie supprimée avec succès.');
-                    prepare_search_link(1); // Reload the first page after deletion
-                } else {
-                    notifs.error('Erreur : ' + response.message);
-                }
-            }
-        };
-        xhr.send();
+    } catch (e) {
+        console.error('onDepartementChange error:', e);
+        posteSelect.innerHTML = '<option value="">Erreur de chargement</option>';
     }
 }
 
+function resetForm() {
+    document.getElementById('employeForm').reset();
+    const posteSelect = document.getElementById('poste');
+    if (posteSelect) {
+        posteSelect.innerHTML = '<option value="">-- Sélectionner le département --</option>';
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////
+// ENREGISTRER EMPLOYÉ
 
 async function enregistrerEmploye() {
-    console.log("enregistrerEmploye called");
     const getV = (id) => {
         const el = document.getElementById(id);
         return el ? el.value.trim() : "";
     };
 
-    // Get form data
-    const data = {
-        nom: getV("nom"),
-        prenom: getV("prenom"),
-        email: getV("email"),
-        telephone: getV("telephone"), // Using the ID from HTML
-        poste: getV("poste"),
-        departement: getV("departement"),
-        created_at: getV("created_at")
+    // get département name from selected option text
+    const deptSelect = document.getElementById('departement_id');
+    const deptName   = deptSelect
+        ? deptSelect.options[deptSelect.selectedIndex]?.text || ''
+        : '';
+
+    const payload = {
+        nom:         getV("nom"),
+        prenom:      getV("prenom"),
+        email:       getV("email"),
+        telephone:   getV("telephone"),
+        poste:       getV("poste"),
+        departement: deptName,
+        created_at:  getV("created_at")
     };
+
+    // basic validation
+    if (!payload.nom)         { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir le nom." }); return; }
+    if (!payload.prenom)      { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir le prénom." }); return; }
+    if (!payload.email)       { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir l'email." }); return; }
+    if (!payload.telephone)   { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir le téléphone." }); return; }
+    if (!deptName || deptName === '-- Sélectionner --') {
+        Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez sélectionner un département." });
+        return;
+    }
+    if (!payload.poste || payload.poste === '-- Sélectionner le poste --') {
+        Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez sélectionner un poste." });
+        return;
+    }
+    if (!payload.created_at)  { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir la date de recrutement." }); return; }
 
     try {
         const response = await fetch("/employe/ajout-employe", {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
+            body:    JSON.stringify(payload)
         });
 
         const result = await response.json();
 
         if (result.status === "success") {
             Swal.fire({
-                icon: "success",
-                title: "Employé ajouté",
-                text: result.message,
-                showConfirmButton: false,
-                timer: 1800   // SweetAlert closes after 1.8 seconds
+                icon: "success", title: "Employé ajouté",
+                text: result.message, showConfirmButton: false, timer: 1800
             }).then(() => {
                 window.location.href = "/dashboard/liste-employes";
             });
-
-
-
         } else {
-            Swal.fire({
-                icon: "warning",
-                title: "Attention",
-                text: result.message,
-                confirmButtonColor: "#f0ad4e"
-            });
+            Swal.fire({ icon: "warning", title: "Attention", text: result.message, confirmButtonColor: "#f0ad4e" });
         }
 
     } catch (error) {
         console.error("Erreur lors de l'envoi :", error);
-
-        Swal.fire({
-            icon: "error",
-            title: "Erreur",
-            text: "Une erreur s'est produite lors de l'enregistrement.",
-            confirmButtonColor: "#d33"
-        });
+        Swal.fire({ icon: "error", title: "Erreur", text: "Une erreur s'est produite lors de l'enregistrement.", confirmButtonColor: "#d33" });
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// INIT
+
+document.addEventListener("DOMContentLoaded", () => {
+    // load employee list if on list page
+    initPage();
+    // load départements if on add employee page
+    loadDepartements();
+});
