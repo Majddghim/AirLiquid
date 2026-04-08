@@ -10,7 +10,7 @@ async function loadBrands() {
         const data = await res.json();
         if (data.status !== 'success') return;
 
-        allBrands = data.data; // cache for OCR matching
+        allBrands = data.data;
 
         const select = document.getElementById('modal_brand_id');
         select.innerHTML = '<option value="">-- Sélectionner --</option>';
@@ -50,7 +50,6 @@ async function loadModels(brandId, preselect = null) {
             });
         }
 
-        // auto-select if a model name was provided from OCR
         if (preselect) {
             const lower = preselect.toLowerCase();
             const match = Array.from(modelSelect.options).find(
@@ -59,7 +58,6 @@ async function loadModels(brandId, preselect = null) {
             if (match) {
                 modelSelect.value = match.value;
             } else {
-                // model not in list → add it as custom option and select it
                 const opt    = document.createElement('option');
                 opt.value    = preselect;
                 opt.text     = preselect;
@@ -74,22 +72,18 @@ async function loadModels(brandId, preselect = null) {
     }
 }
 
-// called by the brand dropdown onchange
 async function onBrandChange() {
     const brandId = document.getElementById('modal_brand_id').value;
     await loadModels(brandId);
 }
 
-// called after OCR scan — matches brand name and pre-selects brand + model
 async function setBrandAndModelFromOcr(ocrModelString) {
     if (!ocrModelString) return;
 
-    // OCR returns e.g. "Peugeot Partner" → split on first space
     const parts     = ocrModelString.trim().split(' ');
-    const brandName = parts[0];                    // "Peugeot"
-    const modelName = parts.slice(1).join(' ');    // "Partner"
+    const brandName = parts[0];
+    const modelName = parts.slice(1).join(' ');
 
-    // find matching brand in cached list (case-insensitive)
     const brand = allBrands.find(
         b => b.name.toLowerCase() === brandName.toLowerCase()
     );
@@ -100,14 +94,12 @@ async function setBrandAndModelFromOcr(ocrModelString) {
         brandSelect.value = brand.id;
         await loadModels(brand.id, modelName);
     } else {
-        // brand not in DB — add as custom option
         const opt    = document.createElement('option');
         opt.value    = '';
         opt.text     = brandName;
         opt.selected = true;
         brandSelect.appendChild(opt);
 
-        // still try to load a custom model name
         const modelSelect = document.getElementById('modal_model');
         modelSelect.innerHTML = `<option value="${modelName}" selected>${modelName}</option>`;
     }
@@ -152,10 +144,8 @@ async function scannerCarteGrise() {
         document.getElementById("modal_cg_id").value             = cgId;
         document.getElementById("modal_cg_id_display").innerText  = cgId;
 
-        // load brands first (needed for OCR matching)
         await loadBrands();
 
-        // fill simple fields
         const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el && val !== undefined && val !== null) el.value = val;
@@ -172,7 +162,6 @@ async function scannerCarteGrise() {
         const carburantEl = document.getElementById("modal_carburant");
         if (carburantEl && data.carburant) carburantEl.value = data.carburant;
 
-        // auto-select brand + model from OCR string e.g. "Peugeot Partner"
         if (data.model) {
             await setBrandAndModelFromOcr(data.model);
         }
@@ -209,7 +198,6 @@ async function confirmerVoiture() {
         return el ? el.value.trim() : "";
     };
 
-    // get brand name from selected option text
     const brandSelect  = document.getElementById('modal_brand_id');
     const brandName    = brandSelect.options[brandSelect.selectedIndex]?.text || '';
     const modelName    = getVal('modal_model');
@@ -350,6 +338,154 @@ async function affecterVoiture() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+// OPEN EDIT MODAL
+
+async function ouvrirModalEdit(event, carId) {
+    event.stopPropagation();
+    try {
+        const res  = await fetch(`/car/get-voiture/${carId}`);
+        const data = await res.json();
+        if (data.status !== 'success') {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de charger les données.' });
+            return;
+        }
+        const car = data.data;
+
+        document.getElementById('edit_car_id').value            = car.id;
+        document.getElementById('edit_car_subtitle').innerText  = `${car.model || ''} — ${car.plate_number || ''}`;
+        document.getElementById('edit_brand').value             = car.brand || '';
+        document.getElementById('edit_model').value             = car.model || '';
+        document.getElementById('edit_plate_number').value      = car.plate_number || '';
+        document.getElementById('edit_year').value              = car.year || '';
+        document.getElementById('edit_owner_name').value        = car.owner_name || '';
+        document.getElementById('edit_chassis_number').value    = car.chassis_number || '';
+        document.getElementById('edit_puissance_fiscale').value = car.puissance_fiscale || '';
+        document.getElementById('edit_carburant').value         = (car.carburant || '').toLowerCase();
+        document.getElementById('edit_status').value            = car.status || 'active';
+        document.getElementById('edit_registration_date').value = car.registration_date
+            ? car.registration_date.split('T')[0] : '';
+        document.getElementById('edit_expiration_date').value   = car.expiration_date
+            ? car.expiration_date.split('T')[0] : '';
+        document.getElementById('edit_acquisition_date').value  = car.acquisition_date
+            ? car.acquisition_date.split('T')[0] : '';
+        document.getElementById('edit_notes').value             = car.notes || '';
+
+        new bootstrap.Modal(document.getElementById('editCarModal')).show();
+    } catch (e) {
+        console.error('ouvrirModalEdit error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// CONFIRM EDIT
+
+async function confirmerModification() {
+    const carId = document.getElementById('edit_car_id').value;
+    const payload = {
+        brand:             document.getElementById('edit_brand').value.trim(),
+        model:             document.getElementById('edit_model').value.trim(),
+        plate_number:      document.getElementById('edit_plate_number').value.trim(),
+        year:              document.getElementById('edit_year').value,
+        owner_name:        document.getElementById('edit_owner_name').value.trim(),
+        chassis_number:    document.getElementById('edit_chassis_number').value.trim(),
+        puissance_fiscale: document.getElementById('edit_puissance_fiscale').value,
+        carburant:         document.getElementById('edit_carburant').value,
+        status:            document.getElementById('edit_status').value,
+        registration_date: document.getElementById('edit_registration_date').value || null,
+        expiration_date:   document.getElementById('edit_expiration_date').value || null,
+        acquisition_date:  document.getElementById('edit_acquisition_date').value || null,
+        notes:             document.getElementById('edit_notes').value.trim()
+    };
+
+    if (!payload.brand || !payload.model || !payload.plate_number) {
+        Swal.fire({ icon: 'warning', title: 'Champs manquants', text: 'Marque, modèle et immatriculation sont obligatoires.' });
+        return;
+    }
+
+    try {
+        const res    = await fetch(`/car/update/${carId}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('editCarModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Modifié !', text: result.message, showConfirmButton: false, timer: 2000 });
+            setTimeout(() => loadCars(), 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('confirmerModification error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DELETE CAR (soft delete → status = retired)
+
+async function supprimerVoiture(event, carId, carLabel) {
+    event.stopPropagation();
+
+    // check if car has an active assignment first
+    let warningHtml = `
+        <span class="text-muted">${carLabel}</span><br>
+        <small class="text-muted">Le véhicule sera marqué comme <strong>Retiré</strong>.</small>
+    `;
+
+    try {
+        const affRes  = await fetch(`/car/get-affectation/${carId}`);
+        const affData = await affRes.json();
+
+        if (affData.status === 'success' && affData.assigned) {
+            const a = affData.data;
+            warningHtml = `
+                <span class="text-muted">${carLabel}</span><br><br>
+                <div class="alert alert-warning py-2 text-start small">
+                    <i class="fas fa-user me-1"></i>
+                    Ce véhicule est actuellement affecté à 
+                    <strong>${a.prenom} ${a.nom}</strong> (${a.poste}).<br>
+                    L'affectation sera clôturée mais <strong>l'historique sera conservé</strong>.
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.error('Erreur vérification affectation:', e);
+    }
+
+    const confirm = await Swal.fire({
+        icon:              'warning',
+        title:             'Retirer ce véhicule ?',
+        html:              warningHtml,
+        showCancelButton:  true,
+        confirmButtonText: 'Oui, retirer',
+        cancelButtonText:  'Annuler',
+        confirmButtonColor:'#e74a3b',
+        cancelButtonColor: '#858796'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const res    = await fetch(`/car/delete/${carId}`, { method: 'DELETE' });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'Retiré !', text: result.message, showConfirmButton: false, timer: 2000 });
+            setTimeout(() => loadCars(), 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('supprimerVoiture error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 
 function escapeHtml(str) {
@@ -468,12 +604,12 @@ function renderTable() {
                     </button>
                     <button class="btn btn-outline-primary border-0 rounded-circle me-1"
                         title="Modifier"
-                        onclick="event.stopPropagation()">
+                        onclick="ouvrirModalEdit(event, ${car.id})">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn btn-outline-danger border-0 rounded-circle"
                         title="Supprimer"
-                        onclick="event.stopPropagation()">
+                        onclick="supprimerVoiture(event, ${car.id}, '${carLabel}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>

@@ -89,3 +89,52 @@ class employe:
                 return jsonify({'status': 'success', 'data': data})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # ------------------------------------------------------------------ #
+        # GET, UPDATE, DELETE, AFFECTATION                                     #
+        # ------------------------------------------------------------------ #
+
+        @self.employe_bp.route('/get-employe/<int:employe_id>', methods=['GET'])
+        def get_employe(employe_id):
+            try:
+                employe = self.EmployeService.get_employe_by_id(employe_id)
+                if not employe:
+                    return jsonify({'status': 'failed', 'message': 'Employé introuvable'}), 404
+                return jsonify({'status': 'success', 'data': employe.__dict__()})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/update/<int:employe_id>', methods=['PUT'])
+        def update_employe(employe_id):
+            try:
+                data = request.get_json()
+                self.EmployeService.update_employe(
+                    employe_id=employe_id,
+                    nom=data.get('nom'),
+                    prenom=data.get('prenom'),
+                    email=data.get('email'),
+                    telephone=data.get('telephone'),
+                    departement=data.get('departement'),
+                    poste=data.get('poste')
+                )
+                return jsonify({'status': 'success', 'message': 'Employé mis à jour avec succès'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/delete/<int:employe_id>', methods=['DELETE'])
+        def delete_employe(employe_id):
+            try:
+                self.EmployeService.supprimer_employe(employe_id)
+                return jsonify({'status': 'success', 'message': 'Employé désactivé avec succès'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/get-affectation-active/<int:employe_id>', methods=['GET'])
+        def get_affectation_active(employe_id):
+            try:
+                data = self.EmployeService.get_affectation_active(employe_id)
+                if data:
+                    return jsonify({'status': 'success', 'assigned': True, 'data': data})
+                return jsonify({'status': 'success', 'assigned': False})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

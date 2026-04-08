@@ -5,6 +5,7 @@ from blueprints.car import car_bp
 from blueprints.dashboard import dashboard_bp
 from blueprints.employer import employe_bp
 from blueprints.guest import guest_bp
+from blueprints.settings import settings_bp
 
 import datetime
 from flask.json.provider import DefaultJSONProvider
@@ -40,6 +41,9 @@ def login():
 def index():
     return redirect(url_for('dashboard.admin_dashboard'))
 
+
+
+app.register_blueprint(settings_bp, url_prefix='/settings')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -15,24 +15,24 @@ class EmployeService:
         con.close()
         le = []
         if result:
-             for employe_data in result:
-                 e = Employe(
-                     id=employe_data['id'],
-                     nom=employe_data['nom'],
-                     prenom=employe_data['prenom'],
-                     departement=employe_data['departement'],
-                     poste=employe_data['poste'],
-                     email=employe_data['email'],
-                     telephone=employe_data['telephone'],
-                     status=employe_data['status'],
-                     created_at=employe_data['created_at'],
-                     updated_at=employe_data['updated_at']
-                 )
-                 if dict_form:
-                     le.append(e.__dict__())
-                 else:
+            for employe_data in result:
+                e = Employe(
+                    id=employe_data['id'],
+                    nom=employe_data['nom'],
+                    prenom=employe_data['prenom'],
+                    departement=employe_data['departement'],
+                    poste=employe_data['poste'],
+                    email=employe_data['email'],
+                    telephone=employe_data['telephone'],
+                    status=employe_data['status'],
+                    created_at=employe_data['created_at'],
+                    updated_at=employe_data['updated_at']
+                )
+                if dict_form:
+                    le.append(e.__dict__())
+                else:
                     le.append(e)
-             return le
+            return le
         return []
 
     def get_employe_by_email(self, email):
@@ -74,14 +74,6 @@ class EmployeService:
         last_id = cursor.lastrowid
         con.close()
         return last_id
-
-    def delete_employe(self, id):
-        con, cursor = self.db_tools.find_connection()
-        query = "DELETE FROM employees WHERE id = %s"
-        cursor.execute(query, (id,))
-        con.commit()
-        con.close()
-        return True
 
     def get_employe_by_name(self, search_by_name, number=None, begin=None, dict_form=True):
         limit = ''
@@ -134,5 +126,63 @@ class EmployeService:
                 (departement_id,)
             )
             return cursor.fetchall()
+        finally:
+            con.close()
+
+    # ------------------------------------------------------------------ #
+    # UPDATE, DELETE, AFFECTATION                                          #
+    # ------------------------------------------------------------------ #
+
+    def update_employe(self, employe_id, nom, prenom, email, telephone, departement, poste):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("""
+                UPDATE employees SET
+                    nom=%s, prenom=%s, email=%s, telephone=%s,
+                    departement=%s, poste=%s, updated_at=NOW()
+                WHERE id=%s
+            """, (nom, prenom, email, telephone, departement, poste, employe_id))
+            con.commit()
+            return True
+        except Exception as e:
+            con.rollback()
+            raise e
+        finally:
+            con.close()
+
+    def supprimer_employe(self, employe_id):
+        import datetime
+        today = datetime.date.today().isoformat()
+        con, cursor = self.db_tools.find_connection()
+        try:
+            con.autocommit(False)
+            cursor.execute("""
+                UPDATE car_assignments SET end_date = %s
+                WHERE employee_id = %s AND end_date IS NULL
+            """, (today, employe_id))
+            cursor.execute("""
+                UPDATE employees SET status = 'inactive' WHERE id = %s
+            """, (employe_id,))
+            con.commit()
+            return True
+        except Exception as e:
+            con.rollback()
+            raise e
+        finally:
+            con.close()
+
+    def get_affectation_active(self, employe_id):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("""
+                SELECT ca.id, ca.start_date,
+                       c.id AS car_id, c.plate_number, cg.model
+                FROM car_assignments ca
+                JOIN cars c ON ca.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE ca.employee_id = %s AND ca.end_date IS NULL
+            """, (employe_id,))
+            result = cursor.fetchone()
+            return dict(result) if result else None
         finally:
             con.close()

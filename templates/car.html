@@ -155,6 +155,121 @@
             </div>
         </div>
     </div>
+    <!-- ============================================================ -->
+<!-- EDIT CAR MODAL                                               -->
+<!-- ============================================================ -->
+<div class="modal fade" id="editCarModal" tabindex="-1"
+    aria-labelledby="editCarModalLabel" aria-hidden="true"
+    data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold text-primary" id="editCarModalLabel">
+                        <i class="fas fa-edit me-2"></i>Modifier le Véhicule
+                    </h5>
+                    <p class="text-muted small mb-0" id="edit_car_subtitle"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4">
+                <input type="hidden" id="edit_car_id">
+
+                <div class="row g-3">
+                    <!-- Marque -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Marque</label>
+                        <input type="text" class="form-control bg-light border-0" id="edit_brand" placeholder="Ex: Peugeot">
+                    </div>
+                    <!-- Modèle -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Modèle</label>
+                        <input type="text" class="form-control bg-light border-0" id="edit_model" placeholder="Ex: Partner">
+                    </div>
+                    <!-- Immatriculation -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Immatriculation</label>
+                        <input type="text" class="form-control bg-light border-0 font-monospace" id="edit_plate_number">
+                    </div>
+                    <!-- Année -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Année</label>
+                        <input type="number" class="form-control bg-light border-0" id="edit_year" min="1990" max="2100">
+                    </div>
+                    <!-- Propriétaire -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Propriétaire</label>
+                        <input type="text" class="form-control bg-light border-0" id="edit_owner_name">
+                    </div>
+                    <!-- Numéro de châssis -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Châssis (VIN)</label>
+                        <input type="text" class="form-control bg-light border-0 font-monospace" id="edit_chassis_number">
+                    </div>
+                    <!-- Puissance fiscale -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Puissance Fiscale (CV)</label>
+                        <input type="number" class="form-control bg-light border-0" id="edit_puissance_fiscale">
+                    </div>
+                    <!-- Carburant -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Carburant</label>
+                        <select class="form-select bg-light border-0" id="edit_carburant">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="diesel">Diesel</option>
+                            <option value="essence">Essence</option>
+                            <option value="hybride">Hybride</option>
+                            <option value="electrique">Électrique</option>
+                        </select>
+                    </div>
+                    <!-- Statut -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Statut</label>
+                        <select class="form-select bg-light border-0" id="edit_status">
+                            <option value="active">Opérationnel</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="inactive">Hors Service</option>
+                            <option value="retired">Retiré</option>
+                        </select>
+                    </div>
+                    <!-- Date mise en circulation -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Date de mise en circulation</label>
+                        <input type="date" class="form-control bg-light border-0" id="edit_registration_date">
+                    </div>
+                    <!-- Date expiration CG -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Expiration Carte Grise</label>
+                        <input type="date" class="form-control bg-light border-0" id="edit_expiration_date">
+                    </div>
+                    <!-- Date acquisition -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Date d'acquisition</label>
+                        <input type="date" class="form-control bg-light border-0" id="edit_acquisition_date">
+                    </div>
+                    <!-- Notes -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Notes</label>
+                        <textarea class="form-control bg-light border-0" id="edit_notes" rows="2" placeholder="Optionnel..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-link text-muted text-decoration-none"
+                    data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary px-4 py-2 shadow"
+                    onclick="confirmerModification()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- END EDIT CAR MODAL -->
     <!-- END AFFECTATION MODAL -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

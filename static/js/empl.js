@@ -116,7 +116,8 @@ function load_table_data(data) {
     const body = data.map(employe => {
         const initials = `${(employe.prenom || 'E')[0]}${(employe.nom || 'P')[0]}`.toUpperCase();
         return `
-            <tr>
+            <tr style="cursor:pointer;"
+                onclick="window.location.href='/employe/profil/${employe.id}'">
                 <td class="ps-4">
                     <div class="d-flex align-items-center">
                         <div class="bg-light p-2 rounded-circle me-3 text-center"
@@ -143,12 +144,16 @@ function load_table_data(data) {
                     <div class="fw-bold text-sm text-dark">${escapeHtml(employe.poste || '—')}</div>
                     <div class="text-xs text-primary fw-bold text-uppercase">${escapeHtml(employe.departement || '—')}</div>
                 </td>
-                <td class="text-end pe-4">
+                <td class="text-end pe-4" onclick="event.stopPropagation()">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary border-0 rounded-circle me-1" title="Modifier">
+                        <button class="btn btn-outline-primary border-0 rounded-circle me-1"
+                            title="Modifier"
+                            onclick="ouvrirModalEditEmploye(event, ${employe.id})">
                             <i class="fas fa-user-edit"></i>
                         </button>
-                        <button class="btn btn-outline-danger border-0 rounded-circle" title="Supprimer">
+                        <button class="btn btn-outline-danger border-0 rounded-circle"
+                            title="Supprimer"
+                            onclick="supprimerEmploye(event, ${employe.id}, '${escapeHtml(employe.prenom)} ${escapeHtml(employe.nom)}')">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -228,6 +233,204 @@ async function onDepartementChange() {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DÉPARTEMENTS & POSTES — edit modal
+
+async function loadDepartementsForEdit() {
+    try {
+        const res  = await fetch('/employe/get-departements');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        allDepartements = data.data;
+
+        const select = document.getElementById('edit_departement_id');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Sélectionner --</option>';
+        allDepartements.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.text  = d.name;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('loadDepartementsForEdit error:', e);
+    }
+}
+
+async function onEditDepartementChange() {
+    const deptId      = document.getElementById('edit_departement_id').value;
+    const posteSelect = document.getElementById('edit_poste');
+
+    if (!deptId) {
+        posteSelect.innerHTML = '<option value="">-- Sélectionner le département --</option>';
+        return;
+    }
+
+    posteSelect.innerHTML = '<option value="">Chargement...</option>';
+
+    try {
+        const res  = await fetch(`/employe/get-postes/${deptId}`);
+        const data = await res.json();
+        posteSelect.innerHTML = '<option value="">-- Sélectionner le poste --</option>';
+        if (data.status === 'success') {
+            data.data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.name;
+                opt.text  = p.name;
+                posteSelect.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        posteSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// OPEN EDIT MODAL
+
+async function ouvrirModalEditEmploye(event, employeId) {
+    event.stopPropagation();
+    try {
+        const res  = await fetch(`/employe/get-employe/${employeId}`);
+        const data = await res.json();
+        if (data.status !== 'success') {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de charger les données.' });
+            return;
+        }
+        const e = data.data;
+
+        document.getElementById('edit_employe_id').value          = e.id;
+        document.getElementById('edit_employe_subtitle').innerText = `${e.prenom} ${e.nom}`;
+        document.getElementById('edit_nom').value                  = e.nom || '';
+        document.getElementById('edit_prenom').value               = e.prenom || '';
+        document.getElementById('edit_email').value                = e.email || '';
+        document.getElementById('edit_telephone').value            = e.telephone || '';
+
+        await loadDepartementsForEdit();
+
+        const deptSelect = document.getElementById('edit_departement_id');
+        const matchDept  = Array.from(deptSelect.options).find(o => o.text === e.departement);
+        if (matchDept) {
+            deptSelect.value = matchDept.value;
+            await onEditDepartementChange();
+            const posteSelect = document.getElementById('edit_poste');
+            const matchPoste  = Array.from(posteSelect.options).find(o => o.value === e.poste);
+            if (matchPoste) posteSelect.value = matchPoste.value;
+        }
+
+        new bootstrap.Modal(document.getElementById('editEmployeModal')).show();
+    } catch (err) {
+        console.error('ouvrirModalEditEmploye error:', err);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// CONFIRM EDIT
+
+async function confirmerModificationEmploye() {
+    const employeId  = document.getElementById('edit_employe_id').value;
+    const deptSelect = document.getElementById('edit_departement_id');
+    const deptName   = deptSelect.options[deptSelect.selectedIndex]?.text || '';
+
+    const payload = {
+        nom:         document.getElementById('edit_nom').value.trim(),
+        prenom:      document.getElementById('edit_prenom').value.trim(),
+        email:       document.getElementById('edit_email').value.trim(),
+        telephone:   document.getElementById('edit_telephone').value.trim(),
+        departement: deptName === '-- Sélectionner --' ? '' : deptName,
+        poste:       document.getElementById('edit_poste').value
+    };
+
+    if (!payload.nom || !payload.prenom || !payload.email) {
+        Swal.fire({ icon: 'warning', title: 'Champs manquants', text: 'Nom, prénom et email sont obligatoires.' });
+        return;
+    }
+
+    try {
+        const res    = await fetch(`/employe/update/${employeId}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('editEmployeModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Modifié !', text: result.message, showConfirmButton: false, timer: 2000 });
+            setTimeout(() => { loadEmployees(); }, 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('confirmerModificationEmploye error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DELETE EMPLOYEE (soft delete → status = inactive)
+
+async function supprimerEmploye(event, employeId, employeLabel) {
+    event.stopPropagation();
+
+    let warningHtml = `
+        <span class="text-muted">${employeLabel}</span><br>
+        <small class="text-muted">L'employé sera marqué comme <strong>Inactif</strong>.</small>
+    `;
+
+    try {
+        const res  = await fetch(`/employe/get-affectation-active/${employeId}`);
+        const data = await res.json();
+        if (data.status === 'success' && data.assigned) {
+            const v = data.data;
+            warningHtml = `
+                <span class="text-muted">${employeLabel}</span><br><br>
+                <div class="alert alert-warning py-2 text-start small">
+                    <i class="fas fa-car me-1"></i>
+                    Cet employé est actuellement affecté au véhicule
+                    <strong>${v.plate_number}</strong> (${v.model || ''}).<br>
+                    L'affectation sera clôturée mais <strong>l'historique sera conservé</strong>.
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.error('Erreur vérification affectation:', e);
+    }
+
+    const confirm = await Swal.fire({
+        icon:              'warning',
+        title:             'Désactiver cet employé ?',
+        html:              warningHtml,
+        showCancelButton:  true,
+        confirmButtonText: 'Oui, désactiver',
+        cancelButtonText:  'Annuler',
+        confirmButtonColor:'#e74a3b',
+        cancelButtonColor: '#858796'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const res    = await fetch(`/employe/delete/${employeId}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'Désactivé !', text: result.message, showConfirmButton: false, timer: 2000 });
+            setTimeout(() => { loadEmployees(); }, 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('supprimerEmploye error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// RESET FORM
+
 function resetForm() {
     document.getElementById('employeForm').reset();
     const posteSelect = document.getElementById('poste');
@@ -245,7 +448,6 @@ async function enregistrerEmploye() {
         return el ? el.value.trim() : "";
     };
 
-    // get département name from selected option text
     const deptSelect = document.getElementById('departement_id');
     const deptName   = deptSelect
         ? deptSelect.options[deptSelect.selectedIndex]?.text || ''
@@ -261,7 +463,6 @@ async function enregistrerEmploye() {
         created_at:  getV("created_at")
     };
 
-    // basic validation
     if (!payload.nom)         { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir le nom." }); return; }
     if (!payload.prenom)      { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir le prénom." }); return; }
     if (!payload.email)       { Swal.fire({ icon: "warning", title: "Champ manquant", text: "Veuillez saisir l'email." }); return; }
@@ -306,8 +507,6 @@ async function enregistrerEmploye() {
 // INIT
 
 document.addEventListener("DOMContentLoaded", () => {
-    // load employee list if on list page
     initPage();
-    // load départements if on add employee page
     loadDepartements();
 });

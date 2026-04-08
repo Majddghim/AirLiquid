@@ -430,3 +430,57 @@ class VoitureService:
             }
         finally:
             con.close()
+
+    def supprimer_voiture(self, voiture_id):
+        import datetime
+        today = datetime.date.today().isoformat()
+        con, cursor = self.db_tools.find_connection()
+        try:
+            con.autocommit(False)
+            # close active assignment if exists — keeps history
+            cursor.execute("""
+                UPDATE car_assignments SET end_date = %s
+                WHERE car_id = %s AND end_date IS NULL
+            """, (today, voiture_id))
+            # soft delete the car
+            cursor.execute("""
+                UPDATE cars SET status = 'retired' WHERE id = %s
+            """, (voiture_id,))
+            con.commit()
+            return cursor.rowcount
+        except Exception as e:
+            con.rollback()
+            raise e
+        finally:
+            con.close()
+
+    def update_voiture(self, car_id, brand, model, plate_number, year, owner_name,
+                       chassis_number, puissance_fiscale, carburant,
+                       registration_date, expiration_date, acquisition_date, status, notes):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            con.autocommit(False)
+            cursor.execute("""
+                UPDATE cars SET
+                    plate_number = %s, brand = %s, status = %s,
+                    acquisition_date = %s, notes = %s, updated_at = NOW()
+                WHERE id = %s
+            """, (plate_number, brand, status, acquisition_date or None, notes or None, car_id))
+
+            cursor.execute("""
+                UPDATE carte_grises SET
+                    model = %s, year = %s, plate_number = %s, owner_name = %s,
+                    chassis_number = %s, puissance_fiscale = %s, carburant = %s,
+                    registration_date = %s, expiration_date = %s
+                WHERE car_id = %s
+            """, (model, year or None, plate_number, owner_name or None,
+                  chassis_number or None, puissance_fiscale or None, carburant or None,
+                  registration_date or None, expiration_date or None, car_id))
+
+            con.commit()
+            return True
+        except Exception as e:
+            con.rollback()
+            raise e
+        finally:
+            con.close()

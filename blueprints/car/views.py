@@ -322,3 +322,35 @@ class CarViews:
                 return jsonify({'status': 'success', 'data': models})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.car_bp.route('/update/<int:car_id>', methods=['PUT'])
+        def update_voiture(car_id):
+            try:
+                data = request.get_json()
+                self.VoitureService.update_voiture(
+                    car_id=car_id,
+                    brand=data.get('brand', '').strip(),
+                    model=data.get('model', '').strip(),
+                    plate_number=data.get('plate_number', '').strip(),
+                    year=data.get('year'),
+                    owner_name=data.get('owner_name'),
+                    chassis_number=data.get('chassis_number'),
+                    puissance_fiscale=data.get('puissance_fiscale'),
+                    carburant=data.get('carburant'),
+                    registration_date=data.get('registration_date') or None,
+                    expiration_date=data.get('expiration_date') or None,
+                    acquisition_date=data.get('acquisition_date') or None,
+                    status=data.get('status', 'active'),
+                    notes=data.get('notes')
+                )
+                return jsonify({'status': 'success', 'message': 'Véhicule mis à jour avec succès'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.car_bp.route('/delete/<int:car_id>', methods=['DELETE'])
+        def delete_voiture(car_id):
+            try:
+                self.VoitureService.supprimer_voiture(car_id)
+                return jsonify({'status': 'success', 'message': 'Véhicule retiré avec succès'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Paramètres - ALT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+    {% include 'elements/side-bar/side-bar.html' %}
+
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-dark mb-0">Paramètres</h3>
+                </div>
+
+                <!-- TABS -->
+                <ul class="nav nav-tabs border-0 mb-4" id="settingsTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" id="tab-brands" href="#"
+                            onclick="switchTab('brands')">
+                            <i class="fas fa-car me-2"></i>Marques & Modèles
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" id="tab-depts" href="#"
+                            onclick="switchTab('depts')">
+                            <i class="fas fa-sitemap me-2"></i>Départements & Postes
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- TAB 1 : MARQUES & MODÈLES -->
+                <div id="panel-brands">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="card shadow border-0">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary fw-bold m-0">
+                                        <i class="fas fa-tag me-2"></i>Marques
+                                    </h6>
+                                    <button class="btn btn-sm btn-primary" onclick="showAddBrand()">
+                                        <i class="fas fa-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="addBrandForm" class="p-3 border-bottom bg-light" style="display:none;">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control border-0"
+                                                id="newBrandName" placeholder="Nom de la marque...">
+                                            <button class="btn btn-success btn-sm" onclick="addBrand()">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddBrand()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <ul class="list-group list-group-flush" id="brandsList"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="card shadow border-0">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary fw-bold m-0">
+                                        <i class="fas fa-car-side me-2"></i>
+                                        Modèles — <span id="selectedBrandName" class="text-muted">sélectionner une marque</span>
+                                    </h6>
+                                    <button class="btn btn-sm btn-primary" id="addModelBtn"
+                                        onclick="showAddModel()" style="display:none;">
+                                        <i class="fas fa-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="addModelForm" class="p-3 border-bottom bg-light" style="display:none;">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control border-0"
+                                                id="newModelName" placeholder="Nom du modèle...">
+                                            <button class="btn btn-success btn-sm" onclick="addModel()">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddModel()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="modelsPlaceholder" class="text-center py-5 text-muted">
+                                        <i class="fas fa-arrow-left me-2"></i>Sélectionnez une marque
+                                    </div>
+                                    <ul class="list-group list-group-flush" id="modelsList" style="display:none;"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2 : DÉPARTEMENTS & POSTES -->
+                <div id="panel-depts" style="display:none;">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="card shadow border-0">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary fw-bold m-0">
+                                        <i class="fas fa-building me-2"></i>Départements
+                                    </h6>
+                                    <button class="btn btn-sm btn-primary" onclick="showAddDept()">
+                                        <i class="fas fa-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="addDeptForm" class="p-3 border-bottom bg-light" style="display:none;">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control border-0"
+                                                id="newDeptName" placeholder="Nom du département...">
+                                            <button class="btn btn-success btn-sm" onclick="addDept()">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddDept()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <ul class="list-group list-group-flush" id="deptsList"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="card shadow border-0">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary fw-bold m-0">
+                                        <i class="fas fa-user-tie me-2"></i>
+                                        Postes — <span id="selectedDeptName" class="text-muted">sélectionner un département</span>
+                                    </h6>
+                                    <button class="btn btn-sm btn-primary" id="addPosteBtn"
+                                        onclick="showAddPoste()" style="display:none;">
+                                        <i class="fas fa-plus me-1"></i>Ajouter
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="addPosteForm" class="p-3 border-bottom bg-light" style="display:none;">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control border-0"
+                                                id="newPosteName" placeholder="Nom du poste...">
+                                            <button class="btn btn-success btn-sm" onclick="addPoste()">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddPoste()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="postesPlaceholder" class="text-center py-5 text-muted">
+                                        <i class="fas fa-arrow-left me-2"></i>Sélectionnez un département
+                                    </div>
+                                    <ul class="list-group list-group-flush" id="postesList" style="display:none;"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+
+<!-- EDIT BRAND MODAL -->
+<div class="modal fade" id="editBrandModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold text-primary">Modifier la Marque</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editBrandId">
+                <input type="text" class="form-control bg-light border-0" id="editBrandName">
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary" onclick="confirmerEditBrand()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT MODEL MODAL -->
+<div class="modal fade" id="editModelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold text-primary">Modifier le Modèle</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editModelId">
+                <input type="text" class="form-control bg-light border-0" id="editModelName">
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary" onclick="confirmerEditModel()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT DEPT MODAL -->
+<div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold text-primary">Modifier le Département</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editDeptId">
+                <input type="text" class="form-control bg-light border-0" id="editDeptName">
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary" onclick="confirmerEditDept()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT POSTE MODAL -->
+<div class="modal fade" id="editPosteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold text-primary">Modifier le Poste</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editPosteId">
+                <input type="text" class="form-control bg-light border-0" id="editPosteName">
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary" onclick="confirmerEditPoste()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+
+</body>
+</html>

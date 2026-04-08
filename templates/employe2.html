@@ -54,11 +54,10 @@
                             <table class="table table-hover align-middle mb-0" id="dataTable">
                                 <thead class="table-light">
                                 <tr class="text-xs text-uppercase text-muted">
-                                    <th class="ps-4">Collaborateur</th>
-                                    <th>Coordonnées</th>
-                                    <th>Poste / Département</th>
-                                    <th>Statut de Flotte</th>
-                                    <th class="text-end pe-4">Actions</th>
+                                <th class="ps-4">Collaborateur</th>
+                                <th>Coordonnées</th>
+                                <th>Poste / Département</th>
+                                <th class="text-end pe-4">Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody id="employeesTableBody">
@@ -90,14 +89,80 @@
     <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
 </div>
 
+<!-- ============================================================ -->
+<!-- EDIT EMPLOYEE MODAL                                          -->
+<!-- ============================================================ -->
+<div class="modal fade" id="editEmployeModal" tabindex="-1"
+    aria-labelledby="editEmployeModalLabel" aria-hidden="true"
+    data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold text-primary" id="editEmployeModalLabel">
+                        <i class="fas fa-user-edit me-2"></i>Modifier l'Employé
+                    </h5>
+                    <p class="text-muted small mb-0" id="edit_employe_subtitle"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4">
+                <input type="hidden" id="edit_employe_id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Nom</label>
+                        <input type="text" class="form-control bg-light border-0" id="edit_nom">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Prénom</label>
+                        <input type="text" class="form-control bg-light border-0" id="edit_prenom">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Email</label>
+                        <input type="email" class="form-control bg-light border-0" id="edit_email">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Téléphone</label>
+                        <input type="text" class="form-control bg-light border-0" id="edit_telephone">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Département</label>
+                        <select class="form-select bg-light border-0" id="edit_departement_id"
+                            onchange="onEditDepartementChange()">
+                            <option value="">-- Sélectionner --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Poste</label>
+                        <select class="form-select bg-light border-0" id="edit_poste">
+                            <option value="">-- Sélectionner le département --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-link text-muted text-decoration-none"
+                    data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary px-4 py-2 shadow"
+                    onclick="confirmerModificationEmploye()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- END EDIT EMPLOYEE MODAL -->
+
 <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
 <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/empl.js') }}"></script>
-
-
-</body>
 
 <script>
     let employees = [];
@@ -106,115 +171,92 @@
 
     async function loadEmployees() {
         try {
-
-            const response = await fetch("/employe/get-all-employes"); // your API
+            const response = await fetch("/employe/get-all-employes");
             const result = await response.json();
-
             if (result.status === "success") {
                 employees = result.data;
                 renderTable();
                 renderPagination();
             }
-
         } catch (error) {
             console.error("Error loading employees:", error);
         }
     }
 
     function renderTable() {
-
         const tbody = document.getElementById("employeesTableBody");
         tbody.innerHTML = "";
 
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
-
         const pageItems = employees.slice(start, end);
 
         pageItems.forEach(p => {
-
             const initials =
                 (p.prenom ? p.prenom[0].toUpperCase() : "E") +
                 (p.nom ? p.nom[0].toUpperCase() : "P");
 
             const row = `
-        <tr>
-            <td class="ps-4">
-                <div class="d-flex align-items-center">
-                    <div class="bg-soft-primary p-2 rounded-circle me-3 text-center"
-                        style="width:40px;height:40px;background:#eef4ff;">
-                        <span class="fw-bold text-primary">${initials}</span>
+            <tr style="cursor:pointer;" onclick="window.location.href='/employe/profil/${p.id}'">
+                <td class="ps-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-soft-primary p-2 rounded-circle me-3 text-center"
+                            style="width:40px;height:40px;background:#eef4ff;">
+                            <span class="fw-bold text-primary">${initials}</span>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">${p.prenom || ""} ${p.nom || ""}</div>
+                            <div class="text-xs text-muted">ID: #${p.id}</div>
+                        </div>
                     </div>
-
-                    <div>
-                        <div class="fw-bold text-dark">${p.prenom || ""} ${p.nom || ""}</div>
-                        <div class="text-xs text-muted">ID: #${p.id}</div>
+                </td>
+                <td>
+                    <div class="text-sm">
+                        <div><i class="far fa-envelope me-1 text-muted"></i>${p.email || ""}</div>
+                        <div class="text-muted small">
+                            <i class="fas fa-phone-alt me-1"></i>${p.telephone || ""}
+                        </div>
                     </div>
-                </div>
-            </td>
-
-            <td>
-                <div class="text-sm">
-                    <div><i class="far fa-envelope me-1 text-muted"></i>${p.email || ""}</div>
-                    <div class="text-muted small">
-                        <i class="fas fa-phone-alt me-1"></i>${p.telephone || ""}
+                </td>
+                <td>
+                    <div class="fw-bold text-sm">${p.poste || ""}</div>
+                    <div class="badge bg-light text-primary border-0">${p.departement || "Général"}</div>
+                </td>
+                <td class="text-end pe-4" onclick="event.stopPropagation()">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary border-0 rounded-circle me-1"
+                            title="Modifier"
+                            onclick="ouvrirModalEditEmploye(event, ${p.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger border-0 rounded-circle"
+                            title="Supprimer"
+                            onclick="supprimerEmploye(event, ${p.id}, '${p.prenom} ${p.nom}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
-                </div>
-            </td>
-
-            <td>
-                <div class="fw-bold text-sm">${p.poste || ""}</div>
-                <div class="badge bg-light text-primary border-0">${p.departement || "Général"}</div>
-            </td>
-
-            <td>
-                <button class="btn btn-sm btn-soft-success rounded-pill px-3"
-                    onclick="window.location.href='/dashboard/ajout-voiture/${p.id}'"
-                    style="font-size:0.7rem;background:#e6fffa;color:#008080;border:none;">
-                    <i class="fas fa-car-side me-1"></i>Assigner Véhicule
-                </button>
-            </td>
-
-            <td class="text-end pe-4">
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary border-0 rounded-circle me-1">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-outline-danger border-0 rounded-circle">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-        `;
+                </td>
+            </tr>`;
 
             tbody.innerHTML += row;
         });
 
         const info = document.getElementById("tableInfo");
-
         const startItem = start + 1;
         const endItem = Math.min(end, employees.length);
-
         info.innerText = `Showing ${startItem} to ${endItem} of ${employees.length} employees`;
     }
 
     function renderPagination() {
-
         const totalPages = Math.ceil(employees.length / rowsPerPage);
         const pagination = document.getElementById("pagination");
-
         pagination.innerHTML = "";
-
         for (let i = 1; i <= totalPages; i++) {
-
             const active = i === currentPage ? "active" : "";
-
             pagination.innerHTML += `
-        <li class="page-item ${active}">
-            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-        </li>
-        `;
+            <li class="page-item ${active}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>`;
         }
     }
 
@@ -227,4 +269,5 @@
     document.addEventListener("DOMContentLoaded", loadEmployees);
 </script>
 
+</body>
 </html>

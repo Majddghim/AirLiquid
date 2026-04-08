@@ -126,3 +126,9 @@ class DashboardViews:
                 return jsonify({'status': 'success', 'data': data, 'count': len(data)})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.admin_bp.route('/settings', methods=['GET'])
+        def settings_page():
+            if 'user_id' not in session:
+                return redirect(url_for("auth.login_template"))
+            return render_template('settings.html')
