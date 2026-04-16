@@ -32,15 +32,23 @@
                 <!-- TABS -->
                 <ul class="nav nav-tabs border-0 mb-4" id="settingsTabs">
                     <li class="nav-item">
-                        <a class="nav-link active fw-bold" id="tab-brands" href="#"
-                            onclick="switchTab('brands')">
+                        <a class="nav-link active fw-bold" id="tab-brands" href="#" onclick="switchTab('brands')">
                             <i class="fas fa-car me-2"></i>Marques & Modèles
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-bold" id="tab-depts" href="#"
-                            onclick="switchTab('depts')">
+                        <a class="nav-link fw-bold" id="tab-depts" href="#" onclick="switchTab('depts')">
                             <i class="fas fa-sitemap me-2"></i>Départements & Postes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" id="tab-parts" href="#" onclick="switchTab('parts')">
+                            <i class="fas fa-cog me-2"></i>Pièces
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" id="tab-garages" href="#" onclick="switchTab('garages')">
+                            <i class="fas fa-warehouse me-2"></i>Garages
                         </a>
                     </li>
                 </ul>
@@ -51,9 +59,7 @@
                         <div class="col-md-5">
                             <div class="card shadow border-0">
                                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                    <h6 class="text-primary fw-bold m-0">
-                                        <i class="fas fa-tag me-2"></i>Marques
-                                    </h6>
+                                    <h6 class="text-primary fw-bold m-0"><i class="fas fa-tag me-2"></i>Marques</h6>
                                     <button class="btn btn-sm btn-primary" onclick="showAddBrand()">
                                         <i class="fas fa-plus me-1"></i>Ajouter
                                     </button>
@@ -61,21 +67,15 @@
                                 <div class="card-body p-0">
                                     <div id="addBrandForm" class="p-3 border-bottom bg-light" style="display:none;">
                                         <div class="input-group input-group-sm">
-                                            <input type="text" class="form-control border-0"
-                                                id="newBrandName" placeholder="Nom de la marque...">
-                                            <button class="btn btn-success btn-sm" onclick="addBrand()">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="btn btn-secondary btn-sm" onclick="hideAddBrand()">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <input type="text" class="form-control border-0" id="newBrandName" placeholder="Nom de la marque...">
+                                            <button class="btn btn-success btn-sm" onclick="addBrand()"><i class="fas fa-check"></i></button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddBrand()"><i class="fas fa-times"></i></button>
                                         </div>
                                     </div>
                                     <ul class="list-group list-group-flush" id="brandsList"></ul>
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-md-7">
                             <div class="card shadow border-0">
                                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -83,22 +83,16 @@
                                         <i class="fas fa-car-side me-2"></i>
                                         Modèles — <span id="selectedBrandName" class="text-muted">sélectionner une marque</span>
                                     </h6>
-                                    <button class="btn btn-sm btn-primary" id="addModelBtn"
-                                        onclick="showAddModel()" style="display:none;">
+                                    <button class="btn btn-sm btn-primary" id="addModelBtn" onclick="showAddModel()" style="display:none;">
                                         <i class="fas fa-plus me-1"></i>Ajouter
                                     </button>
                                 </div>
                                 <div class="card-body p-0">
                                     <div id="addModelForm" class="p-3 border-bottom bg-light" style="display:none;">
                                         <div class="input-group input-group-sm">
-                                            <input type="text" class="form-control border-0"
-                                                id="newModelName" placeholder="Nom du modèle...">
-                                            <button class="btn btn-success btn-sm" onclick="addModel()">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="btn btn-secondary btn-sm" onclick="hideAddModel()">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <input type="text" class="form-control border-0" id="newModelName" placeholder="Nom du modèle...">
+                                            <button class="btn btn-success btn-sm" onclick="addModel()"><i class="fas fa-check"></i></button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddModel()"><i class="fas fa-times"></i></button>
                                         </div>
                                     </div>
                                     <div id="modelsPlaceholder" class="text-center py-5 text-muted">
@@ -117,9 +111,7 @@
                         <div class="col-md-5">
                             <div class="card shadow border-0">
                                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                    <h6 class="text-primary fw-bold m-0">
-                                        <i class="fas fa-building me-2"></i>Départements
-                                    </h6>
+                                    <h6 class="text-primary fw-bold m-0"><i class="fas fa-building me-2"></i>Départements</h6>
                                     <button class="btn btn-sm btn-primary" onclick="showAddDept()">
                                         <i class="fas fa-plus me-1"></i>Ajouter
                                     </button>
@@ -127,21 +119,15 @@
                                 <div class="card-body p-0">
                                     <div id="addDeptForm" class="p-3 border-bottom bg-light" style="display:none;">
                                         <div class="input-group input-group-sm">
-                                            <input type="text" class="form-control border-0"
-                                                id="newDeptName" placeholder="Nom du département...">
-                                            <button class="btn btn-success btn-sm" onclick="addDept()">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="btn btn-secondary btn-sm" onclick="hideAddDept()">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <input type="text" class="form-control border-0" id="newDeptName" placeholder="Nom du département...">
+                                            <button class="btn btn-success btn-sm" onclick="addDept()"><i class="fas fa-check"></i></button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddDept()"><i class="fas fa-times"></i></button>
                                         </div>
                                     </div>
                                     <ul class="list-group list-group-flush" id="deptsList"></ul>
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-md-7">
                             <div class="card shadow border-0">
                                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -149,22 +135,16 @@
                                         <i class="fas fa-user-tie me-2"></i>
                                         Postes — <span id="selectedDeptName" class="text-muted">sélectionner un département</span>
                                     </h6>
-                                    <button class="btn btn-sm btn-primary" id="addPosteBtn"
-                                        onclick="showAddPoste()" style="display:none;">
+                                    <button class="btn btn-sm btn-primary" id="addPosteBtn" onclick="showAddPoste()" style="display:none;">
                                         <i class="fas fa-plus me-1"></i>Ajouter
                                     </button>
                                 </div>
                                 <div class="card-body p-0">
                                     <div id="addPosteForm" class="p-3 border-bottom bg-light" style="display:none;">
                                         <div class="input-group input-group-sm">
-                                            <input type="text" class="form-control border-0"
-                                                id="newPosteName" placeholder="Nom du poste...">
-                                            <button class="btn btn-success btn-sm" onclick="addPoste()">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="btn btn-secondary btn-sm" onclick="hideAddPoste()">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <input type="text" class="form-control border-0" id="newPosteName" placeholder="Nom du poste...">
+                                            <button class="btn btn-success btn-sm" onclick="addPoste()"><i class="fas fa-check"></i></button>
+                                            <button class="btn btn-secondary btn-sm" onclick="hideAddPoste()"><i class="fas fa-times"></i></button>
                                         </div>
                                     </div>
                                     <div id="postesPlaceholder" class="text-center py-5 text-muted">
@@ -173,6 +153,61 @@
                                     <ul class="list-group list-group-flush" id="postesList" style="display:none;"></ul>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3 : PIÈCES -->
+                <div id="panel-parts" style="display:none;">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-cog me-2"></i>Pièces & Entretiens</h6>
+                            <button class="btn btn-sm btn-primary" onclick="ouvrirAddPart()">
+                                <i class="fas fa-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="text-xs text-uppercase text-muted">
+                                        <th class="ps-4">Nom</th>
+                                        <th>Catégorie</th>
+                                        <th>Alerte KM</th>
+                                        <th>Alerte Mois</th>
+                                        <th>Notes</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4 : GARAGES -->
+                <div id="panel-garages" style="display:none;">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary fw-bold m-0"><i class="fas fa-warehouse me-2"></i>Garages</h6>
+                            <button class="btn btn-sm btn-primary" onclick="ouvrirAddGarage()">
+                                <i class="fas fa-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="text-xs text-uppercase text-muted">
+                                        <th class="ps-4">Nom</th>
+                                        <th>Type</th>
+                                        <th>Marque</th>
+                                        <th>Téléphone</th>
+                                        <th>Contact</th>
+                                        <th>Statut</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="garagesTableBody"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -267,6 +302,106 @@
             <div class="modal-footer border-0">
                 <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
                 <button class="btn btn-primary" onclick="confirmerEditPoste()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT PART MODAL -->
+<div class="modal fade" id="partModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold text-primary" id="partModalTitle">Ajouter une Pièce</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="partId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Nom <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light border-0" id="partName" placeholder="Ex: Vidange huile">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Catégorie</label>
+                        <input type="text" class="form-control bg-light border-0" id="partCategory" placeholder="Ex: Moteur, Freins...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Intervalle KM</label>
+                        <input type="number" class="form-control bg-light border-0" id="partAlertKm" placeholder="Ex: 10000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Intervalle Mois</label>
+                        <input type="number" class="form-control bg-light border-0" id="partAlertMonth" placeholder="Ex: 12">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Notes</label>
+                        <textarea class="form-control bg-light border-0" id="partNotes" rows="2" placeholder="Optionnel..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary px-4" onclick="confirmerSavePart()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT GARAGE MODAL -->
+<div class="modal fade" id="garageModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold text-primary" id="garageModalTitle">Ajouter un Garage</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="garageId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Nom <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light border-0" id="garageName">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Type</label>
+                        <select class="form-select bg-light border-0" id="garageType">
+                            <option value="independent">Indépendant</option>
+                            <option value="dealership">Concessionnaire</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Marque associée</label>
+                        <input type="text" class="form-control bg-light border-0" id="garageBrand" placeholder="Ex: Peugeot">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Téléphone</label>
+                        <input type="text" class="form-control bg-light border-0" id="garagePhone">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Contact</label>
+                        <input type="text" class="form-control bg-light border-0" id="garageContact">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Adresse</label>
+                        <input type="text" class="form-control bg-light border-0" id="garageAddress">
+                    </div>
+                    <div class="col-md-6">
+            <label class="form-label small fw-bold">Statut</label>
+                    <select class="form-select bg-light border-0" id="garageStatus">
+                    <option value="active">Actif</option>
+                    <option value="inactive">Inactif</option>
+    </select>
+</div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary px-4" onclick="confirmerSaveGarage()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
             </div>
         </div>
     </div>
