@@ -6,6 +6,8 @@ from blueprints.dashboard import dashboard_bp
 from blueprints.employer import employe_bp
 from blueprints.guest import guest_bp
 from blueprints.settings import settings_bp
+from blueprints.maintenance import maintenance_bp
+
 
 import datetime
 from flask.json.provider import DefaultJSONProvider
@@ -27,7 +29,8 @@ app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 app.register_blueprint(employe_bp, url_prefix='/employe')
 app.register_blueprint(car_bp, url_prefix='/car')
 app.register_blueprint(guest_bp, url_prefix='/guest')
-
+app.register_blueprint(settings_bp, url_prefix='/settings')
+app.register_blueprint(maintenance_bp, url_prefix='/maintenance')
 
 @app.route('/')
 def hello_world():
@@ -43,7 +46,7 @@ def index():
 
 
 
-app.register_blueprint(settings_bp, url_prefix='/settings')
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

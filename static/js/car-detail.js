@@ -6,6 +6,7 @@ const carId = window.location.pathname.split('/').pop();
 document.addEventListener("DOMContentLoaded", async () => {
     if (!carId) return;
     await loadCarDetail();
+    await loadMaintenance();
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +23,6 @@ async function loadCarDetail() {
         }
 
         const d = data.data;
-
         renderHeader(d.car);
         renderCarteGrise(d.car);
         renderDocuments(d.documents);
@@ -38,12 +38,454 @@ async function loadCarDetail() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+// LOAD MAINTENANCE
+
+async function loadMaintenance() {
+    await loadMaintenanceAlerts();
+    await loadMaintenanceRecords();
+}
+
+async function loadMaintenanceAlerts() {
+    try {
+        const res  = await fetch(`/maintenance/alerts/${carId}`);
+        const data = await res.json();
+        const el   = document.getElementById('maintenance_alerts_content');
+        const badge = document.getElementById('maintenance_alerts_badge');
+
+        if (data.status !== 'success' || data.data.length === 0) {
+            el.innerHTML = `
+                <div class="text-center py-3 text-muted small">
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    Aucune maintenance planifiée
+                </div>`;
+            return;
+        }
+
+        badge.style.display = 'inline';
+        badge.innerText = data.data.length;
+
+        el.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr class="text-xs text-uppercase text-muted">
+                            <th>Pièce</th>
+                            <th>Type</th>
+                            <th>Échéance Date</th>
+                            <th>Échéance KM</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.data.map(a => {
+                            const isOverdue = a.due_date && new Date(a.due_date) < new Date();
+                            return `
+                            <tr class="${isOverdue ? 'table-danger' : ''}">
+                                <td><strong>${escapeHtml(a.part_name)}</strong><br>
+                                    <span class="text-muted" style="font-size:11px;">${escapeHtml(a.category || '')}</span>
+                                </td>
+                                <td>
+                                    ${a.alert_type === 'km' ? '<span class="badge bg-info text-dark">KM</span>' :
+                                      a.alert_type === 'date' ? '<span class="badge bg-warning text-dark">Date</span>' :
+                                      '<span class="badge bg-secondary">KM + Date</span>'}
+                                </td>
+                                <td>${a.due_date ? formatDate(a.due_date) : '—'}</td>
+                                <td>${a.due_km ? a.due_km + ' km' : '—'}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-success btn-sm"
+                                        onclick="ouvrirLogMaintenance(${a.id}, ${a.part_id})">
+                                        <i class="fas fa-check me-1"></i>Logger
+                                    </button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (e) {
+        console.error('loadMaintenanceAlerts error:', e);
+    }
+}
+
+async function loadMaintenanceRecords() {
+    try {
+        const res  = await fetch(`/maintenance/records/${carId}`);
+        const data = await res.json();
+        const el   = document.getElementById('maintenance_records_content');
+
+        if (data.status !== 'success' || data.data.length === 0) {
+            el.innerHTML = `
+                <div class="text-center py-3 text-muted small">
+                    <i class="fas fa-history me-1"></i>
+                    Aucun entretien enregistré
+                </div>`;
+            return;
+        }
+
+        el.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr class="text-xs text-uppercase text-muted">
+                            <th>Pièce</th>
+                            <th>Garage</th>
+                            <th>Date</th>
+                            <th>KM</th>
+                            <th>Prochain</th>
+                            <th>Statut</th>
+                            <th class="text-end">Facture</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.data.map(r => `
+                        <tr>
+                            <td><strong>${escapeHtml(r.part_name)}</strong><br>
+                                <span class="text-muted" style="font-size:11px;">${escapeHtml(r.category || '')}</span>
+                            </td>
+                            <td>${escapeHtml(r.garage_name || '—')}</td>
+                            <td>${formatDate(r.done_at)}</td>
+                            <td>${r.km_at_service ? r.km_at_service + ' km' : '—'}</td>
+                            <td>
+                                ${r.next_due_date ? '<span class="text-muted">' + formatDate(r.next_due_date) + '</span>' : ''}
+                                ${r.next_due_km ? '<br><span class="text-muted">' + r.next_due_km + ' km</span>' : ''}
+                                ${!r.next_due_date && !r.next_due_km ? '—' : ''}
+                            </td>
+                            <td>
+                                ${r.status === 'done'
+                                    ? '<span class="badge bg-success">Fait</span>'
+                                    : '<span class="badge bg-warning text-dark">En attente</span>'}
+                            </td>
+                            <td class="text-end">
+                                ${r.facture_id
+                                    ? `<a href="/${r.facture_file}" target="_blank"
+                                        class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-file-invoice me-1"></i>${r.montant_ttc ? r.montant_ttc + ' DT' : 'Voir'}
+                                       </a>`
+                                    : `<button class="btn btn-outline-secondary btn-sm"
+                                        onclick="ouvrirFactureModal(${r.id})">
+                                        <i class="fas fa-paperclip me-1"></i>Attacher
+                                       </button>`
+                                }
+                            </td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (e) {
+        console.error('loadMaintenanceRecords error:', e);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// BON DE COMMANDE
+
+let bonData = null;
+let bonExtraItems = [];
+
+async function ouvrirBonCommande() {
+    try {
+        const res  = await fetch(`/maintenance/bon-data/${carId}`);
+        const data = await res.json();
+        if (data.status !== 'success') {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: data.message });
+            return;
+        }
+        bonData = data.data;
+        bonExtraItems = [];
+
+        // fill garage dropdown
+        const garageSelect = document.getElementById('bon_garage_id');
+        garageSelect.innerHTML = '<option value="">-- Sélectionner un garage --</option>';
+        bonData.garages.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.text  = `${g.name} (${g.type === 'dealership' ? 'Concessionnaire' : 'Indépendant'})`;
+            opt.dataset.garage = JSON.stringify(g);
+            garageSelect.appendChild(opt);
+        });
+
+        // fill alerts list
+        const alertsList = document.getElementById('bon_alerts_list');
+        if (bonData.alerts.length === 0) {
+            alertsList.innerHTML = '<div class="text-muted small text-center py-2">Aucune alerte ouverte</div>';
+        } else {
+            alertsList.innerHTML = bonData.alerts.map(a => `
+                <div class="form-check py-1 border-bottom">
+                    <input class="form-check-input" type="checkbox"
+                        value="${a.id}" id="alert_${a.id}"
+                        data-part-id="${a.part_id}"
+                        data-part-name="${escapeHtml(a.part_name)}"
+                        data-category="${escapeHtml(a.category || '')}"
+                        checked>
+                    <label class="form-check-label small" for="alert_${a.id}">
+                        <strong>${escapeHtml(a.part_name)}</strong>
+                        ${a.category ? `<span class="text-muted"> — ${escapeHtml(a.category)}</span>` : ''}
+                        ${a.due_date ? `<span class="text-danger ms-2"><i class="fas fa-calendar me-1"></i>${formatDate(a.due_date)}</span>` : ''}
+                        ${a.due_km ? `<span class="text-info ms-2"><i class="fas fa-tachometer-alt me-1"></i>${a.due_km} km</span>` : ''}
+                    </label>
+                </div>`).join('');
+        }
+
+        // clear extra items
+        document.getElementById('bon_extra_items').innerHTML = '';
+
+        new bootstrap.Modal(document.getElementById('bonCommandeModal')).show();
+    } catch (e) {
+        console.error('ouvrirBonCommande error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de charger les données.' });
+    }
+}
+
+function ajouterLigneBon() {
+    const container = document.getElementById('bon_extra_items');
+    const idx = Date.now();
+
+    const partOptions = bonData.parts.map(p =>
+        `<option value="${p.id}" data-name="${escapeHtml(p.name)}" data-category="${escapeHtml(p.category || '')}">${escapeHtml(p.name)}${p.category ? ' — ' + escapeHtml(p.category) : ''}</option>`
+    ).join('');
+
+    const div = document.createElement('div');
+    div.className = 'd-flex gap-2 mb-2 align-items-center';
+    div.id = `extra_${idx}`;
+    div.innerHTML = `
+        <select class="form-select form-select-sm bg-light border-0" id="extra_part_${idx}">
+            <option value="">-- Sélectionner une pièce --</option>
+            ${partOptions}
+        </select>
+        <input type="text" class="form-control form-control-sm bg-light border-0"
+            id="extra_notes_${idx}" placeholder="Remarques...">
+        <button class="btn btn-outline-danger btn-sm rounded-circle"
+            onclick="document.getElementById('extra_${idx}').remove()">
+            <i class="fas fa-times"></i>
+        </button>`;
+    container.appendChild(div);
+}
+
+async function genererBon() {
+    const garageSelect = document.getElementById('bon_garage_id');
+    const garageOpt    = garageSelect.options[garageSelect.selectedIndex];
+
+    if (!garageSelect.value) {
+        Swal.fire({ icon: 'warning', title: 'Garage manquant', text: 'Veuillez sélectionner un garage.' });
+        return;
+    }
+
+    const garage = JSON.parse(garageOpt.dataset.garage);
+
+    // collect checked alerts
+    const items = [];
+    document.querySelectorAll('#bon_alerts_list input[type=checkbox]:checked').forEach(cb => {
+        items.push({
+            part_name: cb.dataset.partName,
+            category:  cb.dataset.category,
+            notes:     ''
+        });
+    });
+
+    // collect extra items
+    document.querySelectorAll('#bon_extra_items > div').forEach(row => {
+        const select = row.querySelector('select');
+        const notes  = row.querySelector('input[type=text]');
+        if (select && select.value) {
+            const opt = select.options[select.selectedIndex];
+            items.push({
+                part_name: opt.dataset.name,
+                category:  opt.dataset.category,
+                notes:     notes ? notes.value.trim() : ''
+            });
+        }
+    });
+
+    if (items.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Aucun travail', text: 'Veuillez sélectionner au moins un travail.' });
+        return;
+    }
+
+    const payload = {
+        car:    bonData.car,
+        garage: garage,
+        items:  items,
+        date:   new Date().toLocaleDateString('fr-TN')
+    };
+
+    try {
+        const res = await fetch('/maintenance/bon/generate', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        });
+        const html = await res.text();
+
+        // open in new tab
+        const tab = window.open('', '_blank');
+        tab.document.write(html);
+        tab.document.close();
+
+        bootstrap.Modal.getInstance(document.getElementById('bonCommandeModal')).hide();
+    } catch (e) {
+        console.error('genererBon error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de générer le bon.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// LOG MAINTENANCE
+
+let logPartsCache  = [];
+let logGaragesCache = [];
+
+async function ouvrirLogMaintenance(alertId = null, partId = null) {
+    try {
+        // load parts and garages if not cached
+        if (logPartsCache.length === 0) {
+            const res  = await fetch('/maintenance/bon-data/' + carId);
+            const data = await res.json();
+            if (data.status === 'success') {
+                logPartsCache   = data.data.parts;
+                logGaragesCache = data.data.garages;
+            }
+        }
+
+        // reset form
+        document.getElementById('log_alert_id').value  = alertId || '';
+        document.getElementById('log_done_at').value   = new Date().toISOString().split('T')[0];
+        document.getElementById('log_km').value        = '';
+        document.getElementById('log_next_date').value = '';
+        document.getElementById('log_next_km').value   = '';
+        document.getElementById('log_notes').value     = '';
+
+        // fill parts
+        const partSelect = document.getElementById('log_part_id');
+        partSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+        logPartsCache.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.text  = p.name + (p.category ? ' — ' + p.category : '');
+            partSelect.appendChild(opt);
+        });
+        if (partId) partSelect.value = partId;
+
+        // fill garages
+        const garageSelect = document.getElementById('log_garage_id');
+        garageSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+        logGaragesCache.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.text  = g.name;
+            garageSelect.appendChild(opt);
+        });
+
+        new bootstrap.Modal(document.getElementById('logMaintenanceModal')).show();
+    } catch (e) {
+        console.error('ouvrirLogMaintenance error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de charger les données.' });
+    }
+}
+
+async function confirmerLogMaintenance() {
+    const partId = document.getElementById('log_part_id').value;
+    const doneAt = document.getElementById('log_done_at').value;
+
+    if (!partId) {
+        Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Veuillez sélectionner une pièce.' });
+        return;
+    }
+    if (!doneAt) {
+        Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Veuillez saisir la date.' });
+        return;
+    }
+
+    const payload = {
+        part_id:       parseInt(partId),
+        garage_id:     document.getElementById('log_garage_id').value || null,
+        done_at:       doneAt,
+        km_at_service: document.getElementById('log_km').value || null,
+        next_due_date: document.getElementById('log_next_date').value || null,
+        next_due_km:   document.getElementById('log_next_km').value || null,
+        notes:         document.getElementById('log_notes').value.trim() || null,
+        alert_id:      document.getElementById('log_alert_id').value || null
+    };
+
+    try {
+        const res    = await fetch(`/maintenance/log/${carId}`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('logMaintenanceModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Enregistré !', text: result.message, showConfirmButton: false, timer: 2000 });
+            setTimeout(() => loadMaintenance(), 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('confirmerLogMaintenance error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// FACTURE
+
+function ouvrirFactureModal(recordId) {
+    document.getElementById('facture_record_id').value      = recordId;
+    document.getElementById('facture_num').value            = '';
+    document.getElementById('facture_num_reglement').value  = '';
+    document.getElementById('facture_date').value           = '';
+    document.getElementById('facture_date_reglement').value = '';
+    document.getElementById('facture_montant_ht').value     = '';
+    document.getElementById('facture_tva').value            = '';
+    document.getElementById('facture_montant_ttc').value    = '';
+    new bootstrap.Modal(document.getElementById('factureModal')).show();
+}
+
+async function confirmerAttacherFacture() {
+    const recordId = document.getElementById('facture_record_id').value;
+    const formData = new FormData();
+
+    formData.append('car_id',          carId);
+    formData.append('num_facture',      document.getElementById('facture_num').value.trim());
+    formData.append('num_reglement',    document.getElementById('facture_num_reglement').value.trim());
+    formData.append('date_facture',     document.getElementById('facture_date').value);
+    formData.append('date_reglement',   document.getElementById('facture_date_reglement').value);
+    formData.append('montant_ht',       document.getElementById('facture_montant_ht').value);
+    formData.append('tva',              document.getElementById('facture_tva').value);
+    formData.append('montant_ttc',      document.getElementById('facture_montant_ttc').value);
+
+    const fileInput = document.getElementById('facture_file');
+    if (fileInput.files.length > 0) {
+        formData.append('file', fileInput.files[0]);
+    }
+
+    try {
+        const res    = await fetch(`/maintenance/facture/attach/${recordId}`, {
+            method: 'POST',
+            body:   formData
+        });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('factureModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Facture attachée !', text: result.message, showConfirmButton: false, timer: 2000 });
+            setTimeout(() => loadMaintenanceRecords(), 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('confirmerAttacherFacture error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 // RENDER HEADER
 
 function renderHeader(car) {
     document.getElementById("detail_title").innerText =
         `${car.model || 'Véhicule inconnu'} — ${car.brand || ''}`;
-
     document.getElementById("detail_plate").innerText = car.plate_number || 'N/A';
 
     const statusBadge = document.getElementById("detail_status_badge");
@@ -89,7 +531,6 @@ function renderCarteGrise(car) {
 
 function renderDocuments(docs) {
     let missingCount = 0;
-
     const assurance = docs.assurance;
     const vignette  = docs.vignette;
     const visite    = docs.visite;
@@ -105,7 +546,6 @@ function renderDocuments(docs) {
     }
 
     document.getElementById("docs_detail").innerHTML = `
-
         <!-- Assurance -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
@@ -208,7 +648,7 @@ function renderDocuments(docs) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// RENDER AFFECTATION BANNER
+// RENDER AFFECTATION
 
 function renderAffectation(affectation) {
     const el = document.getElementById("affectation_content");
@@ -222,7 +662,6 @@ function renderAffectation(affectation) {
                     <div class="text-xs">Vous pouvez affecter un employé depuis la liste des véhicules.</div>
                 </div>
             </div>`;
-        // grey out the border when not assigned
         document.getElementById("affectation_banner").style.borderLeftColor = "#dee2e6";
         return;
     }
