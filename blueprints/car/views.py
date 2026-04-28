@@ -354,3 +354,7 @@ class CarViews:
                 return jsonify({'status': 'success', 'message': 'Véhicule retiré avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.car_bp.route('/historique/<int:car_id>', methods=['GET'])
+        def historique(car_id):
+            return render_template('car-historique.html')

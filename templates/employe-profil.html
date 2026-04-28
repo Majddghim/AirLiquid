@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Profil Employé - ALT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+    <style>
+        .info-label { font-size: 11px; font-weight: 700; color: #adb5bd; text-transform: uppercase; margin-bottom: 2px; }
+        .info-value { font-size: 14px; font-weight: 500; color: #2d3748; }
+        .avatar-circle { width: 72px; height: 72px; border-radius: 50%; background: #eef4ff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #0d6efd; }
+        .timeline-item { border-left: 3px solid #dee2e6; padding-left: 16px; margin-left: 8px; position: relative; padding-bottom: 16px; }
+        .timeline-item::before { content: ''; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #0d6efd; border: 2px solid white; }
+        .timeline-item.active::before { background: #198754; }
+        .timeline-item.replacement::before { background: #ffc107; }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid" id="profil-content" style="display:none;">
+
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-circle" id="profil_avatar"></div>
+                        <div>
+                            <h3 class="text-dark mb-0" id="profil_name"></h3>
+                            <div class="text-muted small" id="profil_post"></div>
+                            <span class="badge mt-1" id="profil_status_badge"></span>
+                        </div>
+                    </div>
+                    <a href="/dashboard/liste-employes" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+                    </a>
+                </div>
+
+                <div class="row g-4">
+
+                    <!-- LEFT — Employee info -->
+                    <div class="col-md-4">
+                        <div class="card shadow border-0 mb-4">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="text-primary fw-bold m-0">
+                                    <i class="fas fa-user me-2"></i>Informations
+                                </h6>
+                            </div>
+                            <div class="card-body" id="profil_info"></div>
+                        </div>
+
+                        <!-- Current car -->
+                        <div class="card shadow border-0">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="text-success fw-bold m-0">
+                                    <i class="fas fa-car me-2"></i>Véhicule actuel
+                                </h6>
+                            </div>
+                            <div class="card-body" id="profil_current_car"></div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT — History -->
+                    <div class="col-md-8">
+
+                        <!-- Assignment history -->
+                        <div class="card shadow border-0 mb-4">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="text-primary fw-bold m-0">
+                                    <i class="fas fa-history me-2"></i>Historique des véhicules
+                                </h6>
+                                <span class="badge bg-primary" id="assignments_count"></span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 small">
+                                        <thead class="table-light">
+                                            <tr class="text-xs text-uppercase text-muted">
+                                                <th class="ps-3">Véhicule</th>
+                                                <th>Type</th>
+                                                <th>Début</th>
+                                                <th>Fin</th>
+                                                <th>Durée</th>
+                                                <th>Statut</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="assignments_tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sinistres -->
+                        <div class="card shadow border-0">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="text-danger fw-bold m-0">
+                                    <i class="fas fa-car-crash me-2"></i>Sinistres impliqué
+                                </h6>
+                                <span class="badge bg-danger" id="sinistres_count"></span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 small">
+                                        <thead class="table-light">
+                                            <tr class="text-xs text-uppercase text-muted">
+                                                <th class="ps-3">Date</th>
+                                                <th>Véhicule</th>
+                                                <th>Type</th>
+                                                <th>Statut</th>
+                                                <th>Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="sinistres_tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="container-fluid" id="profil-loading">
+                <div class="text-center py-5 text-muted">
+                    <div class="spinner-border text-primary mb-3"></div>
+                    <p>Chargement du profil...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/employe-profil.js') }}"></script>
+</body>
+</html>

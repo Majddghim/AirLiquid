@@ -132,3 +132,9 @@ class DashboardViews:
             if 'user_id' not in session:
                 return redirect(url_for("auth.login_template"))
             return render_template('settings.html')
+
+        @self.admin_bp.route('/maintenance-alerts', methods=['GET'])
+        def maintenance_alerts_page():
+            if 'user_id' not in session:
+                return redirect(url_for("auth.login_template"))
+            return render_template('maintenance-alerts.html')

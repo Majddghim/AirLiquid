@@ -117,38 +117,50 @@
                             data-bs-parent="#carAccordion">
                             <div class="accordion-body bg-white">
 
-                                <!-- Action buttons -->
                                 <div class="d-flex gap-2 mb-4">
-                                    <button class="btn btn-outline-primary btn-sm"
-                                        onclick="ouvrirBonCommande()">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="ouvrirBonCommande()">
                                         <i class="fas fa-file-invoice me-1"></i>Générer Bon de Commande
                                     </button>
-                                    <button class="btn btn-outline-success btn-sm"
-                                        onclick="ouvrirLogMaintenance(null)">
+                                    <button class="btn btn-outline-success btn-sm" onclick="ouvrirLogMaintenance(null)">
                                         <i class="fas fa-plus me-1"></i>Logger un entretien
                                     </button>
                                 </div>
 
-                                <!-- Alertes planifiées -->
                                 <div class="mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="fw-bold text-dark mb-0">
-                                            <i class="fas fa-bell text-warning me-2"></i>Maintenance planifiée
-                                        </h6>
-                                    </div>
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="fas fa-bell text-warning me-2"></i>Maintenance planifiée
+                                    </h6>
                                     <div id="maintenance_alerts_content">
                                         <div class="text-center py-3 text-muted small">Chargement...</div>
                                     </div>
                                 </div>
 
-                                <!-- Historique -->
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-2">
-                                        <i class="fas fa-history text-info me-2"></i>Historique des entretiens
-                                    </h6>
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="fas fa-history text-info me-2"></i>Historique des entretiens
+                                        </h6>
+                                        <a href="/car/historique/${carId}?tab=maintenance"
+                                            class="btn btn-outline-info btn-sm" id="voir_tout_maintenance">
+                                            <i class="fas fa-external-link-alt me-1"></i>Voir tout
+                                        </a>
+                                    </div>
                                     <div id="maintenance_records_content">
                                         <div class="text-center py-3 text-muted small">Chargement...</div>
                                     </div>
+                                </div>
+
+                                <div class="border-top pt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="fas fa-tachometer-alt text-secondary me-2"></i>Kilométrage
+                                        </h6>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="ouvrirLogKm()">
+                                            <i class="fas fa-plus me-1"></i>Mettre à jour le KM
+                                        </button>
+                                    </div>
+                                    <div id="km_current" class="mb-2"></div>
+                                    <div id="km_history_content"></div>
                                 </div>
 
                             </div>
@@ -164,16 +176,34 @@
                                     <i class="fas fa-car-crash text-danger" style="font-size:13px;"></i>
                                 </div>
                                 Sinistres
+                                <span class="badge bg-danger ms-2" id="sinistres_badge" style="display:none;"></span>
                             </button>
                         </h2>
                         <div id="collapseSinistres" class="accordion-collapse collapse"
                             data-bs-parent="#carAccordion">
                             <div class="accordion-body bg-white">
-                                <div class="text-center py-4 text-muted">
-                                    <i class="fas fa-car-crash fa-2x mb-3 opacity-25"></i>
-                                    <p class="small mb-0">Aucun sinistre enregistré pour ce véhicule.</p>
-                                    <p class="text-xs text-muted">Cette section sera complétée dans le module sinistres.</p>
+
+                                <div class="d-flex gap-2 mb-4">
+                                    <button class="btn btn-outline-danger btn-sm" onclick="ouvrirDeclarerSinistre()">
+                                        <i class="fas fa-plus me-1"></i>Déclarer un sinistre
+                                    </button>
                                 </div>
+
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="fas fa-list text-danger me-2"></i>Historique des sinistres
+                                        </h6>
+                                        <a href="/car/historique/${carId}?tab=sinistres"
+                                            class="btn btn-outline-danger btn-sm" id="voir_tout_sinistres">
+                                            <i class="fas fa-external-link-alt me-1"></i>Voir tout
+                                        </a>
+                                    </div>
+                                    <div id="sinistres_content">
+                                        <div class="text-center py-3 text-muted small">Chargement...</div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -215,16 +245,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4">
-
-                <!-- Garage selector -->
                 <div class="mb-4">
                     <label class="form-label small fw-bold">Garage <span class="text-danger">*</span></label>
                     <select class="form-select bg-light border-0" id="bon_garage_id">
                         <option value="">-- Sélectionner un garage --</option>
                     </select>
                 </div>
-
-                <!-- Open alerts -->
                 <div class="mb-3">
                     <label class="form-label small fw-bold">
                         <i class="fas fa-bell text-warning me-1"></i>Alertes ouvertes
@@ -233,8 +259,6 @@
                         <div class="text-muted small text-center py-2">Chargement...</div>
                     </div>
                 </div>
-
-                <!-- Extra parts -->
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="form-label small fw-bold mb-0">
@@ -246,7 +270,6 @@
                     </div>
                     <div id="bon_extra_items"></div>
                 </div>
-
             </div>
             <div class="modal-footer border-0">
                 <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
@@ -272,10 +295,10 @@
             </div>
             <div class="modal-body px-4">
                 <input type="hidden" id="log_alert_id">
-                <div class="row g-3">
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Pièce / Travail <span class="text-danger">*</span></label>
-                        <select class="form-select bg-light border-0" id="log_part_id">
+                        <select class="form-select bg-light border-0" id="log_part_id" onchange="onLogPartChange()">
                             <option value="">-- Sélectionner --</option>
                         </select>
                     </div>
@@ -287,23 +310,69 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Date d'entretien <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control bg-light border-0" id="log_done_at">
+                        <input type="date" class="form-control bg-light border-0" id="log_done_at" onchange="onLogDateOrKmChange()">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">KM au moment de l'entretien</label>
-                        <input type="number" class="form-control bg-light border-0" id="log_km" placeholder="Ex: 45000">
+                        <input type="number" class="form-control bg-light border-0" id="log_km" placeholder="Auto-rempli" onchange="onLogDateOrKmChange()">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">Prochain entretien (date)</label>
+                        <label class="form-label small fw-bold">
+                            Prochain entretien (date)
+                            <span class="text-muted fw-normal small" id="log_next_date_hint"></span>
+                        </label>
                         <input type="date" class="form-control bg-light border-0" id="log_next_date">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">Prochain entretien (KM)</label>
-                        <input type="number" class="form-control bg-light border-0" id="log_next_km" placeholder="Ex: 55000">
+                        <label class="form-label small fw-bold">
+                            Prochain entretien (KM)
+                            <span class="text-muted fw-normal small" id="log_next_km_hint"></span>
+                        </label>
+                        <input type="number" class="form-control bg-light border-0" id="log_next_km" placeholder="Auto-calculé">
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-bold">Notes</label>
                         <textarea class="form-control bg-light border-0" id="log_notes" rows="2" placeholder="Optionnel..."></textarea>
+                    </div>
+                </div>
+                <div class="border-top pt-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <h6 class="fw-bold text-primary mb-0 me-2"><i class="fas fa-receipt me-1"></i>Facture</h6>
+                        <span class="text-muted small">(optionnel — peut être attachée plus tard)</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">N° Facture</label>
+                            <input type="text" class="form-control bg-light border-0" id="log_facture_num">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">N° Règlement</label>
+                            <input type="text" class="form-control bg-light border-0" id="log_facture_num_reglement">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date Facture</label>
+                            <input type="date" class="form-control bg-light border-0" id="log_facture_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date Règlement</label>
+                            <input type="date" class="form-control bg-light border-0" id="log_facture_date_reglement">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant HT</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="log_facture_montant_ht">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">TVA</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="log_facture_tva">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant TTC</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="log_facture_montant_ttc">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Fichier facture</label>
+                            <input type="file" class="form-control bg-light border-0" id="log_facture_file" accept=".pdf,.jpg,.png">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,7 +387,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- FACTURE MODAL                                                 -->
+<!-- FACTURE MODAL (standalone)                                   -->
 <!-- ============================================================ -->
 <div class="modal fade" id="factureModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-md">
@@ -369,6 +438,314 @@
             <div class="modal-footer border-0">
                 <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
                 <button class="btn btn-primary px-4" onclick="confirmerAttacherFacture()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- LOG KM MODAL                                                  -->
+<!-- ============================================================ -->
+<div class="modal fade" id="logKmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-secondary">
+                    <i class="fas fa-tachometer-alt me-2"></i>Mettre à jour le KM
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Kilométrage actuel <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control bg-light border-0" id="km_value" placeholder="Ex: 47500">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Date de relevé</label>
+                    <input type="date" class="form-control bg-light border-0" id="km_date">
+                </div>
+                <div class="mb-0">
+                    <label class="form-label small fw-bold">Notes</label>
+                    <input type="text" class="form-control bg-light border-0" id="km_notes" placeholder="Optionnel...">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-secondary px-4" onclick="confirmerLogKm()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DECLARER SINISTRE MODAL — STEP 1                             -->
+<!-- ============================================================ -->
+<div class="modal fade" id="declarerSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger">
+                    <i class="fas fa-car-crash me-2"></i>Déclarer un Sinistre
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date du sinistre <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control bg-light border-0" id="sin_date">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Type <span class="text-danger">*</span></label>
+                        <select class="form-select bg-light border-0" id="sin_type">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="accident">Accident</option>
+                            <option value="vol">Vol</option>
+                            <option value="vandalisme">Vandalisme</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Employé impliqué</label>
+                        <select class="form-select bg-light border-0" id="sin_employee_id">
+                            <option value="">-- Sélectionner --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Constat</label>
+                        <input type="text" class="form-control bg-light border-0" id="sin_n_constat">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Constat</label>
+                        <input type="date" class="form-control bg-light border-0" id="sin_date_constat">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Fichier Constat</label>
+                        <input type="file" class="form-control bg-light border-0" id="sin_constat_file" accept=".pdf,.jpg,.png">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea class="form-control bg-light border-0" id="sin_description" rows="2" placeholder="Décrivez l'incident..."></textarea>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="col-12">
+                        <div class="border rounded p-3 bg-light">
+                            <div class="fw-bold small mb-3 text-dark">Options</div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="sin_set_maintenance"
+                                    onchange="onSinSetMaintenanceChange()">
+                                <label class="form-check-label small" for="sin_set_maintenance">
+                                    Mettre le véhicule en <strong>Maintenance</strong>
+                                </label>
+                            </div>
+                            <div id="sin_replacement_section" style="display:none;">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="sin_assign_replacement"
+                                        onchange="onSinAssignReplacementChange()">
+                                    <label class="form-check-label small" for="sin_assign_replacement">
+                                        Affecter un véhicule de remplacement à l'employé
+                                    </label>
+                                </div>
+                                <div id="sin_replacement_car_section" style="display:none;">
+                                    <select class="form-select form-select-sm bg-white border-0 mt-2" id="sin_replacement_car_id">
+                                        <option value="">-- Sélectionner un véhicule de remplacement --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label small fw-bold">Prise en charge</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sin_prise_en_charge"
+                                            id="sin_pec_societe" value="societe" checked>
+                                        <label class="form-check-label small" for="sin_pec_societe">
+                                            <i class="fas fa-building me-1 text-primary"></i>Société
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sin_prise_en_charge"
+                                            id="sin_pec_assurance" value="assurance">
+                                        <label class="form-check-label small" for="sin_pec_assurance">
+                                            <i class="fas fa-shield-alt me-1 text-success"></i>Assurance
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-danger px-4" onclick="confirmerDeclarerSinistre()">
+                    <i class="fas fa-check me-2"></i>Déclarer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CLOTURE SINISTRE MODAL                                       -->
+<!-- ============================================================ -->
+<div class="modal fade" id="clotureSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-success">
+                    <i class="fas fa-check-circle me-2"></i>Clôturer le Sinistre
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="cloture_sinistre_id">
+                <input type="hidden" id="cloture_employee_id">
+                <input type="hidden" id="cloture_replacement_car_id">
+
+                <!-- Règlement -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Montant réparation (DT)</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_montant">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Mode règlement</label>
+                        <select class="form-select bg-light border-0" id="cloture_mode_reglement">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="cheque">Chèque</option>
+                            <option value="virement">Virement</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Chèque / Virement</label>
+                        <input type="text" class="form-control bg-light border-0" id="cloture_n_reglement">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date règlement</label>
+                        <input type="date" class="form-control bg-light border-0" id="cloture_date_reglement">
+                    </div>
+                </div>
+
+                <!-- Facture -->
+                <div class="border-top pt-3 mb-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <h6 class="fw-bold text-primary mb-0 me-2"><i class="fas fa-receipt me-1"></i>Facture</h6>
+                        <span class="text-muted small">(optionnel)</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">N° Facture</label>
+                            <input type="text" class="form-control bg-light border-0" id="cloture_facture_num">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date Facture</label>
+                            <input type="date" class="form-control bg-light border-0" id="cloture_facture_date">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant HT</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_ht">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">TVA</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_tva">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant TTC</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_ttc">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Fichier facture</label>
+                            <input type="file" class="form-control bg-light border-0" id="cloture_facture_file" accept=".pdf,.jpg,.png">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Retour véhicule -->
+                <div class="border-top pt-3" id="cloture_retour_section">
+                    <div class="fw-bold small mb-3 text-dark">Véhicule</div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="cloture_retourner_vehicule" checked>
+                        <label class="form-check-label small" for="cloture_retourner_vehicule">
+                            Retourner le véhicule original à l'employé et clore le véhicule de remplacement
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-success px-4" onclick="confirmerClotureSinistre()">
+                    <i class="fas fa-check me-2"></i>Clôturer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- FACTURE SINISTRE MODAL (standalone attach)                   -->
+<!-- ============================================================ -->
+<div class="modal fade" id="factureSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-primary">
+                    <i class="fas fa-receipt me-2"></i>Attacher une Facture Sinistre
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="sin_facture_sinistre_id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Facture</label>
+                        <input type="text" class="form-control bg-light border-0" id="sin_facture_num">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Règlement</label>
+                        <input type="text" class="form-control bg-light border-0" id="sin_facture_num_reglement">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Facture</label>
+                        <input type="date" class="form-control bg-light border-0" id="sin_facture_date">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Règlement</label>
+                        <input type="date" class="form-control bg-light border-0" id="sin_facture_date_reglement">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Montant HT</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="sin_facture_montant_ht">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">TVA</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="sin_facture_tva">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Montant TTC</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="sin_facture_montant_ttc">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Prise en charge</label>
+                        <select class="form-select bg-light border-0" id="sin_facture_pec">
+                            <option value="societe">Société</option>
+                            <option value="assurance">Assurance</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Fichier facture</label>
+                        <input type="file" class="form-control bg-light border-0" id="sin_facture_file" accept=".pdf,.jpg,.png">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary px-4" onclick="confirmerAttacherFactureSinistre()">
                     <i class="fas fa-save me-2"></i>Enregistrer
                 </button>
             </div>

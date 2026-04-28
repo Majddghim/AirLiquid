@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!carId) return;
     await loadCarDetail();
     await loadMaintenance();
+    await loadKmSection();
+    await loadSinistres();
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +28,11 @@ async function loadCarDetail() {
         renderHeader(d.car);
         renderCarteGrise(d.car);
         renderDocuments(d.documents);
-        renderAffectation(d.affectation);
+        renderAffectation(d.affectation, d.car.status);
+
+        // fix voir tout links
+        document.getElementById('voir_tout_maintenance').href = `/car/historique/${carId}?tab=maintenance`;
+        document.getElementById('voir_tout_sinistres').href   = `/car/historique/${carId}?tab=sinistres`;
 
         document.getElementById("detail-loading").style.display = "none";
         document.getElementById("detail-content").style.display = "block";
@@ -47,9 +53,9 @@ async function loadMaintenance() {
 
 async function loadMaintenanceAlerts() {
     try {
-        const res  = await fetch(`/maintenance/alerts/${carId}`);
-        const data = await res.json();
-        const el   = document.getElementById('maintenance_alerts_content');
+        const res   = await fetch(`/maintenance/alerts/${carId}`);
+        const data  = await res.json();
+        const el    = document.getElementById('maintenance_alerts_content');
         const badge = document.getElementById('maintenance_alerts_badge');
 
         if (data.status !== 'success' || data.data.length === 0) {
@@ -177,9 +183,120 @@ async function loadMaintenanceRecords() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+// KM SECTION
+
+async function loadKmSection() {
+    try {
+        const res  = await fetch(`/maintenance/current-km/${carId}`);
+        const data = await res.json();
+        const currentEl = document.getElementById('km_current');
+
+        if (data.status === 'success' && data.data) {
+            const km = data.data;
+            currentEl.innerHTML = `
+                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded">
+                    <div class="bg-secondary bg-opacity-10 p-2 rounded">
+                        <i class="fas fa-tachometer-alt text-secondary fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size:18px;">${km.km.toLocaleString()} km</div>
+                        <div class="text-muted small">Relevé le ${formatDate(km.recorded_at)}</div>
+                    </div>
+                </div>`;
+        } else {
+            currentEl.innerHTML = `
+                <div class="text-muted small p-2">
+                    <i class="fas fa-info-circle me-1"></i>Aucun relevé KM enregistré
+                </div>`;
+        }
+
+        await loadKmHistory();
+    } catch (e) {
+        console.error('loadKmSection error:', e);
+    }
+}
+
+async function loadKmHistory() {
+    try {
+        const res  = await fetch(`/maintenance/km-history/${carId}`);
+        const data = await res.json();
+        const el   = document.getElementById('km_history_content');
+
+        if (data.status !== 'success' || data.data.length === 0) {
+            el.innerHTML = '';
+            return;
+        }
+
+        // show last 5 entries
+        const entries = data.data.slice(0, 5);
+        el.innerHTML = `
+            <table class="table table-sm align-middle mb-0 small mt-2">
+                <thead class="table-light">
+                    <tr class="text-xs text-uppercase text-muted">
+                        <th>KM</th>
+                        <th>Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${entries.map(k => `
+                    <tr>
+                        <td class="fw-bold">${k.km.toLocaleString()} km</td>
+                        <td>${formatDate(k.recorded_at)}</td>
+                        <td class="text-muted">${escapeHtml(k.notes || '—')}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>`;
+    } catch (e) {
+        console.error('loadKmHistory error:', e);
+    }
+}
+
+function ouvrirLogKm() {
+    document.getElementById('km_value').value = '';
+    document.getElementById('km_date').value  = new Date().toISOString().split('T')[0];
+    document.getElementById('km_notes').value = '';
+    new bootstrap.Modal(document.getElementById('logKmModal')).show();
+}
+
+async function confirmerLogKm() {
+    const km   = document.getElementById('km_value').value;
+    const date = document.getElementById('km_date').value;
+
+    if (!km) {
+        Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Veuillez saisir le kilométrage.' });
+        return;
+    }
+
+    try {
+        const res    = await fetch(`/maintenance/log-km/${carId}`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                km:          parseInt(km),
+                recorded_at: date,
+                notes:       document.getElementById('km_notes').value.trim() || null
+            })
+        });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('logKmModal')).hide();
+            Swal.fire({ icon: 'success', title: 'KM enregistré !', showConfirmButton: false, timer: 1500 });
+            setTimeout(() => loadKmSection(), 1500);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message });
+        }
+    } catch (e) {
+        console.error('confirmerLogKm error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 // BON DE COMMANDE
 
-let bonData = null;
+let bonData      = null;
 let bonExtraItems = [];
 
 async function ouvrirBonCommande() {
@@ -190,10 +307,9 @@ async function ouvrirBonCommande() {
             Swal.fire({ icon: 'error', title: 'Erreur', text: data.message });
             return;
         }
-        bonData = data.data;
+        bonData      = data.data;
         bonExtraItems = [];
 
-        // fill garage dropdown
         const garageSelect = document.getElementById('bon_garage_id');
         garageSelect.innerHTML = '<option value="">-- Sélectionner un garage --</option>';
         bonData.garages.forEach(g => {
@@ -204,7 +320,6 @@ async function ouvrirBonCommande() {
             garageSelect.appendChild(opt);
         });
 
-        // fill alerts list
         const alertsList = document.getElementById('bon_alerts_list');
         if (bonData.alerts.length === 0) {
             alertsList.innerHTML = '<div class="text-muted small text-center py-2">Aucune alerte ouverte</div>';
@@ -216,19 +331,20 @@ async function ouvrirBonCommande() {
                         data-part-id="${a.part_id}"
                         data-part-name="${escapeHtml(a.part_name)}"
                         data-category="${escapeHtml(a.category || '')}"
-                        checked>
+                        ${a.urgent ? 'checked' : ''}>
                     <label class="form-check-label small" for="alert_${a.id}">
                         <strong>${escapeHtml(a.part_name)}</strong>
                         ${a.category ? `<span class="text-muted"> — ${escapeHtml(a.category)}</span>` : ''}
+                        ${a.urgent
+                            ? '<span class="badge bg-danger ms-2">Urgent</span>'
+                            : '<span class="badge bg-secondary ms-2">Optionnel</span>'}
                         ${a.due_date ? `<span class="text-danger ms-2"><i class="fas fa-calendar me-1"></i>${formatDate(a.due_date)}</span>` : ''}
                         ${a.due_km ? `<span class="text-info ms-2"><i class="fas fa-tachometer-alt me-1"></i>${a.due_km} km</span>` : ''}
                     </label>
                 </div>`).join('');
         }
 
-        // clear extra items
         document.getElementById('bon_extra_items').innerHTML = '';
-
         new bootstrap.Modal(document.getElementById('bonCommandeModal')).show();
     } catch (e) {
         console.error('ouvrirBonCommande error:', e);
@@ -239,7 +355,6 @@ async function ouvrirBonCommande() {
 function ajouterLigneBon() {
     const container = document.getElementById('bon_extra_items');
     const idx = Date.now();
-
     const partOptions = bonData.parts.map(p =>
         `<option value="${p.id}" data-name="${escapeHtml(p.name)}" data-category="${escapeHtml(p.category || '')}">${escapeHtml(p.name)}${p.category ? ' — ' + escapeHtml(p.category) : ''}</option>`
     ).join('');
@@ -271,28 +386,18 @@ async function genererBon() {
     }
 
     const garage = JSON.parse(garageOpt.dataset.garage);
+    const items  = [];
 
-    // collect checked alerts
-    const items = [];
     document.querySelectorAll('#bon_alerts_list input[type=checkbox]:checked').forEach(cb => {
-        items.push({
-            part_name: cb.dataset.partName,
-            category:  cb.dataset.category,
-            notes:     ''
-        });
+        items.push({ part_name: cb.dataset.partName, category: cb.dataset.category, notes: '' });
     });
 
-    // collect extra items
     document.querySelectorAll('#bon_extra_items > div').forEach(row => {
         const select = row.querySelector('select');
         const notes  = row.querySelector('input[type=text]');
         if (select && select.value) {
             const opt = select.options[select.selectedIndex];
-            items.push({
-                part_name: opt.dataset.name,
-                category:  opt.dataset.category,
-                notes:     notes ? notes.value.trim() : ''
-            });
+            items.push({ part_name: opt.dataset.name, category: opt.dataset.category, notes: notes ? notes.value.trim() : '' });
         }
     });
 
@@ -301,26 +406,16 @@ async function genererBon() {
         return;
     }
 
-    const payload = {
-        car:    bonData.car,
-        garage: garage,
-        items:  items,
-        date:   new Date().toLocaleDateString('fr-TN')
-    };
+    const payload = { car: bonData.car, garage, items, date: new Date().toLocaleDateString('fr-TN') };
 
     try {
-        const res = await fetch('/maintenance/bon/generate', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(payload)
+        const res  = await fetch('/maintenance/bon/generate', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         const html = await res.text();
-
-        // open in new tab
-        const tab = window.open('', '_blank');
+        const tab  = window.open('', '_blank');
         tab.document.write(html);
         tab.document.close();
-
         bootstrap.Modal.getInstance(document.getElementById('bonCommandeModal')).hide();
     } catch (e) {
         console.error('genererBon error:', e);
@@ -331,12 +426,12 @@ async function genererBon() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // LOG MAINTENANCE
 
-let logPartsCache  = [];
+let logPartsCache   = [];
 let logGaragesCache = [];
+let currentPartIntervals = null;
 
 async function ouvrirLogMaintenance(alertId = null, partId = null) {
     try {
-        // load parts and garages if not cached
         if (logPartsCache.length === 0) {
             const res  = await fetch('/maintenance/bon-data/' + carId);
             const data = await res.json();
@@ -347,12 +442,22 @@ async function ouvrirLogMaintenance(alertId = null, partId = null) {
         }
 
         // reset form
-        document.getElementById('log_alert_id').value  = alertId || '';
-        document.getElementById('log_done_at').value   = new Date().toISOString().split('T')[0];
-        document.getElementById('log_km').value        = '';
-        document.getElementById('log_next_date').value = '';
-        document.getElementById('log_next_km').value   = '';
-        document.getElementById('log_notes').value     = '';
+        document.getElementById('log_alert_id').value              = alertId || '';
+        document.getElementById('log_done_at').value               = new Date().toISOString().split('T')[0];
+        document.getElementById('log_km').value                    = '';
+        document.getElementById('log_next_date').value             = '';
+        document.getElementById('log_next_km').value               = '';
+        document.getElementById('log_notes').value                 = '';
+        document.getElementById('log_next_date_hint').innerText    = '';
+        document.getElementById('log_next_km_hint').innerText      = '';
+        document.getElementById('log_facture_num').value           = '';
+        document.getElementById('log_facture_num_reglement').value = '';
+        document.getElementById('log_facture_date').value          = '';
+        document.getElementById('log_facture_date_reglement').value= '';
+        document.getElementById('log_facture_montant_ht').value    = '';
+        document.getElementById('log_facture_tva').value           = '';
+        document.getElementById('log_facture_montant_ttc').value   = '';
+        currentPartIntervals = null;
 
         // fill parts
         const partSelect = document.getElementById('log_part_id');
@@ -363,7 +468,10 @@ async function ouvrirLogMaintenance(alertId = null, partId = null) {
             opt.text  = p.name + (p.category ? ' — ' + p.category : '');
             partSelect.appendChild(opt);
         });
-        if (partId) partSelect.value = partId;
+        if (partId) {
+            partSelect.value = partId;
+            await onLogPartChange();
+        }
 
         // fill garages
         const garageSelect = document.getElementById('log_garage_id');
@@ -375,10 +483,61 @@ async function ouvrirLogMaintenance(alertId = null, partId = null) {
             garageSelect.appendChild(opt);
         });
 
+        // prefill current KM
+        const kmRes  = await fetch(`/maintenance/current-km/${carId}`);
+        const kmData = await kmRes.json();
+        if (kmData.status === 'success' && kmData.data) {
+            document.getElementById('log_km').value = kmData.data.km;
+            onLogDateOrKmChange();
+        }
+
         new bootstrap.Modal(document.getElementById('logMaintenanceModal')).show();
     } catch (e) {
         console.error('ouvrirLogMaintenance error:', e);
         Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de charger les données.' });
+    }
+}
+
+async function onLogPartChange() {
+    const partId = document.getElementById('log_part_id').value;
+    if (!partId) {
+        currentPartIntervals = null;
+        document.getElementById('log_next_date_hint').innerText = '';
+        document.getElementById('log_next_km_hint').innerText   = '';
+        return;
+    }
+    try {
+        const res  = await fetch(`/maintenance/part-intervals/${partId}`);
+        const data = await res.json();
+        if (data.status === 'success' && data.data) {
+            currentPartIntervals = data.data;
+            const kmInterval    = data.data.alert_km_interval;
+            const monthInterval = data.data.alert_month_interval;
+            document.getElementById('log_next_km_hint').innerText   = kmInterval    ? `(intervalle: ${kmInterval} km)` : '';
+            document.getElementById('log_next_date_hint').innerText = monthInterval ? `(intervalle: ${monthInterval} mois)` : '';
+            onLogDateOrKmChange();
+        }
+    } catch (e) {
+        console.error('onLogPartChange error:', e);
+    }
+}
+
+function onLogDateOrKmChange() {
+    if (!currentPartIntervals) return;
+
+    const km        = parseInt(document.getElementById('log_km').value);
+    const doneAt    = document.getElementById('log_done_at').value;
+    const kmInt     = currentPartIntervals.alert_km_interval;
+    const monthInt  = currentPartIntervals.alert_month_interval;
+
+    if (km && kmInt) {
+        document.getElementById('log_next_km').value = km + kmInt;
+    }
+
+    if (doneAt && monthInt) {
+        const d = new Date(doneAt);
+        d.setMonth(d.getMonth() + monthInt);
+        document.getElementById('log_next_date').value = d.toISOString().split('T')[0];
     }
 }
 
@@ -408,19 +567,42 @@ async function confirmerLogMaintenance() {
 
     try {
         const res    = await fetch(`/maintenance/log/${carId}`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(payload)
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         const result = await res.json();
 
-        if (result.status === 'success') {
-            bootstrap.Modal.getInstance(document.getElementById('logMaintenanceModal')).hide();
-            Swal.fire({ icon: 'success', title: 'Enregistré !', text: result.message, showConfirmButton: false, timer: 2000 });
-            setTimeout(() => loadMaintenance(), 2000);
-        } else {
+        if (result.status !== 'success') {
             Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+            return;
         }
+
+        const recordId = result.record_id;
+
+        // attach facture if any facture fields filled
+        const factureNum = document.getElementById('log_facture_num').value.trim();
+        const factureTtc = document.getElementById('log_facture_montant_ttc').value;
+        const factureFile = document.getElementById('log_facture_file').files[0];
+
+        if (factureNum || factureTtc || factureFile) {
+            const formData = new FormData();
+            formData.append('car_id',        carId);
+            formData.append('num_facture',   factureNum);
+            formData.append('num_reglement', document.getElementById('log_facture_num_reglement').value.trim());
+            formData.append('date_facture',  document.getElementById('log_facture_date').value);
+            formData.append('date_reglement',document.getElementById('log_facture_date_reglement').value);
+            formData.append('montant_ht',    document.getElementById('log_facture_montant_ht').value);
+            formData.append('tva',           document.getElementById('log_facture_tva').value);
+            formData.append('montant_ttc',   factureTtc);
+            if (factureFile) formData.append('file', factureFile);
+
+            await fetch(`/maintenance/facture/attach/${recordId}`, { method: 'POST', body: formData });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('logMaintenanceModal')).hide();
+        await loadMaintenance();
+        await loadKmSection();
+        Swal.fire({ icon: 'success', title: 'Enregistré !', text: 'Entretien logué avec succès.', showConfirmButton: false, timer: 2000 });
+
     } catch (e) {
         console.error('confirmerLogMaintenance error:', e);
         Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
@@ -428,7 +610,7 @@ async function confirmerLogMaintenance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// FACTURE
+// FACTURE (standalone — for attaching later)
 
 function ouvrirFactureModal(recordId) {
     document.getElementById('facture_record_id').value      = recordId;
@@ -445,7 +627,6 @@ function ouvrirFactureModal(recordId) {
 async function confirmerAttacherFacture() {
     const recordId = document.getElementById('facture_record_id').value;
     const formData = new FormData();
-
     formData.append('car_id',          carId);
     formData.append('num_facture',      document.getElementById('facture_num').value.trim());
     formData.append('num_reglement',    document.getElementById('facture_num_reglement').value.trim());
@@ -454,22 +635,15 @@ async function confirmerAttacherFacture() {
     formData.append('montant_ht',       document.getElementById('facture_montant_ht').value);
     formData.append('tva',              document.getElementById('facture_tva').value);
     formData.append('montant_ttc',      document.getElementById('facture_montant_ttc').value);
-
     const fileInput = document.getElementById('facture_file');
-    if (fileInput.files.length > 0) {
-        formData.append('file', fileInput.files[0]);
-    }
+    if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
 
     try {
-        const res    = await fetch(`/maintenance/facture/attach/${recordId}`, {
-            method: 'POST',
-            body:   formData
-        });
+        const res    = await fetch(`/maintenance/facture/attach/${recordId}`, { method: 'POST', body: formData });
         const result = await res.json();
-
         if (result.status === 'success') {
             bootstrap.Modal.getInstance(document.getElementById('factureModal')).hide();
-            Swal.fire({ icon: 'success', title: 'Facture attachée !', text: result.message, showConfirmButton: false, timer: 2000 });
+            Swal.fire({ icon: 'success', title: 'Facture attachée !', showConfirmButton: false, timer: 2000 });
             setTimeout(() => loadMaintenanceRecords(), 2000);
         } else {
             Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
@@ -546,7 +720,6 @@ function renderDocuments(docs) {
     }
 
     document.getElementById("docs_detail").innerHTML = `
-        <!-- Assurance -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
                 <div class="card-body">
@@ -584,8 +757,6 @@ function renderDocuments(docs) {
                 </div>
             </div>
         </div>
-
-        <!-- Vignette -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
                 <div class="card-body">
@@ -615,8 +786,6 @@ function renderDocuments(docs) {
                 </div>
             </div>
         </div>
-
-        <!-- Visite Technique -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
                 <div class="card-body">
@@ -650,30 +819,38 @@ function renderDocuments(docs) {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // RENDER AFFECTATION
 
-function renderAffectation(affectation) {
+function renderAffectation(affectation, carStatus) {
     const el = document.getElementById("affectation_content");
-
     if (!affectation) {
-        el.innerHTML = `
-            <div class="text-muted d-flex align-items-center">
-                <i class="fas fa-user-slash me-3 fa-lg opacity-50"></i>
-                <div>
-                    <div class="fw-bold small">Aucun employé affecté</div>
-                    <div class="text-xs">Vous pouvez affecter un employé depuis la liste des véhicules.</div>
-                </div>
-            </div>`;
-        document.getElementById("affectation_banner").style.borderLeftColor = "#dee2e6";
+        if (carStatus === 'maintenance') {
+            el.innerHTML = `
+                <div class="text-warning d-flex align-items-center">
+                    <i class="fas fa-tools me-3 fa-lg"></i>
+                    <div>
+                        <div class="fw-bold small">Véhicule en maintenance</div>
+                        <div class="text-xs text-muted">L'employé est temporairement affecté à un véhicule de remplacement.</div>
+                    </div>
+                </div>`;
+            document.getElementById("affectation_banner").style.borderLeftColor = "#ffc107";
+        } else {
+            el.innerHTML = `
+                <div class="text-muted d-flex align-items-center">
+                    <i class="fas fa-user-slash me-3 fa-lg opacity-50"></i>
+                    <div>
+                        <div class="fw-bold small">Aucun employé affecté</div>
+                        <div class="text-xs">Vous pouvez affecter un employé depuis la liste des véhicules.</div>
+                    </div>
+                </div>`;
+            document.getElementById("affectation_banner").style.borderLeftColor = "#dee2e6";
+        }
         return;
     }
-
     el.innerHTML = `
         <div class="bg-success bg-opacity-10 p-2 rounded me-3">
             <i class="fas fa-user-tag text-success fa-lg"></i>
         </div>
         <div class="flex-grow-1">
-            <div class="fw-bold text-dark">
-                ${escapeHtml(affectation.prenom)} ${escapeHtml(affectation.nom)}
-            </div>
+            <div class="fw-bold text-dark">${escapeHtml(affectation.prenom)} ${escapeHtml(affectation.nom)}</div>
             <div class="text-muted small">
                 ${escapeHtml(affectation.poste || '')}
                 ${affectation.departement ? ' — ' + escapeHtml(affectation.departement) : ''}
@@ -683,6 +860,357 @@ function renderAffectation(affectation) {
             <div class="info-label">Affecté depuis</div>
             <div class="fw-bold small text-success">${formatDate(affectation.start_date)}</div>
         </div>`;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+// SINISTRES
+
+async function loadSinistres() {
+    try {
+        const res   = await fetch(`/sinistre/by-car/${carId}`);
+        const data  = await res.json();
+        const el    = document.getElementById('sinistres_content');
+        const badge = document.getElementById('sinistres_badge');
+
+        if (data.status !== 'success' || data.data.length === 0) {
+            el.innerHTML = `
+                <div class="text-center py-3 text-muted small">
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    Aucun sinistre enregistré
+                </div>`;
+            return;
+        }
+
+        const open = data.data.filter(s => s.status !== 'cloture');
+        if (open.length > 0) {
+            badge.style.display = 'inline';
+            badge.innerText = open.length;
+        }
+
+        // show last 3 only — full list on history page
+        const preview = data.data.slice(0, 3);
+
+        el.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr class="text-xs text-uppercase text-muted">
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Employé</th>
+                            <th>Statut</th>
+                            <th>Prise en charge</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${preview.map(s => {
+                            const statusBadge =
+                                s.status === 'ouvert'   ? '<span class="badge bg-danger">Ouvert</span>' :
+                                s.status === 'en_cours' ? '<span class="badge bg-warning text-dark">En cours</span>' :
+                                '<span class="badge bg-success">Clôturé</span>';
+                            return `
+                            <tr>
+                                <td>${formatDate(s.date_sinistre)}</td>
+                                <td><span class="badge bg-light text-dark border">${escapeHtml(s.type)}</span></td>
+                                <td>${s.nom ? escapeHtml(s.prenom + ' ' + s.nom) : '—'}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    ${s.facture_id
+                                        ? `<a href="/${s.facture_file}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-file-invoice me-1"></i>${s.montant_ttc ? s.montant_ttc + ' DT' : 'Voir'}
+                                           </a>`
+                                        : `<button class="btn btn-outline-secondary btn-sm"
+                                            onclick="ouvrirFactureSinistreModal(${s.id})">
+                                            <i class="fas fa-paperclip me-1"></i>Facture
+                                           </button>`
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        ${s.status !== 'cloture' ? `
+                                        <button class="btn btn-outline-success border-0 rounded-circle"
+                                            title="Clôturer"
+                                            onclick="ouvrirClotureSinistre(${s.id}, ${s.employee_id || 'null'}, ${s.replacement_car_id || 'null'})">
+                                            <i class="fas fa-check"></i>
+                                        </button>` : ''}
+                                    </div>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (e) {
+        console.error('loadSinistres error:', e);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DECLARER SINISTRE
+
+let sinEmployeesCache = [];
+
+async function ouvrirDeclarerSinistre() {
+    // reset form
+    document.getElementById('sin_date').value          = new Date().toISOString().split('T')[0];
+    document.getElementById('sin_type').value          = '';
+    document.getElementById('sin_n_constat').value     = '';
+    document.getElementById('sin_date_constat').value  = '';
+    document.getElementById('sin_description').value   = '';
+    document.getElementById('sin_set_maintenance').checked              = false;
+    document.getElementById('sin_assign_replacement').checked           = false;
+    document.getElementById('sin_replacement_section').style.display   = 'none';
+    document.getElementById('sin_replacement_car_section').style.display = 'none';
+    document.getElementById('sin_pec_societe').checked = true;
+
+    // load employees + pre-select current assignee
+    try {
+        const [empRes, affRes] = await Promise.all([
+            fetch('/car/get-employes-list'),
+            fetch(`/car/get-affectation/${carId}`)
+        ]);
+        const empData = await empRes.json();
+        const affData = await affRes.json();
+
+        const sel = document.getElementById('sin_employee_id');
+        sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+
+        if (empData.status === 'success') {
+            sinEmployeesCache = empData.data;
+            empData.data.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.id;
+                opt.text  = `${e.prenom} ${e.nom} — ${e.poste}`;
+                sel.appendChild(opt);
+            });
+        }
+
+        // pre-select current assignee if car is assigned
+        if (affData.status === 'success' && affData.assigned) {
+            sel.value = affData.data.employee_id;
+        }
+
+    } catch (e) {
+        console.error('load employees error:', e);
+    }
+
+    new bootstrap.Modal(document.getElementById('declarerSinistreModal')).show();
+}
+
+function onSinSetMaintenanceChange() {
+    const checked = document.getElementById('sin_set_maintenance').checked;
+    document.getElementById('sin_replacement_section').style.display = checked ? 'block' : 'none';
+    if (!checked) {
+        document.getElementById('sin_assign_replacement').checked = false;
+        document.getElementById('sin_replacement_car_section').style.display = 'none';
+    }
+}
+
+async function onSinAssignReplacementChange() {
+    const checked = document.getElementById('sin_assign_replacement').checked;
+    const section = document.getElementById('sin_replacement_car_section');
+    section.style.display = checked ? 'block' : 'none';
+
+    if (checked) {
+        try {
+            const res  = await fetch('/sinistre/available-cars');
+            const data = await res.json();
+            const sel  = document.getElementById('sin_replacement_car_id');
+            sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+            if (data.status === 'success') {
+                data.data.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.text  = `${c.plate_number} — ${c.model || ''} ${c.brand || ''}`;
+                    sel.appendChild(opt);
+                });
+            }
+        } catch (e) {
+            console.error('load available cars error:', e);
+        }
+    }
+}
+
+async function confirmerDeclarerSinistre() {
+    const date = document.getElementById('sin_date').value;
+    const type = document.getElementById('sin_type').value;
+
+    if (!date) {
+        Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Veuillez saisir la date.' });
+        return;
+    }
+    if (!type) {
+        Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Veuillez sélectionner le type.' });
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('date_sinistre',    date);
+    formData.append('type_sinistre',    type);
+    formData.append('employee_id',      document.getElementById('sin_employee_id').value || '');
+    formData.append('n_constat',        document.getElementById('sin_n_constat').value.trim());
+    formData.append('date_constat',     document.getElementById('sin_date_constat').value);
+    formData.append('description',      document.getElementById('sin_description').value.trim());
+    formData.append('set_maintenance',  document.getElementById('sin_set_maintenance').checked ? 'true' : 'false');
+    formData.append('prise_en_charge',  document.querySelector('input[name="sin_prise_en_charge"]:checked').value);
+
+    const replacementCar = document.getElementById('sin_replacement_car_id').value;
+    if (replacementCar) formData.append('replacement_car_id', replacementCar);
+
+    const constatFile = document.getElementById('sin_constat_file').files[0];
+    if (constatFile) formData.append('constat_file', constatFile);
+
+    try {
+        const res    = await fetch(`/sinistre/declarer/${carId}`, { method: 'POST', body: formData });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('declarerSinistreModal')).hide();
+
+            // if car set to maintenance, refresh header badge
+            if (document.getElementById('sin_set_maintenance').checked) {
+                await loadCarDetail();
+            }
+
+            await loadSinistres();
+            Swal.fire({ icon: 'success', title: 'Sinistre déclaré !', showConfirmButton: false, timer: 2000 });
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('confirmerDeclarerSinistre error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// CLOTURE SINISTRE
+
+function ouvrirClotureSinistre(sinistreId, employeeId, replacementCarId) {
+    document.getElementById('cloture_sinistre_id').value        = sinistreId;
+    document.getElementById('cloture_employee_id').value        = employeeId || '';
+    document.getElementById('cloture_replacement_car_id').value = replacementCarId || '';
+    document.getElementById('cloture_montant').value            = '';
+    document.getElementById('cloture_mode_reglement').value     = '';
+    document.getElementById('cloture_n_reglement').value        = '';
+    document.getElementById('cloture_date_reglement').value     = '';
+    document.getElementById('cloture_facture_num').value        = '';
+    document.getElementById('cloture_facture_date').value       = '';
+    document.getElementById('cloture_facture_ht').value         = '';
+    document.getElementById('cloture_facture_tva').value        = '';
+    document.getElementById('cloture_facture_ttc').value        = '';
+    document.getElementById('cloture_retourner_vehicule').checked = true;
+
+    // show/hide retour section based on whether there's a replacement
+    document.getElementById('cloture_retour_section').style.display =
+        replacementCarId ? 'block' : 'none';
+
+    new bootstrap.Modal(document.getElementById('clotureSinistreModal')).show();
+}
+
+async function confirmerClotureSinistre() {
+    const sinistreId     = document.getElementById('cloture_sinistre_id').value;
+    const employeeId     = document.getElementById('cloture_employee_id').value;
+    const replacementId  = document.getElementById('cloture_replacement_car_id').value;
+    const retourner      = document.getElementById('cloture_retourner_vehicule').checked;
+
+    const payload = {
+        car_id:               carId,
+        employee_id:          employeeId || null,
+        montant_reparation:   document.getElementById('cloture_montant').value || null,
+        mode_reglement:       document.getElementById('cloture_mode_reglement').value || null,
+        n_cheque_or_virement: document.getElementById('cloture_n_reglement').value.trim() || null,
+        date_reglement:       document.getElementById('cloture_date_reglement').value || null,
+        retourner_vehicule:   retourner,
+        replacement_car_id:   replacementId || null
+    };
+
+    try {
+        const res    = await fetch(`/sinistre/cloturer/${sinistreId}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.status !== 'success') {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+            return;
+        }
+
+        // attach facture if filled
+        const factureNum  = document.getElementById('cloture_facture_num').value.trim();
+        const factureTtc  = document.getElementById('cloture_facture_ttc').value;
+        const factureFile = document.getElementById('cloture_facture_file').files[0];
+
+        if (factureNum || factureTtc || factureFile) {
+            const formData = new FormData();
+            formData.append('car_id',        carId);
+            formData.append('num_facture',   factureNum);
+            formData.append('date_facture',  document.getElementById('cloture_facture_date').value);
+            formData.append('montant_ht',    document.getElementById('cloture_facture_ht').value);
+            formData.append('tva',           document.getElementById('cloture_facture_tva').value);
+            formData.append('montant_ttc',   factureTtc);
+            formData.append('prise_en_charge', 'societe');
+            if (factureFile) formData.append('file', factureFile);
+            await fetch(`/sinistre/facture/attach/${sinistreId}`, { method: 'POST', body: formData });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('clotureSinistreModal')).hide();
+        await loadCarDetail();
+        await loadSinistres();
+        Swal.fire({ icon: 'success', title: 'Sinistre clôturé !', showConfirmButton: false, timer: 2000 });
+
+    } catch (e) {
+        console.error('confirmerClotureSinistre error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// FACTURE SINISTRE STANDALONE
+
+function ouvrirFactureSinistreModal(sinistreId) {
+    document.getElementById('sin_facture_sinistre_id').value    = sinistreId;
+    document.getElementById('sin_facture_num').value            = '';
+    document.getElementById('sin_facture_num_reglement').value  = '';
+    document.getElementById('sin_facture_date').value           = '';
+    document.getElementById('sin_facture_date_reglement').value = '';
+    document.getElementById('sin_facture_montant_ht').value     = '';
+    document.getElementById('sin_facture_tva').value            = '';
+    document.getElementById('sin_facture_montant_ttc').value    = '';
+    document.getElementById('sin_facture_pec').value            = 'societe';
+    new bootstrap.Modal(document.getElementById('factureSinistreModal')).show();
+}
+
+async function confirmerAttacherFactureSinistre() {
+    const sinistreId = document.getElementById('sin_facture_sinistre_id').value;
+    const formData   = new FormData();
+    formData.append('car_id',          carId);
+    formData.append('num_facture',      document.getElementById('sin_facture_num').value.trim());
+    formData.append('num_reglement',    document.getElementById('sin_facture_num_reglement').value.trim());
+    formData.append('date_facture',     document.getElementById('sin_facture_date').value);
+    formData.append('date_reglement',   document.getElementById('sin_facture_date_reglement').value);
+    formData.append('montant_ht',       document.getElementById('sin_facture_montant_ht').value);
+    formData.append('tva',              document.getElementById('sin_facture_tva').value);
+    formData.append('montant_ttc',      document.getElementById('sin_facture_montant_ttc').value);
+    formData.append('prise_en_charge',  document.getElementById('sin_facture_pec').value);
+    const fileInput = document.getElementById('sin_facture_file');
+    if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
+
+    try {
+        const res    = await fetch(`/sinistre/facture/attach/${sinistreId}`, { method: 'POST', body: formData });
+        const result = await res.json();
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('factureSinistreModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Facture attachée !', showConfirmButton: false, timer: 2000 });
+            await loadSinistres();
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+        }
+    } catch (e) {
+        console.error('confirmerAttacherFactureSinistre error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

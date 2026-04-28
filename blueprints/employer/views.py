@@ -138,3 +138,18 @@ class employe:
                 return jsonify({'status': 'success', 'assigned': False})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/profil/<int:employe_id>', methods=['GET'])
+        def profil_page(employe_id):
+            from flask import render_template
+            return render_template('employe-profil.html')
+
+        @self.employe_bp.route('/profil-data/<int:employe_id>', methods=['GET'])
+        def profil_data(employe_id):
+            try:
+                data = self.EmployeService.get_profil_employe(employe_id)
+                if not data:
+                    return jsonify({'status': 'failed', 'message': 'Employé introuvable'}), 404
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

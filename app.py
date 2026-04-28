@@ -11,7 +11,7 @@ from blueprints.maintenance import maintenance_bp
 
 import datetime
 from flask.json.provider import DefaultJSONProvider
-
+from blueprints.sinistre import sinistre_bp
 class CustomJSONProvider(DefaultJSONProvider):
     def default(self, obj):
         if isinstance(obj, (datetime.date, datetime.datetime)):
@@ -32,6 +32,8 @@ app.register_blueprint(guest_bp, url_prefix='/guest')
 app.register_blueprint(settings_bp, url_prefix='/settings')
 app.register_blueprint(maintenance_bp, url_prefix='/maintenance')
 
+
+app.register_blueprint(sinistre_bp, url_prefix='/sinistre')
 @app.route('/')
 def hello_world():
     return redirect(url_for('login'))

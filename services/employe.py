@@ -186,3 +186,51 @@ class EmployeService:
             return dict(result) if result else None
         finally:
             con.close()
+
+    def get_profil_employe(self, employe_id):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            # employee info
+            cursor.execute("""
+                SELECT id, nom, prenom, departement, poste, email,
+                       telephone, status, created_at, updated_at
+                FROM employees WHERE id = %s
+            """, (employe_id,))
+            emp = cursor.fetchone()
+            if not emp:
+                return None
+
+            # full assignment history
+            cursor.execute("""
+                SELECT ca.id, ca.car_id, ca.start_date, ca.end_date, ca.notes,
+                       c.plate_number, c.brand, c.status AS car_status,
+                       cg.model, cg.year,
+                       DATEDIFF(COALESCE(ca.end_date, CURDATE()), ca.start_date) AS duree_jours
+                FROM car_assignments ca
+                JOIN cars c ON ca.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE ca.employee_id = %s
+                ORDER BY ca.start_date DESC
+            """, (employe_id,))
+            assignments = [dict(r) for r in cursor.fetchall()]
+
+            # sinistres involved in
+            cursor.execute("""
+                SELECT s.id, s.car_id, s.date_sinistre, s.type,
+                       s.description, s.status, s.montant_reparation,
+                       c.plate_number, cg.model
+                FROM sinistres s
+                JOIN cars c ON s.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE s.employee_id = %s
+                ORDER BY s.date_sinistre DESC
+            """, (employe_id,))
+            sinistres = [dict(r) for r in cursor.fetchall()]
+
+            return {
+                'employe': dict(emp),
+                'assignments': assignments,
+                'sinistres': sinistres
+            }
+        finally:
+            con.close()

@@ -24,7 +24,7 @@ class MaintenanceViews:
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
-        @self.maintenance_bp.route('/alerts/all', methods=['GET'])
+        @self.maintenance_bp.route('/all-alerts', methods=['GET'])
         def get_all_alerts():
             try:
                 data = self.service.get_all_open_alerts()
@@ -45,6 +45,7 @@ class MaintenanceViews:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
         @self.maintenance_bp.route('/log/<int:car_id>', methods=['POST'])
+        @self.maintenance_bp.route('/log/<int:car_id>', methods=['POST'])
         def log_maintenance(car_id):
             try:
                 data = request.get_json()
@@ -57,7 +58,7 @@ class MaintenanceViews:
                     next_due_date=data.get('next_due_date'),
                     next_due_km=data.get('next_due_km'),
                     notes=data.get('notes'),
-                    alert_id=data.get('alert_id')
+                    alert_id=int(data.get('alert_id')) if data.get('alert_id') else None
                 )
                 return jsonify({'status': 'success', 'message': 'Entretien enregistré', 'record_id': record_id})
             except Exception as e:
@@ -240,5 +241,50 @@ class MaintenanceViews:
         </html>"""
 
                 return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # ------------------------------------------------------------------ #
+        # KM TRACKING                                                          #
+        # ------------------------------------------------------------------ #
+
+        @self.maintenance_bp.route('/current-km/<int:car_id>', methods=['GET'])
+        def get_current_km(car_id):
+            try:
+                data = self.service.get_current_km(car_id)
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.maintenance_bp.route('/km-history/<int:car_id>', methods=['GET'])
+        def get_km_history(car_id):
+            try:
+                data = self.service.get_km_history(car_id)
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.maintenance_bp.route('/log-km/<int:car_id>', methods=['POST'])
+        def log_km(car_id):
+            try:
+                data = request.get_json()
+                km = data.get('km')
+                if not km:
+                    return jsonify({'status': 'failed', 'message': 'KM requis'})
+                self.service.log_km(
+                    car_id=car_id,
+                    km=km,
+                    recorded_at=data.get('recorded_at'),
+                    notes=data.get('notes')
+                )
+                return jsonify({'status': 'success', 'message': 'KM enregistré'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.maintenance_bp.route('/part-intervals/<int:part_id>', methods=['GET'])
+        def get_part_intervals(part_id):
+            try:
+                data = self.service.get_part_intervals(part_id)
+                return jsonify({'status': 'success', 'data': data})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Alertes Maintenance - ALT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+    <style>
+        .filter-bar { background: #f8f9fc; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .overdue { border-left: 3px solid #dc3545; }
+        .due-soon { border-left: 3px solid #ffc107; }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid">
+
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded me-3">
+                            <i class="fas fa-bell text-danger fa-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-dark mb-0">Alertes Maintenance</h3>
+                            <div class="text-muted small">Tous les véhicules nécessitant une intervention</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-danger fs-6" id="total_alerts_badge">0 alertes</span>
+                </div>
+
+                <!-- SUMMARY CARDS -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
+                            <div class="card-body py-3">
+                                <div class="text-danger small fw-bold text-uppercase mb-1">En retard</div>
+                                <div class="fw-bold text-danger fs-4" id="count_overdue">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
+                            <div class="card-body py-3">
+                                <div class="text-warning small fw-bold text-uppercase mb-1">Dans 15 jours</div>
+                                <div class="fw-bold text-warning fs-4" id="count_soon">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm bg-info bg-opacity-10">
+                            <div class="card-body py-3">
+                                <div class="text-info small fw-bold text-uppercase mb-1">Basé KM</div>
+                                <div class="fw-bold text-info fs-4" id="count_km">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm bg-success bg-opacity-10">
+                            <div class="card-body py-3">
+                                <div class="text-success small fw-bold text-uppercase mb-1">Véhicules concernés</div>
+                                <div class="fw-bold text-success fs-4" id="count_cars">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILTERS -->
+                <div class="filter-bar">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold mb-1">Rechercher véhicule</label>
+                            <input type="text" class="form-control form-control-sm bg-white border-0"
+                                id="filter_search" placeholder="Plaque, modèle...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold mb-1">Type</label>
+                            <select class="form-select form-select-sm bg-white border-0" id="filter_type">
+                                <option value="">Tous</option>
+                                <option value="date">Date</option>
+                                <option value="km">KM</option>
+                                <option value="both">KM + Date</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold mb-1">Urgence</label>
+                            <select class="form-select form-select-sm bg-white border-0" id="filter_urgency">
+                                <option value="">Toutes</option>
+                                <option value="overdue">En retard</option>
+                                <option value="soon">Dans 15 jours</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-sm w-100" onclick="applyFilters()">
+                                <i class="fas fa-filter me-1"></i>Filtrer
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetFilters()">
+                                <i class="fas fa-times me-1"></i>Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="card shadow border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr class="text-xs text-uppercase text-muted">
+                                        <th class="ps-3">Véhicule</th>
+                                        <th>Employé</th>
+                                        <th>Pièce</th>
+                                        <th>Type</th>
+                                        <th>Échéance Date</th>
+                                        <th>Échéance KM</th>
+                                        <th>KM Actuel</th>
+                                        <th>Urgence</th>
+                                        <th class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alerts_tbody">
+                                    <tr><td colspan="9" class="text-center py-4 text-muted">Chargement...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3">
+                            <div class="small text-muted" id="alerts_info"></div>
+                            <ul class="pagination pagination-sm mb-0" id="alerts_pagination"></ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/maintenance-alerts.js') }}"></script>
+</body>
+</html>

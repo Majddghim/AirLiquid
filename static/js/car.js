@@ -256,17 +256,19 @@ async function confirmerVoiture() {
 // OPEN AFFECTATION MODAL
 
 async function ouvrirModalAffectation(event, carId, carLabel) {
-
     event.stopPropagation();
 
-    document.getElementById("affectation_car_id").value       = carId;
+    // reset everything first
+    document.getElementById("affectation_car_id").value        = carId;
     document.getElementById("affectation_car_label").innerText = carLabel;
-    document.getElementById("affectation_employee_id").value  = "";
-    document.getElementById("affectation_notes").value        = "";
-    document.getElementById("affectation_start_date").value   = new Date().toISOString().split("T")[0];
-    document.getElementById("affectation_warning").style.display = "none";
+    document.getElementById("affectation_employee_id").value   = "";
+    document.getElementById("affectation_notes").value         = "";
+    document.getElementById("affectation_start_date").value    = new Date().toISOString().split("T")[0];
+    document.getElementById("affectation_warning").style.display      = "none";
+    document.getElementById("affectation_warning_text").innerText     = "";
 
     try {
+        // load employees
         const empRes  = await fetch("/car/get-employes-list");
         const empData = await empRes.json();
         const select  = document.getElementById("affectation_employee_id");
@@ -280,15 +282,19 @@ async function ouvrirModalAffectation(event, carId, carLabel) {
             });
         }
 
+        // fetch affectation specifically for THIS car
         const affRes  = await fetch(`/car/get-affectation/${carId}`);
         const affData = await affRes.json();
+
         if (affData.status === "success" && affData.assigned) {
             const a = affData.data;
             document.getElementById("affectation_warning").style.display = "flex";
             document.getElementById("affectation_warning_text").innerText =
                 `Ce véhicule est actuellement affecté à ${a.prenom} ${a.nom}. Une nouvelle affectation mettra fin à l'actuelle.`;
+            // pre-select the current employee
             select.value = a.employee_id;
         }
+
     } catch (error) {
         console.error("Erreur chargement modal affectation:", error);
     }

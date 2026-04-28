@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Historique Véhicule - ALT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+    <style>
+        .info-label { font-size: 11px; font-weight: 700; color: #adb5bd; text-transform: uppercase; margin-bottom: 2px; }
+        .filter-bar { background: #f8f9fc; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid">
+
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                            <i class="fas fa-history text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-dark mb-0" id="history_title">Historique</h3>
+                            <div class="text-muted small" id="history_subtitle"></div>
+                        </div>
+                    </div>
+                    <a id="back_to_detail" href="#" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Retour au dossier
+                    </a>
+                </div>
+
+                <!-- TABS -->
+                <ul class="nav nav-tabs border-0 mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" id="tab-maintenance" href="#"
+                            onclick="switchTab('maintenance')">
+                            <i class="fas fa-tools me-2"></i>Maintenance
+                            <span class="badge bg-info ms-1" id="maintenance_count"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" id="tab-sinistres" href="#"
+                            onclick="switchTab('sinistres')">
+                            <i class="fas fa-car-crash me-2"></i>Sinistres
+                            <span class="badge bg-danger ms-1" id="sinistres_count"></span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- ================================================ -->
+                <!-- MAINTENANCE PANEL                                 -->
+                <!-- ================================================ -->
+                <div id="panel-maintenance">
+
+                    <!-- Filters -->
+                    <div class="filter-bar">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Date début</label>
+                                <input type="date" class="form-control form-control-sm bg-white border-0" id="m_filter_from">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Date fin</label>
+                                <input type="date" class="form-control form-control-sm bg-white border-0" id="m_filter_to">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Statut</label>
+                                <select class="form-select form-select-sm bg-white border-0" id="m_filter_status">
+                                    <option value="">Tous</option>
+                                    <option value="done">Fait</option>
+                                    <option value="pending_facture">En attente facture</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Facture</label>
+                                <select class="form-select form-select-sm bg-white border-0" id="m_filter_facture">
+                                    <option value="">Toutes</option>
+                                    <option value="sans">Sans facture</option>
+                                    <option value="avec">Avec facture</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-sm w-100" onclick="applyMaintenanceFilters()">
+                                    <i class="fas fa-filter me-1"></i>Filtrer
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetMaintenanceFilters()">
+                                    <i class="fas fa-times me-1"></i>Réinitialiser
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="card shadow border-0">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 small">
+                                    <thead class="table-light">
+                                        <tr class="text-xs text-uppercase text-muted">
+                                            <th class="ps-3">Pièce</th>
+                                            <th>Garage</th>
+                                            <th>Date</th>
+                                            <th>KM</th>
+                                            <th>Prochain</th>
+                                            <th>Statut</th>
+                                            <th class="text-end pe-3">Facture</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="maintenance_tbody">
+                                        <tr><td colspan="7" class="text-center py-4 text-muted">Chargement...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center p-3">
+                                <div class="small text-muted" id="maintenance_info"></div>
+                                <ul class="pagination pagination-sm mb-0" id="maintenance_pagination"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================ -->
+                <!-- SINISTRES PANEL                                   -->
+                <!-- ================================================ -->
+                <div id="panel-sinistres" style="display:none;">
+
+                    <!-- Filters -->
+                    <div class="filter-bar">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Date début</label>
+                                <input type="date" class="form-control form-control-sm bg-white border-0" id="s_filter_from">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Date fin</label>
+                                <input type="date" class="form-control form-control-sm bg-white border-0" id="s_filter_to">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Type</label>
+                                <select class="form-select form-select-sm bg-white border-0" id="s_filter_type">
+                                    <option value="">Tous</option>
+                                    <option value="accident">Accident</option>
+                                    <option value="vol">Vol</option>
+                                    <option value="vandalisme">Vandalisme</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Statut</label>
+                                <select class="form-select form-select-sm bg-white border-0" id="s_filter_status">
+                                    <option value="">Tous</option>
+                                    <option value="ouvert">Ouvert</option>
+                                    <option value="en_cours">En cours</option>
+                                    <option value="cloture">Clôturé</option>
+                                    <option value="non_cloture">Non clôturés</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold mb-1">Facture</label>
+                                <select class="form-select form-select-sm bg-white border-0" id="s_filter_facture">
+                                    <option value="">Toutes</option>
+                                    <option value="sans">Sans facture</option>
+                                    <option value="avec">Avec facture</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-primary btn-sm w-100" onclick="applySinistresFilters()">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetSinistresFilters()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="card shadow border-0">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 small">
+                                    <thead class="table-light">
+                                        <tr class="text-xs text-uppercase text-muted">
+                                            <th class="ps-3">Date</th>
+                                            <th>Type</th>
+                                            <th>Employé</th>
+                                            <th>Description</th>
+                                            <th>Statut</th>
+                                            <th>Montant</th>
+                                            <th>Prise en charge</th>
+                                            <th class="text-end pe-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sinistres_tbody">
+                                        <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center p-3">
+                                <div class="small text-muted" id="sinistres_info"></div>
+                                <ul class="pagination pagination-sm mb-0" id="sinistres_pagination"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+
+<!-- CLOTURE SINISTRE MODAL -->
+<div class="modal fade" id="clotureSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-success">
+                    <i class="fas fa-check-circle me-2"></i>Clôturer le Sinistre
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="cloture_sinistre_id">
+                <input type="hidden" id="cloture_employee_id">
+                <input type="hidden" id="cloture_replacement_car_id">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Montant réparation (DT)</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_montant">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Mode règlement</label>
+                        <select class="form-select bg-light border-0" id="cloture_mode_reglement">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="cheque">Chèque</option>
+                            <option value="virement">Virement</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Chèque / Virement</label>
+                        <input type="text" class="form-control bg-light border-0" id="cloture_n_reglement">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date règlement</label>
+                        <input type="date" class="form-control bg-light border-0" id="cloture_date_reglement">
+                    </div>
+                </div>
+                <div class="border-top pt-3 mb-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <h6 class="fw-bold text-primary mb-0 me-2"><i class="fas fa-receipt me-1"></i>Facture</h6>
+                        <span class="text-muted small">(optionnel)</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">N° Facture</label>
+                            <input type="text" class="form-control bg-light border-0" id="cloture_facture_num">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date Facture</label>
+                            <input type="date" class="form-control bg-light border-0" id="cloture_facture_date">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant HT</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_ht">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">TVA</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_tva">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant TTC</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_ttc">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Fichier facture</label>
+                            <input type="file" class="form-control bg-light border-0" id="cloture_facture_file" accept=".pdf,.jpg,.png">
+                        </div>
+                    </div>
+                </div>
+                <div class="border-top pt-3" id="cloture_retour_section">
+                    <div class="fw-bold small mb-3 text-dark">Véhicule</div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="cloture_retourner_vehicule" checked>
+                        <label class="form-check-label small" for="cloture_retourner_vehicule">
+                            Retourner le véhicule original à l'employé et clore le véhicule de remplacement
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-success px-4" onclick="confirmerClotureSinistre()">
+                    <i class="fas fa-check me-2"></i>Clôturer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FACTURE SINISTRE MODAL -->
+<div class="modal fade" id="factureSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-primary">
+                    <i class="fas fa-receipt me-2"></i>Attacher une Facture Sinistre
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="sin_facture_sinistre_id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Facture</label>
+                        <input type="text" class="form-control bg-light border-0" id="sin_facture_num">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Règlement</label>
+                        <input type="text" class="form-control bg-light border-0" id="sin_facture_num_reglement">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Facture</label>
+                        <input type="date" class="form-control bg-light border-0" id="sin_facture_date">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Règlement</label>
+                        <input type="date" class="form-control bg-light border-0" id="sin_facture_date_reglement">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Montant HT</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="sin_facture_montant_ht">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">TVA</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="sin_facture_tva">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Montant TTC</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="sin_facture_montant_ttc">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Prise en charge</label>
+                        <select class="form-select bg-light border-0" id="sin_facture_pec">
+                            <option value="societe">Société</option>
+                            <option value="assurance">Assurance</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Fichier facture</label>
+                        <input type="file" class="form-control bg-light border-0" id="sin_facture_file" accept=".pdf,.jpg,.png">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary px-4" onclick="confirmerAttacherFactureSinistre()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FACTURE MAINTENANCE MODAL -->
+<div class="modal fade" id="factureMaintenanceModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-primary">
+                    <i class="fas fa-receipt me-2"></i>Attacher une Facture Maintenance
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="maint_facture_record_id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Facture</label>
+                        <input type="text" class="form-control bg-light border-0" id="maint_facture_num">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">N° Règlement</label>
+                        <input type="text" class="form-control bg-light border-0" id="maint_facture_num_reglement">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Facture</label>
+                        <input type="date" class="form-control bg-light border-0" id="maint_facture_date">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date Règlement</label>
+                        <input type="date" class="form-control bg-light border-0" id="maint_facture_date_reglement">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Montant HT</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="maint_facture_montant_ht">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">TVA</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="maint_facture_tva">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Montant TTC</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" id="maint_facture_montant_ttc">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Fichier facture</label>
+                        <input type="file" class="form-control bg-light border-0" id="maint_facture_file" accept=".pdf,.jpg,.png">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-primary px-4" onclick="confirmerAttacherFactureMaintenance()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/car-historique.js') }}"></script>
+</body>
+</html>
