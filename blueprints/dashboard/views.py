@@ -122,7 +122,7 @@ class DashboardViews:
         def alerts():
             try:
                 days = request.args.get('days', 30, type=int)
-                data = self.DashboardService.get_alerts(days)
+                data = self.DashboardService.get_all_alerts_combined(days)
                 return jsonify({'status': 'success', 'data': data, 'count': len(data)})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500

@@ -381,3 +381,27 @@ class DashboardService:
 
         finally:
             con.close()
+
+    def get_all_alerts_combined(self, days_ahead=30):
+        """Combines document alerts + maintenance alerts for the bell"""
+        alerts = self.get_alerts(days_ahead)
+
+        # add maintenance alerts
+        from services.maintenance import MaintenanceService
+        maintenance_service = MaintenanceService()
+        maintenance_alerts = maintenance_service.get_all_open_alerts()
+
+        for a in maintenance_alerts:
+            alerts.append({
+                'type': 'maintenance',
+                'doc': a['part_name'],
+                'car_id': a['car_id'],
+                'car': f"{a['model'] or ''} — {a['plate_number'] or ''}",
+                'expiry': str(a['due_date']) if a['due_date'] else None,
+                'days': a['days_left'],
+                'level': 'danger' if (a['days_left'] is not None and a['days_left'] <= 0) else 'warning'
+            })
+
+        # re-sort
+        alerts.sort(key=lambda a: (0 if a['level'] == 'danger' else 1, a['days'] or 999))
+        return alerts

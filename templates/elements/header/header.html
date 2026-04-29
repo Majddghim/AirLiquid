@@ -27,7 +27,7 @@
         </li>
 
         <!-- ============================================================ -->
-        <!-- ALERTS BELL — wired to real data                              -->
+        <!-- ALERTS BELL                                                   -->
         <!-- ============================================================ -->
         <li class="nav-item dropdown no-arrow mx-1">
             <a class="dropdown-toggle nav-link" aria-expanded="false"
@@ -47,7 +47,7 @@
                     </div>
                 </div>
                 <a class="dropdown-item text-center small text-primary fw-bold py-2"
-                    href="/dashboard/">
+                    href="/dashboard/maintenance-alerts">
                     Voir toutes les alertes
                 </a>
             </div>
@@ -99,7 +99,6 @@
 </div>
 
 <script>
-// Load alerts on every page for the bell icon
 async function loadHeaderAlerts() {
     try {
         const res  = await fetch('/dashboard/api/alerts?days=30');
@@ -129,15 +128,20 @@ async function loadHeaderAlerts() {
         }
 
         list.innerHTML = preview.map(a => {
-            const icon  = a.level === 'danger' ? 'bg-danger' : 'bg-warning';
-            const itype = a.type === 'incomplete' ? 'fa-folder-open' : 'fa-exclamation-triangle';
-            const sub   = a.type === 'expired'    ? 'Expiré'
-                        : a.type === 'expiry'     ? `Expire dans ${a.days}j`
-                        : 'Dossier incomplet';
+            const iconBg = a.level === 'danger' ? 'bg-danger' : 'bg-warning';
+            const itype  = a.type === 'incomplete'  ? 'fa-folder-open' :
+                           a.type === 'maintenance' ? 'fa-tools' :
+                           'fa-exclamation-triangle';
+            const sub    = a.type === 'expired'     ? 'Expiré' :
+                           a.type === 'expiry'      ? `Expire dans ${a.days}j` :
+                           a.type === 'maintenance' ? (a.days !== null && a.days <= 0
+                               ? 'Maintenance en retard'
+                               : `Maintenance dans ${a.days}j`) :
+                           'Dossier incomplet';
             return `
             <a class="dropdown-item d-flex align-items-center py-2" href="/car/detail/${a.car_id}">
                 <div class="me-3">
-                    <div class="${icon} icon-circle">
+                    <div class="${iconBg} icon-circle">
                         <i class="fas ${itype} text-white"></i>
                     </div>
                 </div>
