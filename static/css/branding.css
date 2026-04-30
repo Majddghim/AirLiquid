@@ -1,0 +1,97 @@
+:root {
+    --al-blue: #004b93;
+    --al-light-blue: #0090d8;
+    --al-red: #ed1c24;
+    --al-gray: #5a5c69;
+    --al-light-gray: #f8f9fc;
+}
+
+/* Backgrounds */
+.bg-al-blue { background-color: var(--al-blue) !important; }
+.bg-gradient-primary {
+    background-image: linear-gradient(180deg, var(--al-blue) 10%, #003366 100%) !important;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    background-color: var(--al-blue) !important;
+}
+
+.sidebar .nav-item .nav-link {
+    font-weight: 600;
+}
+
+.sidebar .nav-item .nav-link i {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar .nav-item.active .nav-link,
+.sidebar .nav-item .nav-link:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--al-blue) !important;
+    border-color: var(--al-blue) !important;
+}
+
+.btn-primary:hover {
+    background-color: #003366 !important;
+    border-color: #003366 !important;
+}
+
+.btn-success {
+    background-color: var(--al-light-blue) !important;
+    border-color: var(--al-light-blue) !important;
+}
+
+.btn-danger {
+     background-color: var(--al-red) !important;
+     border-color: var(--al-red) !important;
+}
+
+/* Text */
+.text-primary { color: var(--al-blue) !important; }
+.text-success { color: var(--al-light-blue) !important; }
+
+/* Cards & Organization */
+.card-header {
+    background-color: #fff !important;
+    border-bottom: 1px solid #e3e6f0 !important;
+}
+
+.card.border-start-success {
+    border-left: 0.25rem solid var(--al-light-blue) !important;
+}
+
+.card.border-start-primary {
+    border-left: 0.25rem solid var(--al-blue) !important;
+}
+
+/* Forms Branding */
+.form-control:focus {
+    border-color: var(--al-light-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 144, 216, 0.25);
+}
+
+.heading-small {
+    font-size: 0.75rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+}
+
+/* Logo specific */
+.sidebar-brand-text {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    font-weight: 800;
+}
+
+.al-dot {
+    color: var(--al-red);
+}
