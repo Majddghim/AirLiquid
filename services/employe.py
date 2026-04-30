@@ -1,6 +1,8 @@
 from tools.database_tools import DatabaseTools
 from entities.employe import Employe
-
+import hashlib
+import random
+import string
 
 class EmployeService:
     def __init__(self):
@@ -230,6 +232,124 @@ class EmployeService:
             return {
                 'employe': dict(emp),
                 'assignments': assignments,
+                'sinistres': sinistres
+            }
+        finally:
+            con.close()
+
+
+
+    def generate_temp_password(self, length=8):
+        chars = string.ascii_letters + string.digits
+        return ''.join(random.choices(chars, k=length))
+
+    def hash_password(self, password):
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def set_temp_password(self, employe_id, temp_password):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            hashed = self.hash_password(temp_password)
+            cursor.execute("""
+                UPDATE employees SET
+                    password_hash = %s,
+                    temp_password = %s,
+                    must_change_password = 1
+                WHERE id = %s
+            """, (hashed, temp_password, employe_id))
+            con.commit()
+        finally:
+            con.close()
+
+    def authenticate_employee(self, email, password):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("""
+                SELECT id, nom, prenom, email, status,
+                       password_hash, must_change_password
+                FROM employees WHERE email = %s
+            """, (email,))
+            emp = cursor.fetchone()
+            if not emp:
+                return None, 'Employé introuvable'
+            if emp['status'] != 'active':
+                return None, 'Compte inactif'
+            hashed = self.hash_password(password)
+            if emp['password_hash'] != hashed:
+                return None, 'Mot de passe incorrect'
+            # update last login
+            cursor.execute("""
+                UPDATE employees SET last_login = NOW() WHERE id = %s
+            """, (emp['id'],))
+            con.commit()
+            return dict(emp), None
+        finally:
+            con.close()
+
+    def change_password(self, employe_id, new_password):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            hashed = self.hash_password(new_password)
+            cursor.execute("""
+                UPDATE employees SET
+                    password_hash = %s,
+                    must_change_password = 0,
+                    temp_password = NULL
+                WHERE id = %s
+            """, (hashed, employe_id))
+            con.commit()
+        finally:
+            con.close()
+
+    def get_employee_mobile_data(self, employe_id):
+        """Returns all data needed for employee mobile dashboard"""
+        con, cursor = self.db_tools.find_connection()
+        try:
+            # employee info
+            cursor.execute("""
+                SELECT id, nom, prenom, email, telephone, poste, departement
+                FROM employees WHERE id = %s
+            """, (employe_id,))
+            emp = cursor.fetchone()
+            if not emp:
+                return None
+
+            # current car
+            cursor.execute("""
+                SELECT ca.start_date, ca.notes,
+                       c.id AS car_id, c.plate_number, c.brand, c.status AS car_status,
+                       cg.model, cg.year,
+                       -- latest km
+                       (SELECT km FROM car_km
+                        WHERE car_id = c.id
+                        ORDER BY recorded_at DESC LIMIT 1) AS current_km,
+                       (SELECT recorded_at FROM car_km
+                        WHERE car_id = c.id
+                        ORDER BY recorded_at DESC LIMIT 1) AS km_date
+                FROM car_assignments ca
+                JOIN cars c ON ca.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE ca.employee_id = %s AND ca.end_date IS NULL
+                ORDER BY ca.start_date DESC
+            """, (employe_id,))
+            cars = [dict(r) for r in cursor.fetchall()]
+
+            # sinistres
+            cursor.execute("""
+                SELECT s.id, s.date_sinistre, s.type, s.description,
+                       s.status, s.montant_reparation,
+                       c.plate_number, cg.model
+                FROM sinistres s
+                JOIN cars c ON s.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE s.employee_id = %s
+                ORDER BY s.date_sinistre DESC
+            """, (employe_id,))
+            sinistres = [dict(r) for r in cursor.fetchall()]
+
+            return {
+                'employe': dict(emp),
+                'cars': cars,
                 'sinistres': sinistres
             }
         finally:

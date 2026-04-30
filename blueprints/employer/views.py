@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.employe import EmployeService
+from flask import render_template, session, redirect, url_for
+from tools.email_tools import send_welcome_email, send_password_changed_email
 
 
 class employe:
@@ -13,35 +15,35 @@ class employe:
         @self.employe_bp.route('/ajout-employe', methods=['POST'])
         def ajout():
             data = request.get_json()
-            nom         = data.get('nom')
-            prenom      = data.get('prenom')
-            email       = data.get('email')
-            telephone   = data.get('telephone')
-            poste       = data.get('poste')
+            nom = data.get('nom')
+            prenom = data.get('prenom')
+            email = data.get('email')
+            telephone = data.get('telephone')
+            poste = data.get('poste')
             departement = data.get('departement')
-            created     = data.get('created_at')
+            created = data.get('created_at')
 
-            if not nom:
-                return {'status': 'failed', 'message': 'Nom est requis'}
-            if not prenom:
-                return {'status': 'failed', 'message': 'Prenom est requis'}
-            if not email:
-                return {'status': 'failed', 'message': 'Email est requis'}
-            if not telephone:
-                return {'status': 'failed', 'message': 'Telephone est requis'}
-            if not poste:
-                return {'status': 'failed', 'message': 'Poste est requis'}
-            if not departement:
-                return {'status': 'failed', 'message': 'Departement est requis'}
-            if not created:
-                return {'status': 'failed', 'message': 'Date de creation est requis'}
+            if not nom:        return {'status': 'failed', 'message': 'Nom est requis'}
+            if not prenom:     return {'status': 'failed', 'message': 'Prenom est requis'}
+            if not email:      return {'status': 'failed', 'message': 'Email est requis'}
+            if not telephone:  return {'status': 'failed', 'message': 'Telephone est requis'}
+            if not poste:      return {'status': 'failed', 'message': 'Poste est requis'}
+            if not departement: return {'status': 'failed', 'message': 'Departement est requis'}
+            if not created:    return {'status': 'failed', 'message': 'Date de creation est requis'}
 
             empl = self.EmployeService.get_employe_by_email(email)
             if empl:
                 return {'status': 'failed', 'message': 'Employe avec cet email existe déjà'}
 
-            self.EmployeService.add_employe(nom, prenom, departement, poste, email, telephone, created)
-            return {'status': 'success', 'message': 'Employe ajouté avec succès'}
+            employe_id = self.EmployeService.add_employe(
+                nom, prenom, departement, poste, email, telephone, created)
+
+            # generate temp password and send email
+            temp_password = self.EmployeService.generate_temp_password()
+            self.EmployeService.set_temp_password(employe_id, temp_password)
+            send_welcome_email(email, prenom, nom, temp_password)
+
+            return {'status': 'success', 'message': 'Employé ajouté avec succès — identifiants envoyés par email'}
 
         @self.employe_bp.route('/get-employes', methods=['GET'])
         def get_employes():
@@ -150,6 +152,91 @@ class employe:
                 data = self.EmployeService.get_profil_employe(employe_id)
                 if not data:
                     return jsonify({'status': 'failed', 'message': 'Employé introuvable'}), 404
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+
+
+        @self.employe_bp.route('/login', methods=['GET'])
+        def login_page():
+            if 'employe_id' in session:
+                return redirect('/employe/dashboard')
+            return render_template('employe-login.html')
+
+        @self.employe_bp.route('/login', methods=['POST'])
+        def login():
+            try:
+                data = request.get_json()
+                email = data.get('email')
+                password = data.get('password')
+                if not email or not password:
+                    return jsonify({'status': 'failed', 'message': 'Email et mot de passe requis'})
+
+                emp, error = self.EmployeService.authenticate_employee(email, password)
+                if error:
+                    return jsonify({'status': 'failed', 'message': error})
+
+                session['employe_id'] = emp['id']
+                session['employe_nom'] = f"{emp['prenom']} {emp['nom']}"
+
+                if emp['must_change_password']:
+                    return jsonify({'status': 'success', 'redirect': '/employe/change-password'})
+                return jsonify({'status': 'success', 'redirect': '/employe/dashboard'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/logout', methods=['GET'])
+        def employe_logout():
+            session.pop('employe_id', None)
+            session.pop('employe_nom', None)
+            return redirect('/employe/login')
+
+        @self.employe_bp.route('/change-password', methods=['GET'])
+        def change_password_page():
+            if 'employe_id' not in session:
+                return redirect('/employe/login')
+            return render_template('employe-change-password.html')
+
+        @self.employe_bp.route('/change-password', methods=['POST'])
+        def change_password():
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'})
+                data = request.get_json()
+                new_password = data.get('new_password')
+                confirm = data.get('confirm_password')
+                if not new_password or len(new_password) < 6:
+                    return jsonify({'status': 'failed', 'message': 'Mot de passe trop court (6 caractères minimum)'})
+                if new_password != confirm:
+                    return jsonify({'status': 'failed', 'message': 'Les mots de passe ne correspondent pas'})
+
+                emp_id = session['employe_id']
+                self.EmployeService.change_password(emp_id, new_password)
+
+                # send confirmation email
+                emp = self.EmployeService.get_employe_by_id(emp_id)
+                if emp:
+                    send_password_changed_email(emp.email, emp.prenom, emp.nom)
+
+                return jsonify({'status': 'success', 'redirect': '/employe/dashboard'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/dashboard', methods=['GET'])
+        def dashboard():
+            if 'employe_id' not in session:
+                return redirect('/employe/login')
+            return render_template('employe-dashboard.html')
+
+        @self.employe_bp.route('/dashboard-data', methods=['GET'])
+        def dashboard_data():
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+                data = self.EmployeService.get_employee_mobile_data(session['employe_id'])
+                if not data:
+                    return jsonify({'status': 'failed', 'message': 'Données introuvables'}), 404
                 return jsonify({'status': 'success', 'data': data})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500

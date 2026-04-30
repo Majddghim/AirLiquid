@@ -77,31 +77,30 @@ async function onBrandChange() {
     await loadModels(brandId);
 }
 
-async function setBrandAndModelFromOcr(ocrModelString) {
-    if (!ocrModelString) return;
+async function setBrandAndModelFromOcr(brandName, modelName) {
+    if (!brandName) return;
 
-    const parts     = ocrModelString.trim().split(' ');
-    const brandName = parts[0];
-    const modelName = parts.slice(1).join(' ');
+    const brandSelect = document.getElementById('modal_brand_id');
 
+    // find brand in dropdown
     const brand = allBrands.find(
         b => b.name.toLowerCase() === brandName.toLowerCase()
     );
-
-    const brandSelect = document.getElementById('modal_brand_id');
 
     if (brand) {
         brandSelect.value = brand.id;
         await loadModels(brand.id, modelName);
     } else {
+        // brand not in list — add it as option
         const opt    = document.createElement('option');
         opt.value    = '';
         opt.text     = brandName;
         opt.selected = true;
         brandSelect.appendChild(opt);
 
+        // set model manually
         const modelSelect = document.getElementById('modal_model');
-        modelSelect.innerHTML = `<option value="${modelName}" selected>${modelName}</option>`;
+        modelSelect.innerHTML = `<option value="${modelName || ''}" selected>${modelName || ''}</option>`;
     }
 }
 
@@ -162,9 +161,9 @@ async function scannerCarteGrise() {
         const carburantEl = document.getElementById("modal_carburant");
         if (carburantEl && data.carburant) carburantEl.value = data.carburant;
 
-        if (data.model) {
-            await setBrandAndModelFromOcr(data.model);
-        }
+        if (data.brand || data.model) {
+    await setBrandAndModelFromOcr(data.brand, data.model);
+}
 
         if (result.file_path) {
             const preview = document.getElementById("modal_doc_preview");

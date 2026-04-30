@@ -168,28 +168,38 @@ class VoitureService:
     # SCAN FLOW                                                            #
     # ------------------------------------------------------------------ #
 
-    def save_temp_carte_grise(self, file_path, extracted_data):
+    def save_temp_carte_grise(self, file_path, data):
         con, cursor = self.db_tools.find_connection()
         try:
-            import json
+            plate_number = data.get('plate_number') or f"TEMP-{int(time.time())}"
+
+            # delete any previous unconfirmed scan with same plate
             cursor.execute("""
-                INSERT INTO carte_grises (
-                    car_id, model, year, plate_number, owner_name, chassis_number,
-                    puissance_fiscale, carburant, registration_date, expiration_date,
-                    file_path, extraction_status, extracted_json
-                ) VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s)
+                DELETE FROM carte_grises 
+                WHERE plate_number = %s AND car_id IS NULL
+            """, (plate_number,))
+
+            cursor.execute("""
+                INSERT INTO carte_grises 
+                    (model, year, plate_number, owner_name, chassis_number,
+                     puissance_fiscale, carburant, registration_date, 
+                     expiration_date, file_path, extraction_status, extracted_json)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'extracted', %s)
             """, (
-                extracted_data.get('model'), extracted_data.get('year'),
-                extracted_data.get('plate_number'), extracted_data.get('owner_name'),
-                extracted_data.get('chassis_number'), extracted_data.get('puissance_fiscale'),
-                extracted_data.get('carburant'), extracted_data.get('registration_date'),
-                extracted_data.get('expiration_date'), file_path, json.dumps(extracted_data)
+                data.get('model'),
+                data.get('year'),
+                plate_number,
+                data.get('owner_name'),
+                data.get('chassis_number'),
+                data.get('puissance_fiscale'),
+                data.get('carburant'),
+                data.get('registration_date'),
+                data.get('expiration_date'),
+                file_path,
+                __import__('json').dumps(data)
             ))
             con.commit()
             return cursor.lastrowid
-        except Exception as e:
-            con.rollback()
-            raise e
         finally:
             con.close()
 

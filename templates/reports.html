@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Rapports - ALT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+</head>
+<body id="page-top">
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid px-0">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                            <i class="fas fa-chart-bar text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-dark mb-0">Rapports Intelligents</h3>
+                            <div class="text-muted small">Décrivez le rapport que vous souhaitez générer</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Examples -->
+                <div class="px-4 mb-3">
+                    <div class="text-muted small fw-bold mb-2">Exemples de demandes :</div>
+                    <span class="example-chip" onclick="useExample(this)">Top 5 voitures avec le plus de dépenses</span>
+                    <span class="example-chip" onclick="useExample(this)">Liste de tous les véhicules actifs</span>
+                    <span class="example-chip" onclick="useExample(this)">Employés dont le véhicule coûte le plus cher</span>
+                    <span class="example-chip" onclick="useExample(this)">Documents qui expirent bientôt</span>
+                    <span class="example-chip" onclick="useExample(this)">Historique des entretiens de 2026</span>
+                    <span class="example-chip" onclick="useExample(this)">Liste des sinistres ouverts</span>
+                    <span class="example-chip" onclick="useExample(this)">Alertes maintenance ouvertes</span>
+                    <span class="example-chip" onclick="useExample(this)">Dépenses par mois cette année</span>
+                </div>
+
+                <!-- Chat -->
+                <div class="chat-container" id="chat_container">
+                    <div class="message bot">
+                        <div class="avatar bot"><i class="fas fa-robot"></i></div>
+                        <div class="message-bubble">
+                            Bonjour ! Je suis votre assistant de rapports ALT Fleet.
+                            Décrivez en français le rapport que vous souhaitez générer et je m'occupe du reste.
+                            Vous pouvez choisir le format PDF ou Excel.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="input-area">
+                    <div class="d-flex gap-2 align-items-center" style="max-width:800px;margin:0 auto;">
+                        <input type="text" class="form-control bg-light border-0"
+                            id="report_input"
+                            placeholder="Ex: Je veux les 10 voitures avec le plus de dépenses en PDF...">
+                        <button class="btn btn-primary rounded-circle send-btn"
+                            onclick="sendRequest()" id="send_btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+</body>
+</html>

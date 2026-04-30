@@ -7,7 +7,11 @@ from blueprints.employer import employe_bp
 from blueprints.guest import guest_bp
 from blueprints.settings import settings_bp
 from blueprints.maintenance import maintenance_bp
+from dotenv import load_dotenv
+from blueprints.reports import reports_bp
 
+import os
+load_dotenv()
 
 import datetime
 from flask.json.provider import DefaultJSONProvider
@@ -31,6 +35,7 @@ app.register_blueprint(car_bp, url_prefix='/car')
 app.register_blueprint(guest_bp, url_prefix='/guest')
 app.register_blueprint(settings_bp, url_prefix='/settings')
 app.register_blueprint(maintenance_bp, url_prefix='/maintenance')
+app.register_blueprint(reports_bp, url_prefix='/reports')
 
 
 app.register_blueprint(sinistre_bp, url_prefix='/sinistre')

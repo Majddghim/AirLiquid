@@ -4,6 +4,7 @@ from services.voiture import VoitureService
 from services.employe import EmployeService
 from flask import Blueprint, request, jsonify, render_template
 from werkzeug.utils import secure_filename
+from tools.ocr_tools import OCRTools
 
 
 class CarViews:
@@ -138,23 +139,23 @@ class CarViews:
             try:
                 upload_folder = 'static/uploads/carte_grises'
                 os.makedirs(upload_folder, exist_ok=True)
-                filename  = secure_filename(file.filename)
+                filename = secure_filename(file.filename)
                 file_path = os.path.join(upload_folder, filename)
                 file.save(file_path)
 
-                extracted_data = {
-                    "model": "Peugeot Partner", "year": "2021",
-                    "plate_number": f"TEST TU {int(time.time()) % 10000}",
-                    "owner_name": "AIR LIQUID S.A",
-                    "chassis_number": f"VN7890BC{int(time.time()) % 100000}",
-                    "puissance_fiscale": "7", "carburant": "diesel",
-                    "registration_date": "2021-03-20", "expiration_date": "2025-03-20"
-                }
+                # real OCR
+                ocr = OCRTools()
+                extracted_data = ocr.scan_carte_grise(file_path)
+
+                if not extracted_data:
+                    return jsonify({'status': 'failed', 'message': 'Impossible d\'extraire les données du document'})
 
                 cg_id = self.VoitureService.save_temp_carte_grise(file_path, extracted_data)
                 return jsonify({
-                    'status': 'success', 'cg_id': cg_id,
-                    'extracted_data': extracted_data, 'file_path': file_path
+                    'status': 'success',
+                    'cg_id': cg_id,
+                    'extracted_data': extracted_data,
+                    'file_path': file_path
                 })
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)})
@@ -201,21 +202,37 @@ class CarViews:
         @self.car_bp.route('/scan-document/<int:car_id>', methods=['POST'])
         def scan_document(car_id):
             doc_type = request.form.get('doc_type')
-            if doc_type == 'assurance':
-                mock = {
-                    "insurer":       "STAR Assurance",
-                    "policy_number": f"STAR-{int(time.time()) % 10000}",
-                    "start_date":    "2025-01-01",
-                    "end_date":      "2025-12-31"
-                }
-            elif doc_type == 'vignette':
-                mock = {"year": "2025", "montant": "180.00", "expiration_date": "2025-12-31"}
-            elif doc_type == 'visite':
-                mock = {"montant": "45.00", "expiration_date": "2027-06-30"}
-            else:
-                return jsonify({'status': 'failed', 'message': 'Type de document inconnu'})
-            time.sleep(1)
-            return jsonify({'status': 'success', 'extracted_data': mock})
+            if 'file' not in request.files:
+                return jsonify({'status': 'failed', 'message': 'Aucun fichier reçu'})
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({'status': 'failed', 'message': 'Fichier vide'})
+
+            try:
+                upload_folder = f'static/uploads/{doc_type}'
+                os.makedirs(upload_folder, exist_ok=True)
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(upload_folder, filename)
+                file.save(file_path)
+
+                ocr = OCRTools()
+                mock = None
+
+                if doc_type == 'assurance':
+                    mock = ocr.scan_assurance(file_path)
+                elif doc_type == 'vignette':
+                    mock = ocr.scan_vignette(file_path)
+                elif doc_type == 'visite':
+                    mock = ocr.scan_visite_technique(file_path)
+                else:
+                    return jsonify({'status': 'failed', 'message': 'Type de document inconnu'})
+
+                if not mock:
+                    return jsonify({'status': 'failed', 'message': 'Impossible d\'extraire les données'})
+
+                return jsonify({'status': 'success', 'extracted_data': mock, 'file_path': file_path})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)})
 
         @self.car_bp.route('/save-document/<int:car_id>/<doc_type>', methods=['POST'])
         def save_document(car_id, doc_type):
