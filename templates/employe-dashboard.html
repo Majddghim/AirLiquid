@@ -2,121 +2,55 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ALT Fleet — Mon Espace</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            background: #f4f6f9;
-            font-family: 'Nunito', sans-serif;
-            padding-bottom: 80px;
-        }
-        .top-header {
-            background: linear-gradient(135deg, #0d6efd, #0a58ca);
-            color: white;
-            padding: 20px 20px 40px;
-        }
-        .avatar {
-            width: 50px; height: 50px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; font-weight: 700;
-        }
-        .content-area { margin-top: -25px; padding: 0 15px; }
-        .card { border-radius: 15px; border: none; box-shadow: 0 2px 15px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        .card-header-custom {
-            background: white; border-radius: 15px 15px 0 0;
-            padding: 15px 20px; border-bottom: 1px solid #f0f0f0;
-        }
-        .info-row { padding: 12px 0; border-bottom: 1px solid #f8f9fc; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { font-size: 11px; font-weight: 700; color: #adb5bd; text-transform: uppercase; }
-        .info-value { font-size: 14px; font-weight: 600; color: #2d3748; }
-        .status-badge {
-            padding: 5px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 700;
-        }
-        .km-display {
-            background: linear-gradient(135deg, #0d6efd10, #0d6efd20);
-            border-radius: 12px; padding: 15px;
-            text-align: center;
-        }
-        .sinistre-item {
-            padding: 12px 15px;
-            border-left: 3px solid #dee2e6;
-            margin-bottom: 10px;
-            background: #f8f9fc;
-            border-radius: 0 8px 8px 0;
-        }
-        .sinistre-item.ouvert { border-left-color: #dc3545; }
-        .sinistre-item.en_cours { border-left-color: #ffc107; }
-        .sinistre-item.cloture { border-left-color: #198754; }
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 10px 0;
-            box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
-            display: flex; justify-content: space-around;
-        }
-        .nav-btn {
-            display: flex; flex-direction: column; align-items: center;
-            color: #adb5bd; font-size: 10px; border: none;
-            background: none; padding: 5px 15px; cursor: pointer;
-        }
-        .nav-btn.active { color: #0d6efd; }
-        .nav-btn i { font-size: 20px; margin-bottom: 3px; }
-        .section { display: none; }
-        .section.active { display: block; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/employe.css') }}">
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="top-header">
+    <!-- HEADER -->
+    <div class="dash-header">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <div class="avatar" id="header_avatar"></div>
+                <div class="dash-avatar" id="header_avatar"></div>
                 <div>
-                    <div class="fw-bold" id="header_name">Chargement...</div>
-                    <div style="font-size:12px;opacity:0.8;" id="header_post"></div>
+                    <div class="dash-name" id="header_name">Chargement...</div>
+                    <div class="dash-post" id="header_post"></div>
                 </div>
             </div>
-            <a href="/employe/logout" style="color:rgba(255,255,255,0.8);">
-                <i class="fas fa-sign-out-alt fa-lg"></i>
+            <a href="/employe/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
             </a>
         </div>
     </div>
 
-    <!-- Content -->
+    <!-- CONTENT -->
     <div class="content-area">
 
-        <!-- MON VÉHICULE -->
         <div class="section active" id="section_car">
             <div id="car_content">
-                <div class="text-center py-5 text-muted">
-                    <div class="spinner-border text-primary mb-3"></div>
+                <div class="loading-state">
+                    <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;"></div>
                     <p>Chargement...</p>
                 </div>
             </div>
         </div>
 
-        <!-- SINISTRES -->
         <div class="section" id="section_sinistres">
             <div id="sinistres_content">
-                <div class="text-center py-5 text-muted">
-                    <div class="spinner-border text-primary mb-3"></div>
+                <div class="loading-state">
+                    <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;"></div>
                     <p>Chargement...</p>
                 </div>
             </div>
         </div>
 
-        <!-- MON PROFIL -->
         <div class="section" id="section_profil">
             <div id="profil_content">
-                <div class="text-center py-5 text-muted">
-                    <div class="spinner-border text-primary mb-3"></div>
+                <div class="loading-state">
+                    <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;"></div>
                     <p>Chargement...</p>
                 </div>
             </div>
@@ -124,198 +58,23 @@
 
     </div>
 
-    <!-- Bottom nav -->
+    <!-- BOTTOM NAV -->
     <div class="bottom-nav">
         <button class="nav-btn active" id="nav_car" onclick="switchSection('car')">
-            <i class="fas fa-car"></i>Mon Véhicule
+            <i class="fas fa-car"></i>
+            <span>Véhicule</span>
         </button>
         <button class="nav-btn" id="nav_sinistres" onclick="switchSection('sinistres')">
-            <i class="fas fa-car-crash"></i>Sinistres
+            <i class="fas fa-car-crash"></i>
+            <span>Sinistres</span>
         </button>
         <button class="nav-btn" id="nav_profil" onclick="switchSection('profil')">
-            <i class="fas fa-user"></i>Mon Profil
+            <i class="fas fa-user"></i>
+            <span>Profil</span>
         </button>
     </div>
 
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script>
-    let dashData = null;
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        await loadDashboard();
-    });
-
-    async function loadDashboard() {
-        try {
-            const res  = await fetch('/employe/dashboard-data');
-            const data = await res.json();
-            if (data.status !== 'success') {
-                window.location.href = '/employe/login';
-                return;
-            }
-            dashData = data.data;
-            renderHeader(dashData.employe);
-            renderCar(dashData.cars);
-            renderSinistres(dashData.sinistres);
-            renderProfil(dashData.employe);
-        } catch (e) {
-            console.error('loadDashboard error:', e);
-        }
-    }
-
-    function renderHeader(emp) {
-        const initials = `${(emp.prenom||'E')[0]}${(emp.nom||'P')[0]}`.toUpperCase();
-        document.getElementById('header_avatar').innerText = initials;
-        document.getElementById('header_name').innerText   = `${emp.prenom} ${emp.nom}`;
-        document.getElementById('header_post').innerText   = emp.poste || '';
-    }
-
-    function renderCar(cars) {
-        const el = document.getElementById('car_content');
-        if (!cars || cars.length === 0) {
-            el.innerHTML = `
-                <div class="card mt-3">
-                    <div class="card-body text-center py-5 text-muted">
-                        <i class="fas fa-car-slash fa-3x mb-3 opacity-25"></i>
-                        <p class="fw-bold">Aucun véhicule affecté</p>
-                        <p class="small">Contactez votre responsable RH.</p>
-                    </div>
-                </div>`;
-            return;
-        }
-
-        el.innerHTML = cars.map(c => {
-            const isReplacement = c.notes && c.notes.includes('Remplacement');
-            const statusColor   = c.car_status === 'active' ? '#198754' :
-                                  c.car_status === 'maintenance' ? '#ffc107' : '#6c757d';
-            return `
-            <div class="card mt-3">
-                <div class="card-header-custom">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <div style="width:40px;height:40px;background:#0d6efd15;border-radius:10px;
-                                display:flex;align-items:center;justify-content:center;">
-                                <i class="fas fa-car text-primary"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark">${escapeHtml(c.model || '')} ${escapeHtml(c.brand || '')}</div>
-                                <div class="font-monospace small text-muted">${escapeHtml(c.plate_number || '')}</div>
-                            </div>
-                        </div>
-                        <span class="status-badge"
-                            style="background:${statusColor}20;color:${statusColor};">
-                            ${c.car_status === 'active' ? 'Opérationnel' :
-                              c.car_status === 'maintenance' ? 'Maintenance' : 'Inactif'}
-                        </span>
-                    </div>
-                    ${isReplacement ? '<div class="mt-2"><span class="badge bg-warning text-dark">Véhicule de remplacement</span></div>' : ''}
-                </div>
-                <div class="card-body px-3 py-2">
-                    <div class="info-row">
-                        <div class="info-label">Année</div>
-                        <div class="info-value">${c.year || '—'}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Affecté depuis</div>
-                        <div class="info-value">${formatDate(c.start_date)}</div>
-                    </div>
-                    ${c.current_km ? `
-                    <div class="km-display mt-3">
-                        <div class="info-label">Kilométrage actuel</div>
-                        <div style="font-size:28px;font-weight:800;color:#0d6efd;">
-                            ${c.current_km.toLocaleString()}
-                        </div>
-                        <div class="text-muted small">km — relevé le ${formatDate(c.km_date)}</div>
-                    </div>` : ''}
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderSinistres(sinistres) {
-        const el = document.getElementById('sinistres_content');
-        if (!sinistres || sinistres.length === 0) {
-            el.innerHTML = `
-                <div class="card mt-3">
-                    <div class="card-body text-center py-5 text-muted">
-                        <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
-                        <p class="fw-bold">Aucun sinistre enregistré</p>
-                    </div>
-                </div>`;
-            return;
-        }
-
-        el.innerHTML = `<div class="mt-3">` + sinistres.map(s => `
-            <div class="sinistre-item ${s.status}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="fw-bold small">${escapeHtml(s.plate_number || '')} — ${escapeHtml(s.model || '')}</div>
-                        <div class="text-muted" style="font-size:12px;">${formatDate(s.date_sinistre)} — ${escapeHtml(s.type)}</div>
-                        ${s.description ? `<div class="text-muted mt-1" style="font-size:12px;">${escapeHtml(s.description)}</div>` : ''}
-                    </div>
-                    <span class="badge ${s.status === 'ouvert' ? 'bg-danger' :
-                                         s.status === 'en_cours' ? 'bg-warning text-dark' :
-                                         'bg-success'}">
-                        ${s.status === 'ouvert' ? 'Ouvert' :
-                          s.status === 'en_cours' ? 'En cours' : 'Clôturé'}
-                    </span>
-                </div>
-                ${s.montant_reparation ? `<div class="mt-1 text-muted small">Montant: ${s.montant_reparation} DT</div>` : ''}
-            </div>`).join('') + `</div>`;
-    }
-
-    function renderProfil(emp) {
-        document.getElementById('profil_content').innerHTML = `
-            <div class="card mt-3">
-                <div class="card-body px-3">
-                    <div class="text-center mb-4">
-                        <div style="width:70px;height:70px;background:#0d6efd15;border-radius:50%;
-                            display:flex;align-items:center;justify-content:center;margin:0 auto 10px;
-                            font-size:24px;font-weight:700;color:#0d6efd;">
-                            ${(emp.prenom||'E')[0]}${(emp.nom||'P')[0]}
-                        </div>
-                        <div class="fw-bold text-dark">${escapeHtml(emp.prenom)} ${escapeHtml(emp.nom)}</div>
-                        <div class="text-muted small">${escapeHtml(emp.poste || '')}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Email</div>
-                        <div class="info-value">${escapeHtml(emp.email || '—')}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Téléphone</div>
-                        <div class="info-value">${escapeHtml(emp.telephone || '—')}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Département</div>
-                        <div class="info-value">${escapeHtml(emp.departement || '—')}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Poste</div>
-                        <div class="info-value">${escapeHtml(emp.poste || '—')}</div>
-                    </div>
-                </div>
-            </div>`;
-    }
-
-    function switchSection(section) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`section_${section}`).classList.add('active');
-        document.getElementById(`nav_${section}`).classList.add('active');
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr) return '—';
-        const d = new Date(dateStr);
-        if (isNaN(d)) return dateStr;
-        return d.toLocaleDateString('fr-TN', {day:'2-digit',month:'2-digit',year:'numeric'});
-    }
-    </script>
+    <script src="{{ url_for('static', filename='js/employe-dashboard.js') }}"></script>
 </body>
 </html>

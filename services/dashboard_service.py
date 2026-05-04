@@ -57,10 +57,6 @@ class DashboardService:
     # ------------------------------------------------------------------ #
 
     def get_expense_kpis(self, date_from=None, date_to=None):
-        """
-        Returns total expenses by category for the given period.
-        If no dates provided, defaults to current year.
-        """
         if not date_from:
             date_from = f"{datetime.date.today().year}-01-01"
         if not date_to:
@@ -74,7 +70,7 @@ class DashboardService:
                 FROM factures
                 WHERE type = 'maintenance'
                 AND date_facture BETWEEN %s AND %s
-                AND extraction_status = 'verified'
+                AND montant_ttc IS NOT NULL
             """, (date_from, date_to))
             maintenance = cursor.fetchone()['total']
 
@@ -84,7 +80,7 @@ class DashboardService:
                 FROM factures
                 WHERE type = 'sinistre'
                 AND date_facture BETWEEN %s AND %s
-                AND extraction_status = 'verified'
+                AND montant_ttc IS NOT NULL
             """, (date_from, date_to))
             sinistres = cursor.fetchone()['total']
 
@@ -118,11 +114,11 @@ class DashboardService:
 
             return {
                 'maintenance': float(maintenance),
-                'sinistres':   float(sinistres),
-                'carburant':   float(carburant),
-                'vignettes':   float(vignettes),
-                'visites':     float(visites),
-                'total':       total
+                'sinistres': float(sinistres),
+                'carburant': float(carburant),
+                'vignettes': float(vignettes),
+                'visites': float(visites),
+                'total': total
             }
         finally:
             con.close()
@@ -132,17 +128,12 @@ class DashboardService:
     # ------------------------------------------------------------------ #
 
     def get_monthly_expenses(self, date_from=None, date_to=None):
-        """
-        Returns monthly expense breakdown by category for chart rendering.
-        Uses YEAR/MONTH instead of DATE_FORMAT to avoid pymysql bytes issue.
-        """
         if not date_from:
             date_from = f"{datetime.date.today().year}-01-01"
         if not date_to:
             date_to = datetime.date.today().isoformat()
 
         def to_key(row):
-            """Convert YEAR + MONTH columns to 'YYYY-MM' string safely."""
             y = str(row['yr'])
             m = str(row['mo']).zfill(2)
             return f"{y}-{m}"
@@ -156,7 +147,7 @@ class DashboardService:
                 FROM factures
                 WHERE type = 'maintenance'
                 AND date_facture BETWEEN %s AND %s
-                AND extraction_status = 'verified'
+                AND montant_ttc IS NOT NULL
                 GROUP BY yr, mo ORDER BY yr, mo
             """, (date_from, date_to))
             maintenance_rows = {to_key(r): float(r['total']) for r in cursor.fetchall()}
@@ -168,7 +159,7 @@ class DashboardService:
                 FROM factures
                 WHERE type = 'sinistre'
                 AND date_facture BETWEEN %s AND %s
-                AND extraction_status = 'verified'
+                AND montant_ttc IS NOT NULL
                 GROUP BY yr, mo ORDER BY yr, mo
             """, (date_from, date_to))
             sinistre_rows = {to_key(r): float(r['total']) for r in cursor.fetchall()}
@@ -183,22 +174,20 @@ class DashboardService:
             """, (date_from, date_to))
             carburant_rows = {to_key(r): float(r['total']) for r in cursor.fetchall()}
 
-            # build unified month list
             all_months = sorted(set(
                 list(maintenance_rows.keys()) +
                 list(sinistre_rows.keys()) +
                 list(carburant_rows.keys())
             ))
 
-            # if no data at all, return empty structure
             if not all_months:
                 return {'labels': [], 'maintenance': [], 'sinistres': [], 'carburant': []}
 
             return {
-                'labels':      all_months,
+                'labels': all_months,
                 'maintenance': [maintenance_rows.get(m, 0) for m in all_months],
-                'sinistres':   [sinistre_rows.get(m, 0)    for m in all_months],
-                'carburant':   [carburant_rows.get(m, 0)   for m in all_months],
+                'sinistres': [sinistre_rows.get(m, 0) for m in all_months],
+                'carburant': [carburant_rows.get(m, 0) for m in all_months],
             }
         finally:
             con.close()
@@ -220,8 +209,8 @@ class DashboardService:
                     c.id,
                     c.plate_number,
                     cg.model,
-                    COALESCE(f.total_factures, 0)  AS total_factures,
-                    COALESCE(cb.total_carburant, 0) AS total_carburant,
+                    COALESCE(f.total_factures, 0)   AS total_factures,
+                    COALESCE(cb.total_carburant, 0)  AS total_carburant,
                     COALESCE(f.total_factures, 0) + COALESCE(cb.total_carburant, 0) AS grand_total
                 FROM cars c
                 LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
@@ -229,7 +218,7 @@ class DashboardService:
                     SELECT car_id, SUM(montant_ttc) AS total_factures
                     FROM factures
                     WHERE date_facture BETWEEN %s AND %s
-                    AND extraction_status = 'verified'
+                    AND montant_ttc IS NOT NULL
                     GROUP BY car_id
                 ) f ON f.car_id = c.id
                 LEFT JOIN (

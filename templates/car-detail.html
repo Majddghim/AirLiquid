@@ -140,8 +140,7 @@
                                         <h6 class="fw-bold text-dark mb-0">
                                             <i class="fas fa-history text-info me-2"></i>Historique des entretiens
                                         </h6>
-                                        <a href="/car/historique/${carId}?tab=maintenance"
-                                            class="btn btn-outline-info btn-sm" id="voir_tout_maintenance">
+                                        <a href="#" class="btn btn-outline-info btn-sm" id="voir_tout_maintenance">
                                             <i class="fas fa-external-link-alt me-1"></i>Voir tout
                                         </a>
                                     </div>
@@ -194,8 +193,7 @@
                                         <h6 class="fw-bold text-dark mb-0">
                                             <i class="fas fa-list text-danger me-2"></i>Historique des sinistres
                                         </h6>
-                                        <a href="/car/historique/${carId}?tab=sinistres"
-                                            class="btn btn-outline-danger btn-sm" id="voir_tout_sinistres">
+                                        <a href="#" class="btn btn-outline-danger btn-sm" id="voir_tout_sinistres">
                                             <i class="fas fa-external-link-alt me-1"></i>Voir tout
                                         </a>
                                     </div>
@@ -335,11 +333,35 @@
                         <textarea class="form-control bg-light border-0" id="log_notes" rows="2" placeholder="Optionnel..."></textarea>
                     </div>
                 </div>
+
+                <!-- FACTURE SECTION WITH OCR -->
                 <div class="border-top pt-3">
                     <div class="d-flex align-items-center mb-3">
-                        <h6 class="fw-bold text-primary mb-0 me-2"><i class="fas fa-receipt me-1"></i>Facture</h6>
+                        <h6 class="fw-bold text-primary mb-0 me-2">
+                            <i class="fas fa-receipt me-1"></i>Facture
+                        </h6>
                         <span class="text-muted small">(optionnel — peut être attachée plus tard)</span>
                     </div>
+
+                    <!-- Scan facture -->
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="fw-bold small text-dark">
+                                <i class="fas fa-magic text-primary me-1"></i>Scanner la facture (OCR)
+                            </div>
+                            <span class="text-muted small">pré-remplit les champs automatiquement</span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="file" class="form-control form-control-sm bg-white border-0"
+                                id="log_facture_scan_file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                            <button class="btn btn-primary btn-sm px-3"
+                                onclick="scannerFacture('log')" id="log_facture_scan_btn">
+                                <i class="fas fa-search me-1"></i>Scanner
+                            </button>
+                        </div>
+                        <div id="log_facture_scan_status" class="mt-2" style="display:none;"></div>
+                    </div>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">N° Facture</label>
@@ -400,6 +422,26 @@
             </div>
             <div class="modal-body px-4">
                 <input type="hidden" id="facture_record_id">
+
+                <!-- Scan facture -->
+                <div class="border rounded p-3 bg-light mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-bold small text-dark">
+                            <i class="fas fa-magic text-primary me-1"></i>Scanner la facture (OCR)
+                        </div>
+                        <span class="text-muted small">pré-remplit les champs</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="file" class="form-control form-control-sm bg-white border-0"
+                            id="facture_scan_file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                        <button class="btn btn-primary btn-sm px-3"
+                            onclick="scannerFacture('facture')" id="facture_scan_btn">
+                            <i class="fas fa-search me-1"></i>Scanner
+                        </button>
+                    </div>
+                    <div id="facture_scan_status" class="mt-2" style="display:none;"></div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">N° Facture</label>
@@ -482,7 +524,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- DECLARER SINISTRE MODAL — STEP 1                             -->
+<!-- DECLARER SINISTRE MODAL                                      -->
 <!-- ============================================================ -->
 <div class="modal fade" id="declarerSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
@@ -531,8 +573,6 @@
                         <label class="form-label small fw-bold">Description</label>
                         <textarea class="form-control bg-light border-0" id="sin_description" rows="2" placeholder="Décrivez l'incident..."></textarea>
                     </div>
-
-                    <!-- Options -->
                     <div class="col-12">
                         <div class="border rounded p-3 bg-light">
                             <div class="fw-bold small mb-3 text-dark">Options</div>
@@ -606,8 +646,6 @@
                 <input type="hidden" id="cloture_sinistre_id">
                 <input type="hidden" id="cloture_employee_id">
                 <input type="hidden" id="cloture_replacement_car_id">
-
-                <!-- Règlement -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Montant réparation (DT)</label>
@@ -630,13 +668,31 @@
                         <input type="date" class="form-control bg-light border-0" id="cloture_date_reglement">
                     </div>
                 </div>
-
-                <!-- Facture -->
                 <div class="border-top pt-3 mb-3">
                     <div class="d-flex align-items-center mb-3">
                         <h6 class="fw-bold text-primary mb-0 me-2"><i class="fas fa-receipt me-1"></i>Facture</h6>
                         <span class="text-muted small">(optionnel)</span>
                     </div>
+
+                    <!-- Scan facture clôture -->
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="fw-bold small text-dark">
+                                <i class="fas fa-magic text-primary me-1"></i>Scanner la facture (OCR)
+                            </div>
+                            <span class="text-muted small">pré-remplit les champs</span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="file" class="form-control form-control-sm bg-white border-0"
+                                id="cloture_facture_scan_file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                            <button class="btn btn-primary btn-sm px-3"
+                                onclick="scannerFacture('cloture')" id="cloture_facture_scan_btn">
+                                <i class="fas fa-search me-1"></i>Scanner
+                            </button>
+                        </div>
+                        <div id="cloture_facture_scan_status" class="mt-2" style="display:none;"></div>
+                    </div>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">N° Facture</label>
@@ -664,18 +720,15 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Retour véhicule -->
                 <div class="border-top pt-3" id="cloture_retour_section">
                     <div class="fw-bold small mb-3 text-dark">Véhicule</div>
-                    <div class="form-check mb-2">
+                    <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="cloture_retourner_vehicule" checked>
                         <label class="form-check-label small" for="cloture_retourner_vehicule">
                             Retourner le véhicule original à l'employé et clore le véhicule de remplacement
                         </label>
                     </div>
                 </div>
-
             </div>
             <div class="modal-footer border-0">
                 <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
@@ -688,7 +741,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- FACTURE SINISTRE MODAL (standalone attach)                   -->
+<!-- FACTURE SINISTRE MODAL                                       -->
 <!-- ============================================================ -->
 <div class="modal fade" id="factureSinistreModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-md">
@@ -701,6 +754,26 @@
             </div>
             <div class="modal-body px-4">
                 <input type="hidden" id="sin_facture_sinistre_id">
+
+                <!-- Scan facture sinistre -->
+                <div class="border rounded p-3 bg-light mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-bold small text-dark">
+                            <i class="fas fa-magic text-primary me-1"></i>Scanner la facture (OCR)
+                        </div>
+                        <span class="text-muted small">pré-remplit les champs</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="file" class="form-control form-control-sm bg-white border-0"
+                            id="sin_facture_scan_file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                        <button class="btn btn-primary btn-sm px-3"
+                            onclick="scannerFacture('sin_facture')" id="sin_facture_scan_btn">
+                            <i class="fas fa-search me-1"></i>Scanner
+                        </button>
+                    </div>
+                    <div id="sin_facture_scan_status" class="mt-2" style="display:none;"></div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">N° Facture</label>
@@ -746,6 +819,100 @@
             <div class="modal-footer border-0">
                 <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
                 <button class="btn btn-primary px-4" onclick="confirmerAttacherFactureSinistre()">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DOCUMENT MODAL (assurance / vignette / visite)               -->
+<!-- ============================================================ -->
+<div class="modal fade" id="documentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-warning" id="doc_modal_title">
+                    <i class="fas fa-file-alt me-2"></i>Document
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="doc_type">
+
+                <div class="border rounded p-3 bg-light mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-bold small text-dark">
+                            <i class="fas fa-magic text-primary me-1"></i>Scanner le document (OCR)
+                        </div>
+                        <span class="text-muted small">optionnel — pré-remplit les champs</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="file" class="form-control form-control-sm bg-white border-0"
+                            id="doc_scan_file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                        <button class="btn btn-primary btn-sm px-3" onclick="scannerDocument()" id="doc_scan_btn">
+                            <i class="fas fa-search me-1"></i>Scanner
+                        </button>
+                    </div>
+                    <div id="doc_scan_status" class="mt-2" style="display:none;"></div>
+                </div>
+
+                <div id="doc_fields_assurance" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Assureur <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-light border-0" id="ass_insurer" placeholder="Ex: STAR Assurance">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">N° Police</label>
+                            <input type="text" class="form-control bg-light border-0" id="ass_policy_number">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date début <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-light border-0" id="ass_start_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date fin <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-light border-0" id="ass_end_date">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="doc_fields_vignette" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Année <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control bg-light border-0" id="vig_year" placeholder="2026">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Montant (DT)</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="vig_montant">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Date expiration <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-light border-0" id="vig_expiration_date">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="doc_fields_visite" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Montant (DT)</label>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="vt_montant">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date expiration <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-light border-0" id="vt_expiration_date">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Annuler</button>
+                <button class="btn btn-warning px-4" onclick="confirmerSauvegarderDocument()" id="doc_save_btn">
                     <i class="fas fa-save me-2"></i>Enregistrer
                 </button>
             </div>

@@ -1,0 +1,320 @@
+/* ============================================================ */
+/* EMPLOYEE MOBILE APP — SHARED STYLES                          */
+/* ============================================================ */
+
+@import url('https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: #f4f6f9;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---- AUTH PAGES ---- */
+.auth-body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #0d6efd 0%, #0a58ca 60%, #084298 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 24px;
+    padding: 40px 28px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+}
+
+.auth-logo {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 20px rgba(13,110,253,0.4);
+}
+
+.auth-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a202c;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.auth-subtitle {
+    font-size: 13px;
+    color: #718096;
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.auth-input-group {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.auth-input-group .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    font-size: 15px;
+    z-index: 1;
+}
+
+.auth-input-group input {
+    width: 100%;
+    padding: 13px 14px 13px 40px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Nunito', sans-serif;
+    background: #f8fafc;
+    color: #2d3748;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.auth-input-group input:focus {
+    border-color: #0d6efd;
+    background: white;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+    box-shadow: 0 4px 15px rgba(13,110,253,0.35);
+}
+
+.auth-btn:active { transform: scale(0.98); }
+.auth-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.auth-btn.green {
+    background: linear-gradient(135deg, #198754, #157347);
+    box-shadow: 0 4px 15px rgba(25,135,84,0.35);
+}
+
+.error-box {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    color: #c53030;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.auth-footer {
+    text-align: center;
+    color: #a0aec0;
+    font-size: 12px;
+    margin-top: 24px;
+}
+
+/* ---- DASHBOARD ---- */
+.dash-header {
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    padding: 20px 20px 50px;
+    color: white;
+    position: relative;
+}
+
+.dash-avatar {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 800;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.dash-name { font-size: 16px; font-weight: 700; }
+.dash-post { font-size: 12px; opacity: 0.8; }
+
+.logout-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: white;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+}
+
+.content-area {
+    margin-top: -28px;
+    padding: 0 14px;
+    padding-bottom: 90px;
+}
+
+/* ---- CARDS ---- */
+.dash-card {
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+
+.dash-card-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dash-card-header .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.dash-card-body { padding: 14px 16px; }
+
+/* ---- INFO ROWS ---- */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f7fafc;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; }
+.info-value { font-size: 13px; font-weight: 600; color: #2d3748; text-align: right; max-width: 60%; }
+
+/* ---- KM DISPLAY ---- */
+.km-box {
+    background: linear-gradient(135deg, #ebf4ff, #dbeafe);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    margin-top: 12px;
+}
+.km-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: #0d6efd;
+    line-height: 1;
+}
+.km-label { font-size: 11px; color: #718096; margin-top: 4px; }
+
+/* ---- STATUS BADGE ---- */
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ---- SINISTRE ITEM ---- */
+.sinistre-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-left: 4px solid #dee2e6;
+}
+.sinistre-card.ouvert   { border-left-color: #dc3545; }
+.sinistre-card.en_cours { border-left-color: #ffc107; }
+.sinistre-card.cloture  { border-left-color: #198754; }
+
+/* ---- AVATAR CIRCLE ---- */
+.avatar-circle {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #ebf4ff, #dbeafe);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800;
+    color: #0d6efd;
+    margin: 0 auto 10px;
+}
+
+/* ---- BOTTOM NAV ---- */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white;
+    padding: 8px 0 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-around;
+    z-index: 100;
+}
+
+.nav-btn {
+    display: flex; flex-direction: column; align-items: center;
+    color: #a0aec0; font-size: 10px; font-weight: 600;
+    border: none; background: none;
+    padding: 4px 20px; cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: color 0.2s;
+    gap: 3px;
+}
+
+.nav-btn i { font-size: 22px; }
+.nav-btn.active { color: #0d6efd; }
+
+.nav-btn.active i {
+    filter: drop-shadow(0 2px 4px rgba(13,110,253,0.3));
+}
+
+/* ---- SECTION ---- */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ---- EMPTY STATE ---- */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a0aec0;
+}
+.empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state p { font-size: 14px; font-weight: 600; margin: 0; }
+.empty-state small { font-size: 12px; }
+
+/* ---- LOADING ---- */
+.loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a0aec0;
+}
+
+/* ---- REPLACEMENT BADGE ---- */
+.replacement-badge {
+    background: #fff3cd;
+    color: #856404;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}

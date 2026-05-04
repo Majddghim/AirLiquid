@@ -720,6 +720,7 @@ function renderDocuments(docs) {
     }
 
     document.getElementById("docs_detail").innerHTML = `
+        <!-- Assurance -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
                 <div class="card-body">
@@ -747,16 +748,24 @@ function renderDocuments(docs) {
                                 <div class="info-value small ${isExpired(assurance.end_date) ? 'text-danger fw-bold' : ''}">${formatDate(assurance.end_date)}</div>
                             </div>
                         </div>
-                        ${assurance.file_path ? `<a href="/${assurance.file_path}" target="_blank" class="btn btn-outline-primary btn-sm w-100 mt-3"><i class="fas fa-file-alt me-1"></i> Voir le document</a>` : ''}
+                        ${assurance.file_path ? `<a href="/${assurance.file_path}" target="_blank" class="btn btn-outline-primary btn-sm w-100 mt-3"><i class="fas fa-file-alt me-1"></i>Voir</a>` : ''}
+                        <button class="btn btn-outline-warning btn-sm w-100 mt-2" onclick="ouvrirDocumentModal('assurance')">
+                            <i class="fas fa-sync-alt me-1"></i>Renouveler
+                        </button>
                     ` : `
                         <div class="text-center py-3 text-muted">
-                            <i class="fas fa-exclamation-circle text-warning mb-2"></i>
-                            <p class="small mb-0">Non enregistrée</p>
+                            <i class="fas fa-exclamation-circle text-warning mb-2 d-block fa-2x"></i>
+                            <p class="small mb-2">Non enregistrée</p>
                         </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="ouvrirDocumentModal('assurance')">
+                            <i class="fas fa-plus me-1"></i>Ajouter l'assurance
+                        </button>
                     `}
                 </div>
             </div>
         </div>
+
+        <!-- Vignette -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
                 <div class="card-body">
@@ -771,21 +780,29 @@ function renderDocuments(docs) {
                     </div>
                     ${vignette ? `
                         <div class="info-label">Année</div>
-                        <div class="info-value mb-2">${escapeHtml(vignette.year || '—')}</div>
+                        <div class="info-value mb-2">${escapeHtml(String(vignette.year || '—'))}</div>
                         <div class="info-label">Montant</div>
                         <div class="info-value mb-2">${vignette.montant ? vignette.montant + ' DT' : '—'}</div>
                         <div class="info-label">Expiration</div>
                         <div class="info-value ${isExpired(vignette.expiration_date) ? 'text-danger fw-bold' : ''}">${formatDate(vignette.expiration_date)}</div>
-                        ${vignette.file_path ? `<a href="/${vignette.file_path}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3"><i class="fas fa-file-alt me-1"></i> Voir le document</a>` : ''}
+                        ${vignette.file_path ? `<a href="/${vignette.file_path}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3"><i class="fas fa-file-alt me-1"></i>Voir</a>` : ''}
+                        <button class="btn btn-outline-warning btn-sm w-100 mt-2" onclick="ouvrirDocumentModal('vignette')">
+                            <i class="fas fa-sync-alt me-1"></i>Renouveler
+                        </button>
                     ` : `
                         <div class="text-center py-3 text-muted">
-                            <i class="fas fa-exclamation-circle text-warning mb-2"></i>
-                            <p class="small mb-0">Non enregistrée</p>
+                            <i class="fas fa-exclamation-circle text-warning mb-2 d-block fa-2x"></i>
+                            <p class="small mb-2">Non enregistrée</p>
                         </div>
+                        <button class="btn btn-success btn-sm w-100" onclick="ouvrirDocumentModal('vignette')">
+                            <i class="fas fa-plus me-1"></i>Ajouter la vignette
+                        </button>
                     `}
                 </div>
             </div>
         </div>
+
+        <!-- Visite Technique -->
         <div class="col-md-4 mb-3">
             <div class="card border-0 bg-light h-100">
                 <div class="card-body">
@@ -803,12 +820,18 @@ function renderDocuments(docs) {
                         <div class="info-value mb-2">${visite.montant ? visite.montant + ' DT' : '—'}</div>
                         <div class="info-label">Expiration</div>
                         <div class="info-value ${isExpired(visite.expiration_date) ? 'text-danger fw-bold' : ''}">${formatDate(visite.expiration_date)}</div>
-                        ${visite.file_path ? `<a href="/${visite.file_path}" target="_blank" class="btn btn-outline-info btn-sm w-100 mt-3"><i class="fas fa-file-alt me-1"></i> Voir le document</a>` : ''}
+                        ${visite.file_path ? `<a href="/${visite.file_path}" target="_blank" class="btn btn-outline-info btn-sm w-100 mt-3"><i class="fas fa-file-alt me-1"></i>Voir</a>` : ''}
+                        <button class="btn btn-outline-warning btn-sm w-100 mt-2" onclick="ouvrirDocumentModal('visite')">
+                            <i class="fas fa-sync-alt me-1"></i>Renouveler
+                        </button>
                     ` : `
                         <div class="text-center py-3 text-muted">
-                            <i class="fas fa-exclamation-circle text-warning mb-2"></i>
-                            <p class="small mb-0">Non enregistrée</p>
+                            <i class="fas fa-exclamation-circle text-warning mb-2 d-block fa-2x"></i>
+                            <p class="small mb-2">Non enregistrée</p>
                         </div>
+                        <button class="btn btn-info btn-sm w-100 text-white" onclick="ouvrirDocumentModal('visite')">
+                            <i class="fas fa-plus me-1"></i>Ajouter la visite
+                        </button>
                     `}
                 </div>
             </div>
@@ -1212,6 +1235,175 @@ async function confirmerAttacherFactureSinistre() {
         Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
     }
 }
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCUMENT MANAGEMENT (assurance / vignette / visite)
+
+function ouvrirDocumentModal(docType) {
+    // reset
+    document.getElementById('doc_type').value        = docType;
+    document.getElementById('doc_scan_file').value   = '';
+    document.getElementById('doc_scan_status').style.display = 'none';
+    document.getElementById('doc_scan_btn').disabled = false;
+    document.getElementById('doc_scan_btn').innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+
+    // hide all field sections
+    document.getElementById('doc_fields_assurance').style.display = 'none';
+    document.getElementById('doc_fields_vignette').style.display  = 'none';
+    document.getElementById('doc_fields_visite').style.display    = 'none';
+
+    // reset fields
+    ['ass_insurer','ass_policy_number','ass_start_date','ass_end_date'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    ['vig_year','vig_montant','vig_expiration_date'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    ['vt_montant','vt_expiration_date'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    // show correct fields + update title
+    const titles = {
+        assurance: 'Assurance',
+        vignette:  'Vignette',
+        visite:    'Visite Technique'
+    };
+    document.getElementById('doc_modal_title').innerHTML =
+        `<i class="fas fa-file-alt me-2"></i>${titles[docType]}`;
+    document.getElementById(`doc_fields_${docType === 'visite' ? 'visite' : docType}`).style.display = 'block';
+
+    new bootstrap.Modal(document.getElementById('documentModal')).show();
+}
+
+async function scannerDocument() {
+    const docType  = document.getElementById('doc_type').value;
+    const fileInput = document.getElementById('doc_scan_file');
+    const statusEl  = document.getElementById('doc_scan_status');
+    const scanBtn   = document.getElementById('doc_scan_btn');
+
+    if (!fileInput.files.length) {
+        Swal.fire({ icon: 'warning', title: 'Fichier manquant', text: 'Veuillez sélectionner un fichier.' });
+        return;
+    }
+
+    scanBtn.disabled = true;
+    scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Scan...';
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = '<div class="text-muted small"><i class="fas fa-spinner fa-spin me-1"></i>Extraction en cours...</div>';
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('doc_type', docType);
+
+    try {
+        const res    = await fetch(`/car/scan-document/${carId}`, { method: 'POST', body: formData });
+        const result = await res.json();
+
+        if (result.status !== 'success') {
+            statusEl.innerHTML = `<div class="text-danger small"><i class="fas fa-times me-1"></i>${result.message}</div>`;
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+            return;
+        }
+
+        const d = result.extracted_data;
+
+        if (docType === 'assurance') {
+            if (d.insurer)        document.getElementById('ass_insurer').value       = d.insurer;
+            if (d.policy_number)  document.getElementById('ass_policy_number').value = d.policy_number;
+            if (d.start_date)     document.getElementById('ass_start_date').value    = d.start_date;
+            if (d.end_date)       document.getElementById('ass_end_date').value      = d.end_date;
+        } else if (docType === 'vignette') {
+            if (d.year)             document.getElementById('vig_year').value            = d.year;
+            if (d.montant)          document.getElementById('vig_montant').value         = d.montant;
+            if (d.expiration_date)  document.getElementById('vig_expiration_date').value = d.expiration_date;
+        } else if (docType === 'visite') {
+            if (d.montant)          document.getElementById('vt_montant').value          = d.montant;
+            if (d.expiration_date)  document.getElementById('vt_expiration_date').value  = d.expiration_date;
+        }
+
+        statusEl.innerHTML = '<div class="text-success small"><i class="fas fa-check me-1"></i>Données extraites — vérifiez et corrigez si nécessaire.</div>';
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+
+    } catch (e) {
+        statusEl.innerHTML = '<div class="text-danger small"><i class="fas fa-times me-1"></i>Erreur réseau.</div>';
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+    }
+}
+
+async function confirmerSauvegarderDocument() {
+    const docType  = document.getElementById('doc_type').value;
+    const saveBtn  = document.getElementById('doc_save_btn');
+    const fileInput = document.getElementById('doc_scan_file');
+
+    const formData = new FormData();
+    if (fileInput.files.length) {
+        formData.append('file', fileInput.files[0]);
+    }
+
+    // validate + collect fields
+    if (docType === 'assurance') {
+        const insurer    = document.getElementById('ass_insurer').value.trim();
+        const startDate  = document.getElementById('ass_start_date').value;
+        const endDate    = document.getElementById('ass_end_date').value;
+        if (!insurer || !startDate || !endDate) {
+            Swal.fire({ icon: 'warning', title: 'Champs manquants', text: 'Assureur, date début et date fin sont obligatoires.' });
+            return;
+        }
+        formData.append('insurer',       insurer);
+        formData.append('policy_number', document.getElementById('ass_policy_number').value.trim());
+        formData.append('start_date',    startDate);
+        formData.append('end_date',      endDate);
+
+    } else if (docType === 'vignette') {
+        const year           = document.getElementById('vig_year').value;
+        const expirationDate = document.getElementById('vig_expiration_date').value;
+        if (!year || !expirationDate) {
+            Swal.fire({ icon: 'warning', title: 'Champs manquants', text: 'Année et date d\'expiration sont obligatoires.' });
+            return;
+        }
+        formData.append('year',            year);
+        formData.append('montant',         document.getElementById('vig_montant').value || '');
+        formData.append('expiration_date', expirationDate);
+
+    } else if (docType === 'visite') {
+        const expirationDate = document.getElementById('vt_expiration_date').value;
+        if (!expirationDate) {
+            Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Date d\'expiration est obligatoire.' });
+            return;
+        }
+        formData.append('montant',         document.getElementById('vt_montant').value || '');
+        formData.append('expiration_date', expirationDate);
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enregistrement...';
+
+    try {
+        const res    = await fetch(`/car/save-document/${carId}/${docType}`, { method: 'POST', body: formData });
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('documentModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Document enregistré !', showConfirmButton: false, timer: 2000 });
+            setTimeout(() => loadCarDetail(), 2000);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Enregistrer';
+        }
+    } catch (e) {
+        console.error('confirmerSauvegarderDocument error:', e);
+        Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Enregistrer';
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
@@ -1239,4 +1431,62 @@ function escapeHtml(str) {
     return String(str)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+async function scannerFacture(prefix) {
+    const fileInput = document.getElementById(`${prefix}_facture_scan_file`);
+    const statusEl  = document.getElementById(`${prefix}_facture_scan_status`);
+    const scanBtn   = document.getElementById(`${prefix}_facture_scan_btn`);
+
+    if (!fileInput.files.length) {
+        Swal.fire({ icon: 'warning', title: 'Fichier manquant', text: 'Veuillez sélectionner un fichier.' });
+        return;
+    }
+
+    scanBtn.disabled  = true;
+    scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Scan...';
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = '<div class="text-muted small"><i class="fas fa-spinner fa-spin me-1"></i>Extraction en cours...</div>';
+
+    const formData = new FormData();
+    formData.append('file',     fileInput.files[0]);
+    formData.append('doc_type', 'facture');
+
+    try {
+        const res    = await fetch(`/car/scan-document/${carId}`, { method: 'POST', body: formData });
+        const result = await res.json();
+
+        if (result.status !== 'success') {
+            statusEl.innerHTML = `<div class="text-danger small"><i class="fas fa-times me-1"></i>${result.message}</div>`;
+            scanBtn.disabled  = false;
+            scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+            return;
+        }
+
+        const d = result.extracted_data;
+
+        if (d.num_facture)   document.getElementById(`${prefix}_facture_num`).value          = d.num_facture;
+        if (d.date_facture)  document.getElementById(`${prefix}_facture_date`).value         = d.date_facture;
+        if (d.montant_ht)    document.getElementById(`${prefix}_facture_montant_ht`).value   = d.montant_ht;
+        if (d.tva)           document.getElementById(`${prefix}_facture_tva`).value          = d.tva;
+        if (d.montant_ttc)   document.getElementById(`${prefix}_facture_montant_ttc`).value  = d.montant_ttc;
+        if (d.num_reglement) document.getElementById(`${prefix}_facture_num_reglement`).value = d.num_reglement;
+
+        // also set the file input for upload
+        const fileEl = document.getElementById(`${prefix}_facture_file`);
+        if (fileEl) {
+            const dt = new DataTransfer();
+            dt.items.add(fileInput.files[0]);
+            fileEl.files = dt.files;
+        }
+
+        statusEl.innerHTML = '<div class="text-success small"><i class="fas fa-check me-1"></i>Données extraites — vérifiez et corrigez si nécessaire.</div>';
+        scanBtn.disabled  = false;
+        scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+
+    } catch (e) {
+        statusEl.innerHTML = '<div class="text-danger small"><i class="fas fa-times me-1"></i>Erreur réseau.</div>';
+        scanBtn.disabled  = false;
+        scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
+    }
 }

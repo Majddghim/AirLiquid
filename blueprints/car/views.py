@@ -224,6 +224,8 @@ class CarViews:
                     mock = ocr.scan_vignette(file_path)
                 elif doc_type == 'visite':
                     mock = ocr.scan_visite_technique(file_path)
+                elif doc_type == 'facture':
+                    mock = ocr.scan_facture(file_path)
                 else:
                     return jsonify({'status': 'failed', 'message': 'Type de document inconnu'})
 

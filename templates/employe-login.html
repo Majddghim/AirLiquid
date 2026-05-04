@@ -2,160 +2,41 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ALT Fleet — Connexion</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            font-family: 'Nunito', sans-serif;
-        }
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-        }
-        .logo-circle {
-            width: 70px; height: 70px;
-            background: linear-gradient(135deg, #0d6efd, #0a58ca);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px;
-        }
-        .form-control {
-            border-radius: 10px;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            font-size: 15px;
-        }
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: none;
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #0d6efd, #0a58ca);
-            border: none;
-            border-radius: 10px;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            color: white;
-        }
-        .input-group-text {
-            border-radius: 10px 0 0 10px;
-            background: #f8f9fc;
-            border: 2px solid #e9ecef;
-            border-right: none;
-        }
-        .input-group .form-control { border-radius: 0 10px 10px 0; }
-        .error-msg {
-            background: #fff5f5;
-            border: 1px solid #fed7d7;
-            color: #c53030;
-            border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 14px;
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/employe.css') }}">
 </head>
-<body>
-    <div class="login-card">
-        <div class="logo-circle">
+<body class="auth-body">
+
+    <div class="auth-card">
+        <div class="auth-logo">
             <i class="fas fa-car text-white fa-lg"></i>
         </div>
-        <h4 class="text-center fw-bold text-dark mb-1">ALT Fleet</h4>
-        <p class="text-center text-muted small mb-4">Espace Employé</p>
+        <div class="auth-title">ALT Fleet</div>
+        <div class="auth-subtitle">Espace Employé — Air Liquide Tunisia</div>
 
-        <div class="error-msg mb-3" id="error_msg"></div>
+        <div class="error-box" id="error_msg"></div>
 
-        <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text">
-                    <i class="fas fa-envelope text-muted"></i>
-                </span>
-                <input type="email" class="form-control" id="email"
-                    placeholder="Votre email" autocomplete="email">
-            </div>
+        <div class="auth-input-group">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="email" placeholder="Votre adresse email" autocomplete="email">
         </div>
 
-        <div class="mb-4">
-            <div class="input-group">
-                <span class="input-group-text">
-                    <i class="fas fa-lock text-muted"></i>
-                </span>
-                <input type="password" class="form-control" id="password"
-                    placeholder="Mot de passe" autocomplete="current-password">
-            </div>
+        <div class="auth-input-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" placeholder="Mot de passe" autocomplete="current-password">
         </div>
 
-        <button class="btn-login" onclick="login()" id="login_btn">
+        <button class="auth-btn" onclick="login()" id="login_btn">
             <i class="fas fa-sign-in-alt me-2"></i>Se connecter
         </button>
 
-        <p class="text-center text-muted small mt-4 mb-0">
-            Air Liquide Tunisia © 2025
-        </p>
+        <div class="auth-footer">Air Liquide Tunisia © 2026</div>
     </div>
 
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script>
-    async function login() {
-        const email    = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const btn      = document.getElementById('login_btn');
-        const errorMsg = document.getElementById('error_msg');
-
-        errorMsg.style.display = 'none';
-
-        if (!email || !password) {
-            errorMsg.innerText = 'Veuillez remplir tous les champs.';
-            errorMsg.style.display = 'block';
-            return;
-        }
-
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Connexion...';
-        btn.disabled  = true;
-
-        try {
-            const res    = await fetch('/employe/login', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ email, password })
-            });
-            const result = await res.json();
-
-            if (result.status === 'success') {
-                window.location.href = result.redirect;
-            } else {
-                errorMsg.innerText      = result.message;
-                errorMsg.style.display  = 'block';
-                btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Se connecter';
-                btn.disabled  = false;
-            }
-        } catch (e) {
-            errorMsg.innerText     = 'Erreur réseau. Veuillez réessayer.';
-            errorMsg.style.display = 'block';
-            btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Se connecter';
-            btn.disabled  = false;
-        }
-    }
-
-    // allow Enter key
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Enter') login();
-    });
-    </script>
+    <script src="{{ url_for('static', filename='js/employe-login.js') }}"></script>
 </body>
 </html>
