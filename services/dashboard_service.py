@@ -62,7 +62,7 @@ class DashboardService:
         if not date_to:
             date_to = datetime.date.today().isoformat()
 
-        con, cursor = self.db.find_connection()
+        con, cursor = self.db_tools.find_connection()
         try:
             # maintenance — sum DISTINCT factures to avoid double counting
             cursor.execute("""
