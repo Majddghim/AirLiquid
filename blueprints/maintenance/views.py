@@ -45,7 +45,6 @@ class MaintenanceViews:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
         @self.maintenance_bp.route('/log/<int:car_id>', methods=['POST'])
-        @self.maintenance_bp.route('/log/<int:car_id>', methods=['POST'])
         def log_maintenance(car_id):
             try:
                 data = request.get_json()
@@ -75,37 +74,6 @@ class MaintenanceViews:
                 if data:
                     return jsonify({'status': 'success', 'data': data})
                 return jsonify({'status': 'success', 'data': None})
-            except Exception as e:
-                return jsonify({'status': 'failed', 'message': str(e)}), 500
-
-        @self.maintenance_bp.route('/facture/attach/<int:record_id>', methods=['POST'])
-        def attach_facture(record_id):
-            try:
-                car_id = request.form.get('car_id')
-                file_path = None
-
-                if 'file' in request.files:
-                    file = request.files['file']
-                    if file and file.filename != '':
-                        upload_folder = 'static/uploads/factures/maintenance'
-                        os.makedirs(upload_folder, exist_ok=True)
-                        filename  = secure_filename(file.filename)
-                        file_path = os.path.join(upload_folder, filename)
-                        file.save(file_path)
-
-                self.service.attach_facture(
-                    record_id=record_id,
-                    car_id=car_id,
-                    num_facture=request.form.get('num_facture'),
-                    num_reglement=request.form.get('num_reglement'),
-                    date_facture=request.form.get('date_facture'),
-                    date_reglement=request.form.get('date_reglement'),
-                    montant_ht=request.form.get('montant_ht'),
-                    montant_ttc=request.form.get('montant_ttc'),
-                    tva=request.form.get('tva'),
-                    file_path=file_path
-                )
-                return jsonify({'status': 'success', 'message': 'Facture attachée avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
@@ -286,5 +254,54 @@ class MaintenanceViews:
             try:
                 data = self.service.get_part_intervals(part_id)
                 return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # add this new route
+        @self.maintenance_bp.route('/facture/search', methods=['GET'])
+        def search_facture():
+            try:
+                num_facture = request.args.get('num_facture')
+                car_id = request.args.get('car_id')
+                if not num_facture or not car_id:
+                    return jsonify({'status': 'failed', 'message': 'Paramètres manquants'})
+                data = self.service.search_facture_by_num(num_facture, int(car_id))
+                if data:
+                    return jsonify({'status': 'success', 'found': True, 'data': data})
+                return jsonify({'status': 'success', 'found': False})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # update attach_facture route to handle existing_facture_id
+        @self.maintenance_bp.route('/facture/attach/<int:record_id>', methods=['POST'])
+        def attach_facture(record_id):
+            try:
+                car_id = request.form.get('car_id')
+                existing_facture_id = request.form.get('existing_facture_id')
+                file_path = None
+
+                if 'file' in request.files:
+                    file = request.files['file']
+                    if file and file.filename != '':
+                        upload_folder = 'static/uploads/factures/maintenance'
+                        os.makedirs(upload_folder, exist_ok=True)
+                        filename = secure_filename(file.filename)
+                        file_path = os.path.join(upload_folder, filename)
+                        file.save(file_path)
+
+                self.service.attach_facture(
+                    record_id=record_id,
+                    car_id=car_id,
+                    num_facture=request.form.get('num_facture'),
+                    num_reglement=request.form.get('num_reglement'),
+                    date_facture=request.form.get('date_facture'),
+                    date_reglement=request.form.get('date_reglement'),
+                    montant_ht=request.form.get('montant_ht'),
+                    montant_ttc=request.form.get('montant_ttc'),
+                    tva=request.form.get('tva'),
+                    file_path=file_path,
+                    existing_facture_id=int(existing_facture_id) if existing_facture_id else None
+                )
+                return jsonify({'status': 'success', 'message': 'Facture attachée avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500

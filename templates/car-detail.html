@@ -364,9 +364,11 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">N° Facture</label>
-                            <input type="text" class="form-control bg-light border-0" id="log_facture_num">
-                        </div>
+    <label class="form-label small fw-bold">N° Facture</label>
+    <input type="text" class="form-control bg-light border-0" id="log_facture_num"
+        onblur="verifierFactureExistante('log')">
+    <div id="log_facture_existing_status" class="mt-1"></div>
+</div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">N° Règlement</label>
                             <input type="text" class="form-control bg-light border-0" id="log_facture_num_reglement">

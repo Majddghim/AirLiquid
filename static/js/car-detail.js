@@ -583,20 +583,27 @@ async function confirmerLogMaintenance() {
         const factureTtc = document.getElementById('log_facture_montant_ttc').value;
         const factureFile = document.getElementById('log_facture_file').files[0];
 
+        // in confirmerLogMaintenance(), replace the facture attach section:
         if (factureNum || factureTtc || factureFile) {
-            const formData = new FormData();
-            formData.append('car_id',        carId);
-            formData.append('num_facture',   factureNum);
-            formData.append('num_reglement', document.getElementById('log_facture_num_reglement').value.trim());
-            formData.append('date_facture',  document.getElementById('log_facture_date').value);
-            formData.append('date_reglement',document.getElementById('log_facture_date_reglement').value);
-            formData.append('montant_ht',    document.getElementById('log_facture_montant_ht').value);
-            formData.append('tva',           document.getElementById('log_facture_tva').value);
-            formData.append('montant_ttc',   factureTtc);
-            if (factureFile) formData.append('file', factureFile);
+    const formData = new FormData();
+    formData.append('car_id',        carId);
+    formData.append('num_facture',   factureNum);
+    formData.append('num_reglement', document.getElementById('log_facture_num_reglement').value.trim());
+    formData.append('date_facture',  document.getElementById('log_facture_date').value);
+    formData.append('date_reglement',document.getElementById('log_facture_date_reglement').value);
+    formData.append('montant_ht',    document.getElementById('log_facture_montant_ht').value);
+    formData.append('tva',           document.getElementById('log_facture_tva').value);
+    formData.append('montant_ttc',   factureTtc);
 
-            await fetch(`/maintenance/facture/attach/${recordId}`, { method: 'POST', body: formData });
-        }
+    // pass existing facture id if found
+    const existingId = document.getElementById('log_facture_existing_id');
+    if (existingId && existingId.value) {
+        formData.append('existing_facture_id', existingId.value);
+    }
+
+    if (factureFile) formData.append('file', factureFile);
+    await fetch(`/maintenance/facture/attach/${recordId}`, { method: 'POST', body: formData });
+}
 
         bootstrap.Modal.getInstance(document.getElementById('logMaintenanceModal')).hide();
         await loadMaintenance();
@@ -1435,41 +1442,41 @@ function escapeHtml(str) {
 
 async function scannerFacture(prefix) {
     const fileInput = document.getElementById(`${prefix}_facture_scan_file`);
-    const statusEl  = document.getElementById(`${prefix}_facture_scan_status`);
-    const scanBtn   = document.getElementById(`${prefix}_facture_scan_btn`);
+    const statusEl = document.getElementById(`${prefix}_facture_scan_status`);
+    const scanBtn = document.getElementById(`${prefix}_facture_scan_btn`);
 
     if (!fileInput.files.length) {
-        Swal.fire({ icon: 'warning', title: 'Fichier manquant', text: 'Veuillez sélectionner un fichier.' });
+        Swal.fire({icon: 'warning', title: 'Fichier manquant', text: 'Veuillez sélectionner un fichier.'});
         return;
     }
 
-    scanBtn.disabled  = true;
+    scanBtn.disabled = true;
     scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Scan...';
     statusEl.style.display = 'block';
     statusEl.innerHTML = '<div class="text-muted small"><i class="fas fa-spinner fa-spin me-1"></i>Extraction en cours...</div>';
 
     const formData = new FormData();
-    formData.append('file',     fileInput.files[0]);
+    formData.append('file', fileInput.files[0]);
     formData.append('doc_type', 'facture');
 
     try {
-        const res    = await fetch(`/car/scan-document/${carId}`, { method: 'POST', body: formData });
+        const res = await fetch(`/car/scan-document/${carId}`, {method: 'POST', body: formData});
         const result = await res.json();
 
         if (result.status !== 'success') {
             statusEl.innerHTML = `<div class="text-danger small"><i class="fas fa-times me-1"></i>${result.message}</div>`;
-            scanBtn.disabled  = false;
+            scanBtn.disabled = false;
             scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
             return;
         }
 
         const d = result.extracted_data;
 
-        if (d.num_facture)   document.getElementById(`${prefix}_facture_num`).value          = d.num_facture;
-        if (d.date_facture)  document.getElementById(`${prefix}_facture_date`).value         = d.date_facture;
-        if (d.montant_ht)    document.getElementById(`${prefix}_facture_montant_ht`).value   = d.montant_ht;
-        if (d.tva)           document.getElementById(`${prefix}_facture_tva`).value          = d.tva;
-        if (d.montant_ttc)   document.getElementById(`${prefix}_facture_montant_ttc`).value  = d.montant_ttc;
+        if (d.num_facture) document.getElementById(`${prefix}_facture_num`).value = d.num_facture;
+        if (d.date_facture) document.getElementById(`${prefix}_facture_date`).value = d.date_facture;
+        if (d.montant_ht) document.getElementById(`${prefix}_facture_montant_ht`).value = d.montant_ht;
+        if (d.tva) document.getElementById(`${prefix}_facture_tva`).value = d.tva;
+        if (d.montant_ttc) document.getElementById(`${prefix}_facture_montant_ttc`).value = d.montant_ttc;
         if (d.num_reglement) document.getElementById(`${prefix}_facture_num_reglement`).value = d.num_reglement;
 
         // also set the file input for upload
@@ -1481,12 +1488,43 @@ async function scannerFacture(prefix) {
         }
 
         statusEl.innerHTML = '<div class="text-success small"><i class="fas fa-check me-1"></i>Données extraites — vérifiez et corrigez si nécessaire.</div>';
-        scanBtn.disabled  = false;
+        scanBtn.disabled = false;
         scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
 
     } catch (e) {
         statusEl.innerHTML = '<div class="text-danger small"><i class="fas fa-times me-1"></i>Erreur réseau.</div>';
-        scanBtn.disabled  = false;
+        scanBtn.disabled = false;
         scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Scanner';
     }
 }
+
+    async function verifierFactureExistante(prefix) {
+        const numFacture = document.getElementById(`${prefix}_facture_num`).value.trim();
+        if (!numFacture) return;
+
+        try {
+            const res  = await fetch(`/maintenance/facture/search?num_facture=${encodeURIComponent(numFacture)}&car_id=${carId}`);
+            const data = await res.json();
+
+            const statusEl = document.getElementById(`${prefix}_facture_existing_status`);
+            if (!statusEl) return;
+
+            if (data.status === 'success' && data.found) {
+                const f = data.data;
+                statusEl.innerHTML = `
+                    <div class="alert alert-info py-2 small mb-0">
+                        <i class="fas fa-link me-1"></i>
+                        Facture <strong>${escapeHtml(f.num_facture)}</strong> trouvée
+                        (${f.montant_ttc} DT — ${f.date_facture || '—'}).
+                        Cette facture existante sera réutilisée.
+                        <input type="hidden" id="${prefix}_facture_existing_id" value="${f.id}">
+                    </div>`;
+            } else {
+                statusEl.innerHTML = '';
+                const existingId = document.getElementById(`${prefix}_facture_existing_id`);
+                if (existingId) existingId.remove();
+            }
+        } catch (e) {
+            console.error('verifierFactureExistante error:', e);
+        }
+    }

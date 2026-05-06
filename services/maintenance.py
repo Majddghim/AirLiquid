@@ -110,6 +110,20 @@ class MaintenanceService:
     # ------------------------------------------------------------------ #
     # RECORDS                                                              #
     # ------------------------------------------------------------------ #
+    def search_facture_by_num(self, num_facture, car_id):
+        """Search for existing facture by number for reuse"""
+        con, cursor = self.db.find_connection()
+        try:
+            cursor.execute("""
+                SELECT id, num_facture, date_facture, montant_ttc
+                FROM factures
+                WHERE num_facture = %s AND car_id = %s
+                LIMIT 1
+            """, (num_facture, car_id))
+            result = cursor.fetchone()
+            return dict(result) if result else None
+        finally:
+            con.close()
 
     def get_records_by_car(self, car_id):
         con, cursor = self.db.find_connection()
@@ -120,11 +134,15 @@ class MaintenanceService:
                        mr.next_due_km, mr.status, mr.notes, mr.created_at,
                        cp.name AS part_name, cp.category,
                        g.name  AS garage_name,
-                       f.id    AS facture_id, f.montant_ttc, f.file_path AS facture_file
+                       f.id    AS facture_id,
+                       f.montant_ttc,
+                       f.file_path AS facture_file
                 FROM maintenance_records mr
                 JOIN car_parts cp ON mr.part_id = cp.id
                 LEFT JOIN garages g ON mr.garage_id = g.id
-                LEFT JOIN factures f ON f.type = 'maintenance' AND f.reference_id = mr.id
+                LEFT JOIN facture_records fr ON fr.record_id = mr.id
+                    AND fr.record_type = 'maintenance'
+                LEFT JOIN factures f ON f.id = fr.facture_id
                 WHERE mr.car_id = %s
                 ORDER BY mr.done_at DESC
             """, (car_id,))
@@ -186,10 +204,13 @@ class MaintenanceService:
         con, cursor = self.db.find_connection()
         try:
             cursor.execute("""
-                SELECT id, num_facture, num_reglement, date_facture,
-                       date_reglement, montant_ht, montant_ttc, tva, file_path
-                FROM factures
-                WHERE type = 'maintenance' AND reference_id = %s
+                SELECT f.id, f.num_facture, f.num_reglement, f.date_facture,
+                       f.date_reglement, f.montant_ht, f.montant_ttc,
+                       f.tva, f.file_path
+                FROM factures f
+                JOIN facture_records fr ON fr.facture_id = f.id
+                WHERE fr.record_id = %s AND fr.record_type = 'maintenance'
+                LIMIT 1
             """, (record_id,))
             result = cursor.fetchone()
             return dict(result) if result else None
@@ -198,24 +219,39 @@ class MaintenanceService:
 
     def attach_facture(self, record_id, car_id, num_facture, num_reglement,
                        date_facture, date_reglement, montant_ht, montant_ttc,
-                       tva, file_path=None):
+                       tva, file_path=None, existing_facture_id=None):
         con, cursor = self.db.find_connection()
         try:
+            con.autocommit(False)
+
+            if existing_facture_id:
+                # reuse existing facture — just create the link
+                facture_id = existing_facture_id
+            else:
+                # create new facture
+                cursor.execute("""
+                    INSERT INTO factures
+                        (type, reference_id, car_id, num_facture, num_reglement,
+                         date_facture, date_reglement, montant_ht, montant_ttc,
+                         tva, file_path, extraction_status)
+                    VALUES ('maintenance', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'verified')
+                """, (
+                    record_id, car_id,
+                    num_facture or None, num_reglement or None,
+                    date_facture or None, date_reglement or None,
+                    montant_ht or None, montant_ttc or None,
+                    tva or None, file_path or None
+                ))
+                facture_id = cursor.lastrowid
+
+            # create junction record
             cursor.execute("""
-                INSERT INTO factures
-                    (type, reference_id, car_id, num_facture, num_reglement,
-                     date_facture, date_reglement, montant_ht, montant_ttc,
-                     tva, file_path, extraction_status)
-                VALUES ('maintenance', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'verified')
-            """, (
-                record_id, car_id,
-                num_facture or None, num_reglement or None,
-                date_facture or None, date_reglement or None,
-                montant_ht or None, montant_ttc or None,
-                tva or None, file_path or None
-            ))
+                INSERT INTO facture_records (facture_id, record_id, record_type)
+                VALUES (%s, %s, 'maintenance')
+            """, (facture_id, record_id))
+
             con.commit()
-            return cursor.lastrowid
+            return facture_id
         except Exception as e:
             con.rollback()
             raise e

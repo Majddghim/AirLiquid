@@ -62,25 +62,25 @@ class DashboardService:
         if not date_to:
             date_to = datetime.date.today().isoformat()
 
-        con, cursor = self.db_tools.find_connection()
+        con, cursor = self.db.find_connection()
         try:
-            # maintenance factures
+            # maintenance — sum DISTINCT factures to avoid double counting
             cursor.execute("""
-                SELECT COALESCE(SUM(montant_ttc), 0) AS total
-                FROM factures
-                WHERE type = 'maintenance'
-                AND date_facture BETWEEN %s AND %s
-                AND montant_ttc IS NOT NULL
+                SELECT COALESCE(SUM(f.montant_ttc), 0) AS total
+                FROM factures f
+                WHERE f.type = 'maintenance'
+                AND f.date_facture BETWEEN %s AND %s
+                AND f.montant_ttc IS NOT NULL
             """, (date_from, date_to))
             maintenance = cursor.fetchone()['total']
 
-            # sinistre factures
+            # sinistre
             cursor.execute("""
-                SELECT COALESCE(SUM(montant_ttc), 0) AS total
-                FROM factures
-                WHERE type = 'sinistre'
-                AND date_facture BETWEEN %s AND %s
-                AND montant_ttc IS NOT NULL
+                SELECT COALESCE(SUM(f.montant_ttc), 0) AS total
+                FROM factures f
+                WHERE f.type = 'sinistre'
+                AND f.date_facture BETWEEN %s AND %s
+                AND f.montant_ttc IS NOT NULL
             """, (date_from, date_to))
             sinistres = cursor.fetchone()['total']
 
