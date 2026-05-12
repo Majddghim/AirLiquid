@@ -54,28 +54,29 @@
         </li>
 
         <!-- Messages (kept as-is) -->
-        <li class="nav-item dropdown no-arrow mx-1">
-            <div class="nav-item dropdown no-arrow">
-                <a class="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="#">
-                    <span class="badge bg-danger badge-counter">7</span>
-                    <i class="fas fa-envelope fa-fw"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-end dropdown-list animated--grow-in">
-                    <h6 class="dropdown-header">Messages</h6>
-                    <a class="dropdown-item d-flex align-items-center" href="#">
-                        <div class="dropdown-list-image me-3">
-                            <img class="rounded-circle" src="../static/assets/img/avatars/avatar4.jpeg">
-                            <div class="bg-success status-indicator"></div>
-                        </div>
-                        <div class="fw-bold">
-                            <div class="text-truncate"><span>Hi there! I am wondering if you can help me with a problem.</span></div>
-                            <p class="small text-gray-500 mb-0">Emily Fowler - 58m</p>
-                        </div>
-                    </a>
-                    <a class="dropdown-item text-center small text-gray-500" href="#">Voir tous les messages</a>
-                </div>
+        <!-- Messages -->
+<li class="nav-item dropdown no-arrow mx-1">
+    <a class="dropdown-toggle nav-link" aria-expanded="false"
+        data-bs-toggle="dropdown" href="#" id="messagesDropdownToggle">
+        <span class="badge bg-danger badge-counter d-none" id="msg_badge">0</span>
+        <i class="fas fa-envelope fa-fw"></i>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end dropdown-list animated--grow-in" style="min-width:340px;">
+        <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+            <span>Messages Employés</span>
+            <span class="badge bg-danger rounded-pill" id="msg_header_count">0</span>
+        </h6>
+        <div id="messages_dropdown_list">
+            <div class="dropdown-item text-center text-muted small py-3">
+                <div class="spinner-border spinner-border-sm me-2"></div>
+                Chargement...
             </div>
-        </li>
+        </div>
+        <a class="dropdown-item text-center small text-primary fw-bold py-2" href="#">
+            Voir tous les messages
+        </a>
+    </div>
+</li>
 
         <div class="d-none d-sm-block topbar-divider"></div>
 
@@ -156,6 +157,77 @@ async function loadHeaderAlerts() {
         console.error('loadHeaderAlerts error:', e);
     }
 }
+async function loadHeaderMessages() {
+    try {
+        const res  = await fetch('/messages/unread-per-employee');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const counts = data.data;
+        const total  = Object.values(counts).reduce((a, b) => a + b, 0);
+
+        // update badge
+        const badge = document.getElementById('msg_badge');
+        if (total > 0) {
+            badge.classList.remove('d-none');
+            badge.innerText = total > 9 ? '9+' : total;
+        } else {
+            badge.classList.add('d-none');
+        }
+        document.getElementById('msg_header_count').innerText = total;
+
+        // fill dropdown
+        const list = document.getElementById('messages_dropdown_list');
+        if (total === 0) {
+            list.innerHTML = `
+                <div class="dropdown-item text-center text-muted small py-3">
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    Aucun message non lu
+                </div>`;
+            return;
+        }
+
+        // fetch employee names
+        const empRes  = await fetch('/car/get-employes-list');
+        const empData = await empRes.json();
+        const empMap  = {};
+        if (empData.status === 'success') {
+            empData.data.forEach(e => {
+                empMap[e.id] = `${e.prenom} ${e.nom}`;
+            });
+        }
+
+        list.innerHTML = Object.entries(counts).map(([empId, count]) => `
+            <a class="dropdown-item d-flex align-items-center py-2"
+                href="/dashboard/employe-profil/${empId}">
+                <div class="me-3">
+                    <div class="bg-primary icon-circle d-flex align-items-center
+                        justify-content-center" style="width:40px;height:40px;border-radius:50%;">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="small fw-bold">
+                        ${empMap[empId] || 'Employé #' + empId}
+                    </div>
+                    <span class="small text-muted">
+                        ${count} message(s) non lu(s)
+                    </span>
+                </div>
+                <span class="badge bg-danger rounded-pill">${count}</span>
+            </a>`).join('');
+
+    } catch (e) {
+        console.error('loadHeaderMessages error:', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadHeaderAlerts();
+    loadHeaderMessages();
+    // refresh every 10 seconds
+    setInterval(loadHeaderMessages, 10000);
+});
 
 document.addEventListener('DOMContentLoaded', loadHeaderAlerts);
 </script>

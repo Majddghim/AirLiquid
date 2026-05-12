@@ -12,6 +12,7 @@ from blueprints.reports import reports_bp
 from apscheduler.schedulers.background import BackgroundScheduler
 from services.digest_service import DigestService
 from blueprints.gmail import gmail_bp
+from blueprints.messages import message_bp
 
 import os
 load_dotenv()
@@ -58,6 +59,7 @@ app.register_blueprint(settings_bp, url_prefix='/settings')
 app.register_blueprint(maintenance_bp, url_prefix='/maintenance')
 app.register_blueprint(reports_bp, url_prefix='/reports')
 app.register_blueprint(gmail_bp, url_prefix='/gmail')
+app.register_blueprint(message_bp, url_prefix='/messages')
 
 
 app.register_blueprint(sinistre_bp, url_prefix='/sinistre')

@@ -35,6 +35,7 @@ async function loadProfil() {
         console.error('loadProfil error:', e);
         Swal.fire({ icon: 'error', title: 'Erreur serveur', text: 'Impossible de charger le profil.' });
     }
+    startChatPolling();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,3 +208,104 @@ function formatDate(dateStr) {
     if (isNaN(d)) return dateStr;
     return d.toLocaleDateString('fr-TN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
+////////////////////////////////////////////////////////////////////////////////////////////////
+// MESSAGING
+
+let chatPolling = null;
+
+async function loadMessages() {
+    try {
+        const res  = await fetch(`/messages/conversation/${employeId}`);
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const el       = document.getElementById('chat_messages');
+        const messages = data.data;
+
+        if (messages.length === 0) {
+            el.innerHTML = `
+                <div class="text-center text-muted small py-4">
+                    <i class="fas fa-comments fa-2x mb-2 opacity-25 d-block"></i>
+                    Aucun message — commencez la conversation
+                </div>`;
+            return;
+        }
+
+        const wasAtBottom = el.scrollHeight - el.scrollTop === el.clientHeight;
+
+        el.innerHTML = messages.map(m => {
+            const isAdmin  = m.sender_type === 'admin';
+            const time     = new Date(m.created_at).toLocaleTimeString('fr-TN', {
+                hour: '2-digit', minute: '2-digit'
+            });
+            const date     = new Date(m.created_at).toLocaleDateString('fr-TN', {
+                day: '2-digit', month: '2-digit'
+            });
+
+            return isAdmin ? `
+                <div class="d-flex justify-content-end mb-3">
+                    <div style="max-width:70%;">
+                        <div style="background:#0d6efd;color:white;border-radius:18px 18px 4px 18px;
+                            padding:10px 14px;font-size:13px;line-height:1.4;">
+                            ${escapeHtml(m.content)}
+                        </div>
+                        <div class="text-muted text-end mt-1" style="font-size:10px;">
+                            RH · ${date} ${time}
+                        </div>
+                    </div>
+                </div>` : `
+                <div class="d-flex justify-content-start mb-3">
+                    <div style="max-width:70%;">
+                        <div style="background:white;border:1px solid #dee2e6;
+                            border-radius:18px 18px 18px 4px;
+                            padding:10px 14px;font-size:13px;line-height:1.4;">
+                            ${escapeHtml(m.content)}
+                        </div>
+                        <div class="text-muted mt-1" style="font-size:10px;">
+                            ${escapeHtml(m.sender_name)} · ${date} ${time}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        // scroll to bottom
+        el.scrollTop = el.scrollHeight;
+
+    } catch (e) {
+        console.error('loadMessages error:', e);
+    }
+}
+
+async function envoyerMessage() {
+    const input   = document.getElementById('chat_input');
+    const content = input.value.trim();
+    if (!content) return;
+
+    input.value = '';
+
+    try {
+        await fetch('/messages/send', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                sender_type: 'admin',
+                employee_id: parseInt(employeId),
+                content:     content
+            })
+        });
+        await loadMessages();
+    } catch (e) {
+        console.error('envoyerMessage error:', e);
+    }
+}
+
+// start polling when profil loads
+function startChatPolling() {
+    loadMessages();
+    chatPolling = setInterval(loadMessages, 5000);
+}
+
+// stop polling when leaving page
+window.addEventListener('beforeunload', () => {
+    if (chatPolling) clearInterval(chatPolling);
+});

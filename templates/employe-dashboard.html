@@ -29,6 +29,7 @@
     <!-- CONTENT -->
     <div class="content-area">
 
+        <!-- VEHICULE -->
         <div class="section active" id="section_car">
             <div id="car_content">
                 <div class="loading-state">
@@ -38,6 +39,7 @@
             </div>
         </div>
 
+        <!-- SINISTRES -->
         <div class="section" id="section_sinistres">
             <div id="sinistres_content">
                 <div class="loading-state">
@@ -47,6 +49,32 @@
             </div>
         </div>
 
+        <!-- MESSAGES -->
+        <div class="section" id="section_messages">
+            <div style="padding:16px 16px 0;">
+                <div class="fw-bold text-dark mb-3" style="font-size:15px;">
+                    <i class="fas fa-comments text-primary me-2"></i>Messages RH
+                </div>
+            </div>
+            <div id="messages_content"
+                style="height:calc(100vh - 230px);overflow-y:auto;padding:0 16px 16px;background:#f8f9fc;">
+                <div class="text-center text-muted small py-4">Chargement...</div>
+            </div>
+            <div class="border-top p-3 d-flex gap-2 bg-white">
+                <input type="text" class="form-control bg-light border-0"
+                    id="mobile_chat_input"
+                    placeholder="Écrire un message..."
+                    onkeydown="if(event.key==='Enter') envoyerMessageMobile()"
+                    style="border-radius:20px;">
+                <button class="btn btn-primary px-3"
+                    onclick="envoyerMessageMobile()"
+                    style="border-radius:20px;min-width:44px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- PROFIL -->
         <div class="section" id="section_profil">
             <div id="profil_content">
                 <div class="loading-state">
@@ -68,95 +96,97 @@
             <i class="fas fa-car-crash"></i>
             <span>Sinistres</span>
         </button>
+        <button class="nav-btn position-relative" id="nav_messages" onclick="switchSection('messages')">
+            <i class="fas fa-comments"></i>
+            <span class="badge bg-danger rounded-pill position-absolute"
+                id="mobile_unread_badge"
+                style="display:none;top:4px;right:8px;font-size:9px;padding:2px 5px;">0</span>
+            <span>Messages</span>
+        </button>
         <button class="nav-btn" id="nav_profil" onclick="switchSection('profil')">
             <i class="fas fa-user"></i>
             <span>Profil</span>
         </button>
     </div>
+
     <!-- ODOMETER MODAL -->
-<div class="modal fade" id="odometerModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:20px;border:none;">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="fw-bold text-dark mb-0">
-                    <i class="fas fa-tachometer-alt text-primary me-2"></i>
-                    Mettre à jour le kilométrage
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body px-4">
-                <input type="hidden" id="odometer_car_id">
-
-                <div class="border rounded p-3 bg-light mb-3">
-                    <div class="fw-bold small text-dark mb-2">
-                        <i class="fas fa-camera text-primary me-1"></i>
-                        Scanner le compteur (OCR)
+    <div class="modal fade" id="odometerModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:20px;border:none;">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                        Mettre à jour le kilométrage
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <input type="hidden" id="odometer_car_id">
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <div class="fw-bold small text-dark mb-2">
+                            <i class="fas fa-camera text-primary me-1"></i>
+                            Scanner le compteur (OCR)
+                        </div>
+                        <input type="file" class="form-control form-control-sm bg-white border-0"
+                            id="odometer_file" accept="image/*" capture="environment">
+                        <button class="auth-btn mt-2" style="padding:10px;"
+                            onclick="scanOdometer()" id="odometer_scan_btn">
+                            <i class="fas fa-search me-1"></i>Lire le KM
+                        </button>
+                        <div id="odometer_scan_status" class="mt-2" style="display:none;"></div>
                     </div>
-                    <input type="file" class="form-control form-control-sm bg-white border-0"
-                        id="odometer_file" accept="image/*" capture="environment">
-                    <button class="auth-btn mt-2" style="padding:10px;"
-                        onclick="scanOdometer()" id="odometer_scan_btn">
-                        <i class="fas fa-search me-1"></i>Lire le KM
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kilométrage <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control bg-light border-0"
+                            id="odometer_km" placeholder="Ex: 47500" style="border-radius:12px;">
+                        <small class="text-muted">Vérifiez et corrigez si nécessaire</small>
+                    </div>
+                    <button class="auth-btn" onclick="confirmerUpdateKm()" id="odometer_save_btn">
+                        <i class="fas fa-save me-2"></i>Enregistrer
                     </button>
-                    <div id="odometer_scan_status" class="mt-2" style="display:none;"></div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Kilométrage <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control bg-light border-0"
-                        id="odometer_km" placeholder="Ex: 47500" style="border-radius:12px;">
-                    <small class="text-muted">Vérifiez et corrigez si nécessaire</small>
-                </div>
-
-                <button class="auth-btn" onclick="confirmerUpdateKm()" id="odometer_save_btn">
-                    <i class="fas fa-save me-2"></i>Enregistrer
-                </button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- PROBLEM REPORT MODAL -->
-<div class="modal fade" id="problemModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:20px;border:none;">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="fw-bold text-dark mb-0">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Signaler un problème
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body px-4">
-                <input type="hidden" id="problem_car_id">
-                <input type="hidden" id="problem_file_path">
-
-                <div class="border rounded p-3 bg-light mb-3">
-                    <div class="fw-bold small text-dark mb-2">
-                        <i class="fas fa-camera text-primary me-1"></i>
-                        Photographier le problème
+    <!-- PROBLEM REPORT MODAL -->
+    <div class="modal fade" id="problemModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:20px;border:none;">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Signaler un problème
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <input type="hidden" id="problem_car_id">
+                    <input type="hidden" id="problem_file_path">
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <div class="fw-bold small text-dark mb-2">
+                            <i class="fas fa-camera text-primary me-1"></i>
+                            Photographier le problème
+                        </div>
+                        <input type="file" class="form-control form-control-sm bg-white border-0"
+                            id="problem_file" accept="image/*" capture="environment"
+                            onchange="analyzeProblem()">
+                        <div id="problem_analysis" class="mt-2" style="display:none;"></div>
                     </div>
-                    <input type="file" class="form-control form-control-sm bg-white border-0"
-                        id="problem_file" accept="image/*" capture="environment"
-                        onchange="analyzeProblem()">
-                    <div id="problem_analysis" class="mt-2" style="display:none;"></div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description du problème</label>
+                        <textarea class="form-control bg-light border-0" id="problem_description"
+                            rows="3" placeholder="Décrivez ce que vous observez..."
+                            style="border-radius:12px;"></textarea>
+                    </div>
+                    <button class="auth-btn" style="background:linear-gradient(135deg,#dc3545,#c82333);"
+                        onclick="confirmerSignalement()" id="problem_save_btn">
+                        <i class="fas fa-paper-plane me-2"></i>Envoyer le signalement
+                    </button>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Description du problème</label>
-                    <textarea class="form-control bg-light border-0" id="problem_description"
-                        rows="3" placeholder="Décrivez ce que vous observez..."
-                        style="border-radius:12px;"></textarea>
-                </div>
-
-                <button class="auth-btn" style="background:linear-gradient(135deg,#dc3545,#c82333);"
-                    onclick="confirmerSignalement()" id="problem_save_btn">
-                    <i class="fas fa-paper-plane me-2"></i>Envoyer le signalement
-                </button>
             </div>
         </div>
     </div>
-</div>
 
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/employe-dashboard.js') }}"></script>
