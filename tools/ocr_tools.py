@@ -185,3 +185,29 @@ Champs à extraire:
 Si un champ n'est pas trouvé, mettre null.
 Retourne UNIQUEMENT le JSON, rien d'autre."""
         return self._call_claude(file_path, prompt)
+
+    def scan_odometer(self, file_path):
+        prompt = """Tu es un assistant OCR. Lis le nombre affiché dans cette image.
+Il peut s'agir d'un compteur kilométrique, un écran numérique, ou tout affichage de chiffres.
+
+Retourne UNIQUEMENT un JSON valide:
+- km: le nombre entier que tu vois (sans espaces ni points ni virgules), ex: 47500
+- confidence: "high", "medium", ou "low"
+
+Si l'image est floue ou illisible, essaie quand même de donner une estimation.
+Si vraiment impossible, retourne {"km": null, "confidence": "low"}
+Retourne UNIQUEMENT le JSON, rien d'autre."""
+        return self._call_claude(file_path, prompt)
+
+    def analyze_car_damage(self, file_path):
+        prompt = """Tu es un expert en évaluation de dommages automobiles.
+    Analyse cette photo d'un véhicule et décris les dommages visibles.
+
+    Retourne UNIQUEMENT un JSON valide:
+    - description: description courte des dommages en français (2-3 phrases max)
+    - severity: "léger", "modéré", ou "grave"
+    - parts_affected: liste des parties endommagées (ex: ["pare-choc avant", "phare gauche"])
+
+    Si aucun dommage visible, retourne {"description": "Aucun dommage visible", "severity": "aucun", "parts_affected": []}
+    Retourne UNIQUEMENT le JSON, rien d'autre."""
+        return self._call_claude(file_path, prompt)

@@ -97,6 +97,53 @@
                     </div>
                 </div>
 
+        <!-- ================================================ -->
+<!-- FLEET RISK SCORE                                  -->
+<!-- ================================================ -->
+<div class="row mb-4" id="risk_row">
+    <div class="col-12">
+        <div class="card shadow border-0" id="risk_card">
+            <div class="card-body py-3 px-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+
+                    <!-- Score circle + label -->
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="position-relative d-flex align-items-center justify-content-center"
+                            style="width:80px;height:80px;">
+                            <svg width="80" height="80" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="34" fill="none"
+                                    stroke="#e9ecef" stroke-width="8"/>
+                                <circle cx="40" cy="40" r="34" fill="none"
+                                    id="risk_circle"
+                                    stroke="#198754" stroke-width="8"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="213.6"
+                                    stroke-dashoffset="213.6"
+                                    transform="rotate(-90 40 40)"
+                                    style="transition: stroke-dashoffset 1s ease, stroke 0.5s ease;"/>
+                            </svg>
+                            <div class="position-absolute text-center">
+                                <div class="fw-bold" id="risk_score_text"
+                                    style="font-size:18px;line-height:1;">—</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-muted fw-bold text-uppercase mb-1">
+                                Score de Santé de la Flotte
+                            </div>
+                            <div class="fw-bold h5 mb-1" id="risk_label">Chargement...</div>
+                            <div class="text-muted small" id="risk_sublabel"></div>
+                        </div>
+                    </div>
+
+                    <!-- Issues list -->
+                    <div class="d-flex flex-wrap gap-2" id="risk_issues"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                 <!-- ================================================ -->
                 <!-- ROW 2: Expense KPIs                               -->
                 <!-- ================================================ -->
@@ -219,7 +266,78 @@
                         </div>
                     </div>
                 </div>
+<!-- ================================================ -->
+<!-- ROW ML: Predictions + Anomalies                  -->
+<!-- ================================================ -->
+<div class="row mb-4">
+    <!-- Predictive Maintenance -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="text-primary fw-bold m-0">
+                    <i class="fas fa-brain me-2"></i>Maintenance Prédictive
+                </h6>
+                <span class="badge bg-primary-subtle text-primary">ML</span>
+            </div>
+            <div class="card-body p-0" id="predictions_list">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Analyse en cours...
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Anomaly Detection -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="text-danger fw-bold m-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Anomalies Détectées
+                </h6>
+                <span class="badge bg-danger-subtle text-danger">ML</span>
+            </div>
+            <div class="card-body p-0" id="anomalies_list">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Analyse en cours...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                <!-- ================================================ -->
+<!-- GMAIL FLEET EMAILS                               -->
+<!-- ================================================ -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="text-primary fw-bold m-0">
+                    <i class="fas fa-envelope me-2"></i>Emails Flotte
+                    <span class="badge bg-primary-subtle text-primary ms-2 small">Gmail</span>
+                </h6>
+                <div class="d-flex gap-2 align-items-center">
+                    <span id="gmail_status_badge"></span>
+                    <button class="btn btn-outline-primary btn-sm"
+                        id="gmail_connect_btn" onclick="connectGmail()" style="display:none;">
+                        <i class="fab fa-google me-1"></i>Connecter Gmail
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm"
+                        id="gmail_refresh_btn" onclick="loadGmailEmails()" style="display:none;">
+                        <i class="fas fa-sync me-1"></i>Actualiser
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0" id="gmail_emails_list">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Vérification de la connexion Gmail...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                 <!-- ================================================ -->
                 <!-- ROW 5: Alerts                                      -->
                 <!-- ================================================ -->

@@ -374,12 +374,24 @@ class MaintenanceService:
     def log_km(self, car_id, km, recorded_at, notes=None):
         con, cursor = self.db.find_connection()
         try:
+            # check if this is the first KM entry for this car
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM car_km WHERE car_id = %s
+            """, (car_id,))
+            is_first = cursor.fetchone()['cnt'] == 0
+
             cursor.execute("""
                 INSERT INTO car_km (car_id, km, recorded_at, notes)
                 VALUES (%s, %s, %s, %s)
             """, (car_id, km, recorded_at, notes or None))
             con.commit()
-            return cursor.lastrowid
+            new_id = cursor.lastrowid
+
+            # if first KM ever, auto-create maintenance alerts
+            if is_first:
+                self.initialize_alerts_for_car(car_id, km)
+
+            return new_id
         finally:
             con.close()
 
@@ -451,5 +463,61 @@ class MaintenanceService:
                     result.append(alert)
 
             return result
+        finally:
+            con.close()
+
+    def initialize_alerts_for_car(self, car_id, current_km):
+        """Create initial maintenance alerts for a newly tracked car based on current KM"""
+        import math
+        con, cursor = self.db.find_connection()
+        try:
+            # check if alerts already exist for this car
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM maintenance_alerts
+                WHERE car_id = %s
+            """, (car_id,))
+            if cursor.fetchone()['cnt'] > 0:
+                return False  # already initialized
+
+            # get all parts with intervals
+            cursor.execute("""
+                SELECT id, name, alert_km_interval, alert_month_interval
+                FROM car_parts
+                WHERE alert_km_interval IS NOT NULL OR alert_month_interval IS NOT NULL
+            """)
+            parts = cursor.fetchall()
+
+            today = datetime.date.today()
+            created = 0
+
+            for part in parts:
+                next_km = None
+                next_date = None
+                alert_type = None
+
+                # calculate next KM threshold
+                if part['alert_km_interval']:
+                    interval = part['alert_km_interval']
+                    # next multiple strictly greater than current
+                    next_km = (math.floor(current_km / interval) + 1) * interval
+                    alert_type = 'km'
+
+                # calculate next date (today + interval months)
+                if part['alert_month_interval']:
+                    months = part['alert_month_interval']
+                    next_date = today.replace(year=today.year + (today.month + months - 1) // 12,
+                                              month=((today.month + months - 1) % 12) + 1)
+                    alert_type = 'both' if next_km else 'date'
+
+                if next_km or next_date:
+                    cursor.execute("""
+                        INSERT INTO maintenance_alerts
+                            (car_id, part_id, alert_type, due_date, due_km, status)
+                        VALUES (%s, %s, %s, %s, %s, 'open')
+                    """, (car_id, part['id'], alert_type, next_date, next_km))
+                    created += 1
+
+            con.commit()
+            return created
         finally:
             con.close()

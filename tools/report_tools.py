@@ -38,57 +38,69 @@ class ReportTools:
 
     def understand_report_request(self, user_request):
         schema = """
-Base de données MySQL: airliquide_flotte
+    Base de données MySQL: airliquide_flotte
 
-TABLE cars: id, plate_number, brand, current_cg_id, status(active/inactive/maintenance/retired), acquisition_date
-TABLE carte_grises: id, car_id, model, year, owner_name, chassis_number, puissance_fiscale, carburant(essence/diesel/hybride/electrique), registration_date, expiration_date
-TABLE employees: id, nom, prenom, email, telephone, poste, departement, status(active/inactive)
-TABLE car_assignments: id, car_id, employee_id, start_date, end_date(NULL=actif), notes
-TABLE maintenance_records: id, car_id, part_id, garage_id, done_at, km_at_service, next_due_date, next_due_km, status(pending_facture/done/cancelled)
-TABLE maintenance_alerts: id, car_id, part_id, alert_type(km/date/both), due_date, due_km, status(open/acknowledged/closed)
-TABLE car_parts: id, name, category, alert_km_interval, alert_month_interval
-TABLE car_km: id, car_id, km, recorded_at
-TABLE factures: id, type(maintenance/sinistre), reference_id, car_id, num_facture, date_facture, montant_ht, montant_ttc, tva
-TABLE sinistres: id, car_id, employee_id, date_sinistre, type(accident/vol/vandalisme/autre), description, montant_reparation, status(ouvert/en_cours/cloture)
-TABLE insurances: id, car_id, insurer, policy_number, start_date, end_date, status(active/expired/pending/cancelled)
-TABLE vignettes: id, car_id, year, expiration_date, montant, status(active/expired/pending)
-TABLE visite_technique: id, car_id, expiration_date, montant, status(active/expired/pending)
-TABLE garages: id, name, type(dealership/independent), phone, address, status(active/inactive)
-TABLE carburant_expenses: id, car_id, employee_id, periode, litres, montant_ttc
-"""
+    TABLE cars: id, plate_number, brand(marque du véhicule), current_cg_id, status(active/inactive/maintenance/retired), acquisition_date, notes
+    TABLE carte_grises: id, car_id, model(modèle du véhicule), year, plate_number, owner_name, chassis_number, puissance_fiscale, carburant(essence/diesel/hybride/electrique), registration_date, expiration_date
+    TABLE employees: id, nom, prenom, email, telephone, poste, departement, status(active/inactive), created_at
+    TABLE car_assignments: id, car_id, employee_id, start_date, end_date(NULL=affectation active), notes
+    TABLE maintenance_records: id, car_id, part_id, garage_id, done_at, km_at_service, next_due_date, next_due_km, status(pending_facture/done/cancelled), notes
+    TABLE maintenance_alerts: id, car_id, part_id, alert_type(km/date/both), due_date, due_km, status(open/acknowledged/closed)
+    TABLE car_parts: id, name, category, alert_km_interval, alert_month_interval
+    TABLE car_km: id, car_id, km, recorded_at, notes
+    TABLE factures: id, type(maintenance/sinistre), reference_id, car_id, num_facture, date_facture, montant_ht, montant_ttc, tva, file_path
+    TABLE facture_records: id, facture_id, record_id, record_type(maintenance/sinistre)
+    TABLE sinistres: id, car_id, employee_id, date_sinistre, type(accident/vol/vandalisme/autre), description, montant_reparation, mode_reglement, status(ouvert/en_cours/cloture)
+    TABLE insurances: id, car_id, insurer, policy_number, start_date, end_date, status(active/expired/pending/cancelled)
+    TABLE vignettes: id, car_id, year, expiration_date, montant, status(active/expired/pending)
+    TABLE visite_technique: id, car_id, expiration_date, montant, status(active/expired/pending)
+    TABLE garages: id, name, type(dealership/independent), brand, phone, address, contact_person, status(active/inactive)
+    TABLE carburant_expenses: id, car_id, employee_id, periode, litres, montant_ttc
+    TABLE car_brands: id, name
+    TABLE car_models: id, brand_id, name
+    TABLE departements: id, name
+    TABLE postes: id, departement_id, name
+
+    RELATIONS IMPORTANTES:
+    - cars.brand = marque (ex: Renault, Peugeot) — PAS dans carte_grises
+    - carte_grises.model = modèle commercial (ex: Clio, 208) — PAS dans cars
+    - Pour avoir marque ET modèle: JOIN cars c LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id → utiliser c.brand ET cg.model
+    - Pour employé actuel d'un véhicule: JOIN car_assignments ca ON ca.car_id=c.id AND ca.end_date IS NULL
+    - Pour dépenses sans doublon: SUM depuis factures directement (pas via facture_records)
+    """
 
         prompt = f"""Tu es un expert SQL MySQL. Génère une requête SQL SELECT pour cette demande.
 
-SCHEMA:
-{schema}
+    SCHEMA:
+    {schema}
 
-DEMANDE: "{user_request}"
+    DEMANDE: "{user_request}"
 
-REGLES STRICTES:
-- Retourne UNIQUEMENT le JSON ci-dessous, sans markdown, sans explication, sans backticks
-- SELECT valide MySQL uniquement
-- LIMIT 100 maximum
-- JOIN avec carte_grises pour avoir model et year du véhicule
-- Pour employé actuel d'un véhicule: JOIN car_assignments ca ON ca.car_id=c.id AND ca.end_date IS NULL
-- Écrire le SQL en texte brut: écrire c.id et NON [c.id](http://c.id)
-- Ne JAMAIS utiliser de syntaxe markdown dans le SQL
-- NE PAS inclure les colonnes: id, car_id, employee_id, part_id, garage_id, current_cg_id, reference_id
-- Inclure uniquement des colonnes lisibles (noms, plaques, dates, montants)
-- Aliaser les colonnes avec des noms français: AS "Immatriculation", AS "Modèle", etc.
+    REGLES STRICTES:
+    - Retourne UNIQUEMENT le JSON ci-dessous, sans markdown, sans explication, sans backticks
+    - SELECT valide MySQL uniquement
+    - LIMIT 100 maximum
+    - Toujours JOIN avec carte_grises ON c.current_cg_id = cg.id pour avoir cg.model et cg.year
+    - La marque est c.brand (dans cars), le modèle est cg.model (dans carte_grises)
+    - Ne JAMAIS écrire cg.brand — ça n'existe pas
+    - Ne JAMAIS écrire c.model — ça n'existe pas
+    - Écrire le SQL en texte brut, jamais de liens markdown comme [c.id](http://c.id)
+    - NE PAS inclure les colonnes: id, car_id, employee_id, part_id, garage_id, current_cg_id, reference_id, brand_id, departement_id
+    - Inclure uniquement des colonnes lisibles (noms, plaques, dates, montants)
+    - Aliaser toutes les colonnes avec des noms français lisibles: AS "Immatriculation", AS "Marque", AS "Modèle", etc.
 
-FORMAT DE RÉPONSE (JSON pur, pas de markdown):
-{{"title": "titre court en français", "sql": "SELECT ..."}}"""
+    FORMAT DE RÉPONSE (JSON pur, pas de markdown):
+    {{"title": "titre court en français", "sql": "SELECT ..."}}"""
 
         try:
             response = self.client.messages.create(
-                model      = self.model,
-                max_tokens = 1000,
-                messages   = [{'role': 'user', 'content': prompt}]
+                model=self.model,
+                max_tokens=1000,
+                messages=[{'role': 'user', 'content': prompt}]
             )
             raw = response.content[0].text.strip()
             print(f'Claude raw: {raw}')
 
-            # clean markdown code blocks
             if '```json' in raw:
                 raw = raw.split('```json')[1].split('```')[0].strip()
             elif '```' in raw:

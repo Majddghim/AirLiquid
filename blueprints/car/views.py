@@ -377,3 +377,281 @@ class CarViews:
         @self.car_bp.route('/historique/<int:car_id>', methods=['GET'])
         def historique(car_id):
             return render_template('car-historique.html')
+
+        @self.car_bp.route('/export-dossier/<int:car_id>', methods=['GET'])
+        def export_dossier(car_id):
+            try:
+                from reportlab.lib.pagesizes import A4
+                from reportlab.lib import colors
+                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                from reportlab.lib.units import cm
+                from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable
+                from reportlab.lib.enums import TA_CENTER, TA_LEFT
+                from io import BytesIO
+                import datetime
+
+                # fetch all data
+                from services.maintenance import MaintenanceService
+                from services.sinistre import SinistreService
+
+                car_data = self.VoitureService.get_car_detail(car_id)
+                if not car_data:
+                    return jsonify({'status': 'failed', 'message': 'Voiture introuvable'}), 404
+
+                maint_service = MaintenanceService()
+                sin_service = SinistreService()
+
+                records = maint_service.get_records_by_car(car_id)
+                alerts = maint_service.get_alerts_by_car(car_id)
+                sinistres = sin_service.get_sinistres_by_car(car_id)
+                km_data = maint_service.get_current_km(car_id)
+
+                car = car_data['car']
+                docs = car_data['documents']
+
+                buffer = BytesIO()
+                doc = SimpleDocTemplate(
+                    buffer, pagesize=A4,
+                    rightMargin=1.5 * cm, leftMargin=1.5 * cm,
+                    topMargin=1.5 * cm, bottomMargin=1.5 * cm
+                )
+
+                styles = getSampleStyleSheet()
+                elements = []
+
+                # colors
+                BLUE = colors.HexColor('#0d6efd')
+                GRAY = colors.HexColor('#6c757d')
+                LIGHT = colors.HexColor('#f8f9fc')
+                DARK = colors.HexColor('#2d3748')
+                GREEN = colors.HexColor('#198754')
+                RED = colors.HexColor('#dc3545')
+                YELLOW = colors.HexColor('#ffc107')
+
+                title_style = ParagraphStyle('T', parent=styles['Title'],
+                                             fontSize=20, textColor=BLUE, alignment=TA_CENTER, spaceAfter=2)
+                sub_style = ParagraphStyle('S', parent=styles['Normal'],
+                                           fontSize=9, textColor=GRAY, alignment=TA_CENTER, spaceAfter=4)
+                section_style = ParagraphStyle('SEC', parent=styles['Heading2'],
+                                               fontSize=11, textColor=BLUE, spaceBefore=12, spaceAfter=6)
+                normal_style = ParagraphStyle('N', parent=styles['Normal'],
+                                              fontSize=9, textColor=DARK)
+
+                def section_title(text, icon=''):
+                    elements.append(Spacer(1, 0.3 * cm))
+                    elements.append(HRFlowable(width='100%', thickness=1, color=BLUE))
+                    elements.append(Paragraph(f"{icon} {text}", section_style))
+
+                def info_table(data):
+                    t = Table(data, colWidths=[5 * cm, 11 * cm])
+                    t.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), LIGHT),
+                        ('TEXTCOLOR', (0, 0), (0, -1), GRAY),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                        ('TEXTCOLOR', (1, 0), (1, -1), DARK),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                        ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                    ]))
+                    elements.append(t)
+
+                # ---- HEADER ----
+                elements.append(Paragraph('AIR LIQUIDE TUNISIA', title_style))
+                elements.append(Paragraph('Système de Gestion de Flotte', sub_style))
+                elements.append(Paragraph('DOSSIER VÉHICULE', ParagraphStyle('DV',
+                                                                             parent=styles['Heading1'], fontSize=16,
+                                                                             textColor=DARK,
+                                                                             alignment=TA_CENTER, spaceAfter=2)))
+                elements.append(Paragraph(
+                    f"Généré le {datetime.date.today().strftime('%d/%m/%Y')}",
+                    sub_style))
+                elements.append(HRFlowable(width='100%', thickness=3, color=BLUE))
+
+                # ---- CARTE GRISE ----
+                section_title('Carte Grise & Identification', '🚗')
+                info_table([
+                    ['Immatriculation', car.get('plate_number') or '—'],
+                    ['Marque', car.get('brand') or '—'],
+                    ['Modèle', car.get('model') or '—'],
+                    ['Année', str(car.get('year') or '—')],
+                    ['Propriétaire', car.get('owner_name') or '—'],
+                    ['Châssis (VIN)', car.get('chassis_number') or '—'],
+                    ['Carburant', car.get('carburant') or '—'],
+                    ['Puissance', f"{car.get('puissance_fiscale') or '—'} CV"],
+                    ['Statut', car.get('status') or '—'],
+                    ['Date acquisition', str(car.get('acquisition_date') or '—')],
+                ])
+
+                # ---- KM ----
+                section_title('Kilométrage', '📍')
+                if km_data:
+                    info_table([
+                        ['KM actuel', f"{int(km_data['km']):,} km".replace(',', ' ')],
+                        ['Relevé le', str(km_data['recorded_at'])],
+                    ])
+                else:
+                    elements.append(Paragraph('Aucun relevé kilométrique enregistré.', normal_style))
+
+                # ---- DOCUMENTS ----
+                section_title('Documents', '📄')
+                ass = docs.get('assurance')
+                vig = docs.get('vignette')
+                vt = docs.get('visite')
+
+                doc_data = [['Document', 'Statut', 'Détails', 'Expiration']]
+                doc_data.append([
+                    'Assurance',
+                    'Valide' if ass and not ass.get('expired') else ('Expiré' if ass else 'Manquant'),
+                    ass.get('insurer', '—') if ass else '—',
+                    str(ass.get('end_date', '—')) if ass else '—'
+                ])
+                doc_data.append([
+                    'Vignette',
+                    'Valide' if vig else 'Manquant',
+                    str(vig.get('year', '—')) if vig else '—',
+                    str(vig.get('expiration_date', '—')) if vig else '—'
+                ])
+                doc_data.append([
+                    'Visite Technique',
+                    'Valide' if vt else 'Manquant',
+                    '—',
+                    str(vt.get('expiration_date', '—')) if vt else '—'
+                ])
+
+                doc_table = Table(doc_data, colWidths=[4 * cm, 3 * cm, 5 * cm, 4 * cm])
+                doc_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), BLUE),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT]),
+                    ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ]))
+                elements.append(doc_table)
+
+                # ---- AFFECTATION ----
+                section_title('Affectation', '👤')
+                aff = car_data.get('affectation')
+                if aff:
+                    info_table([
+                        ['Employé', f"{aff.get('prenom', '')} {aff.get('nom', '')}"],
+                        ['Poste', aff.get('poste') or '—'],
+                        ['Département', aff.get('departement') or '—'],
+                        ['Depuis', str(aff.get('start_date') or '—')],
+                    ])
+                else:
+                    elements.append(Paragraph('Aucun employé affecté.', normal_style))
+
+                # ---- MAINTENANCE ALERTS ----
+                section_title('Alertes Maintenance', '🔧')
+                if alerts:
+                    alert_data = [['Pièce', 'Type', 'Échéance Date', 'Échéance KM']]
+                    for a in alerts[:10]:
+                        alert_data.append([
+                            a.get('part_name', '—'),
+                            a.get('alert_type', '—'),
+                            str(a.get('due_date') or '—'),
+                            str(a.get('due_km') or '—'),
+                        ])
+                    at = Table(alert_data, colWidths=[5 * cm, 3 * cm, 4 * cm, 4 * cm])
+                    at.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), YELLOW),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), DARK),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT]),
+                        ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ]))
+                    elements.append(at)
+                else:
+                    elements.append(Paragraph('Aucune alerte maintenance active.', normal_style))
+
+                # ---- MAINTENANCE HISTORY ----
+                section_title('Historique des Entretiens', '📋')
+                if records:
+                    rec_data = [['Pièce', 'Garage', 'Date', 'KM', 'Montant']]
+                    for r in records[:10]:
+                        rec_data.append([
+                            r.get('part_name', '—'),
+                            r.get('garage_name') or '—',
+                            str(r.get('done_at') or '—'),
+                            str(r.get('km_at_service') or '—'),
+                            f"{r.get('montant_ttc') or '—'} DT",
+                        ])
+                    rt = Table(rec_data, colWidths=[4 * cm, 3 * cm, 3 * cm, 3 * cm, 3 * cm])
+                    rt.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), BLUE),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT]),
+                        ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ]))
+                    elements.append(rt)
+                else:
+                    elements.append(Paragraph('Aucun entretien enregistré.', normal_style))
+
+                # ---- SINISTRES ----
+                section_title('Historique des Sinistres', '🚨')
+                if sinistres:
+                    sin_data = [['Date', 'Type', 'Statut', 'Montant', 'Description']]
+                    for s in sinistres[:10]:
+                        sin_data.append([
+                            str(s.get('date_sinistre') or '—'),
+                            s.get('type') or '—',
+                            s.get('status') or '—',
+                            f"{s.get('montant_reparation') or '—'} DT",
+                            (s.get('description') or '—')[:40],
+                        ])
+                    st = Table(sin_data, colWidths=[3 * cm, 3 * cm, 3 * cm, 3 * cm, 4 * cm])
+                    st.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), RED),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT]),
+                        ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ]))
+                    elements.append(st)
+                else:
+                    elements.append(Paragraph('Aucun sinistre enregistré.', normal_style))
+
+                # ---- FOOTER ----
+                elements.append(Spacer(1, 0.5 * cm))
+                elements.append(HRFlowable(width='100%', thickness=1, color=GRAY))
+                elements.append(Paragraph(
+                    f'ALT Fleet Management — Dossier généré le {datetime.date.today().strftime("%d/%m/%Y")} — Confidentiel',
+                    ParagraphStyle('F', parent=styles['Normal'], fontSize=7,
+                                   textColor=GRAY, alignment=TA_CENTER)
+                ))
+
+                doc.build(elements)
+                buffer.seek(0)
+
+                from flask import send_file
+                return send_file(
+                    buffer,
+                    mimetype='application/pdf',
+                    as_attachment=True,
+                    download_name=f"dossier_{car.get('plate_number', car_id).replace(' ', '_')}.pdf"
+                )
+
+            except Exception as e:
+                import traceback
+                print(traceback.format_exc())
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

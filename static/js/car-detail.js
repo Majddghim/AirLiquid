@@ -36,6 +36,7 @@ async function loadCarDetail() {
 
         document.getElementById("detail-loading").style.display = "none";
         document.getElementById("detail-content").style.display = "block";
+        document.getElementById('export_pdf_btn').href = `/car/export-dossier/${carId}`;
 
     } catch (e) {
         console.error("loadCarDetail error:", e);

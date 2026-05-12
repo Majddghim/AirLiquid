@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify
 from services.employe import EmployeService
 from flask import render_template, session, redirect, url_for
 from tools.email_tools import send_welcome_email, send_password_changed_email
-
+import os
+from werkzeug.utils import secure_filename
+from tools.ocr_tools import OCRTools
+from services.maintenance import MaintenanceService
 
 class employe:
     def __init__(self):
@@ -238,5 +241,137 @@ class employe:
                 if not data:
                     return jsonify({'status': 'failed', 'message': 'Données introuvables'}), 404
                 return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # add in employe_routes():
+
+        @self.employe_bp.route('/scan-odometer/<int:car_id>', methods=['POST'])
+        def scan_odometer(car_id):
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+
+                if 'file' not in request.files:
+                    return jsonify({'status': 'failed', 'message': 'Aucun fichier reçu'})
+
+                file = request.files['file']
+                if file.filename == '':
+                    return jsonify({'status': 'failed', 'message': 'Fichier vide'})
+
+                upload_folder = 'static/uploads/odometer'
+                os.makedirs(upload_folder, exist_ok=True)
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(upload_folder, filename)
+                file.save(file_path)
+
+                ocr = OCRTools()
+                result = ocr.scan_odometer(file_path)
+
+                if not result or not result.get('km'):
+                    return jsonify({'status': 'failed', 'message': 'Impossible de lire le kilométrage'})
+
+                return jsonify({'status': 'success', 'km': result['km']})
+
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/update-km/<int:car_id>', methods=['POST'])
+        def update_km(car_id):
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+
+                data = request.get_json()
+                km = data.get('km')
+
+                if not km:
+                    return jsonify({'status': 'failed', 'message': 'KM requis'})
+
+                maintenance_service = MaintenanceService()
+                maintenance_service.log_km(
+                    car_id=car_id,
+                    km=int(km),
+                    recorded_at=__import__('datetime').date.today().isoformat(),
+                    notes=f"Relevé par employé via app mobile"
+                )
+
+                return jsonify({'status': 'success', 'message': 'Kilométrage mis à jour'})
+
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/report-problem/<int:car_id>', methods=['POST'])
+        def report_problem(car_id):
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+
+                description = request.form.get('description', '').strip()
+                ai_analysis = request.form.get('ai_analysis', '').strip()
+                file_path = None
+
+                if 'file' in request.files:
+                    file = request.files['file']
+                    if file and file.filename != '':
+                        upload_folder = 'static/uploads/problems'
+                        os.makedirs(upload_folder, exist_ok=True)
+                        filename = secure_filename(file.filename)
+                        file_path = os.path.join(upload_folder, filename)
+                        file.save(file_path)
+
+                # save as a sinistre with type 'autre' and status 'ouvert'
+                from services.sinistre import SinistreService
+                sinistre_service = SinistreService()
+                full_description = f"[Signalement employé]\n{ai_analysis}\n\nDescription: {description}" if ai_analysis else description
+
+                sinistre_service.declarer_sinistre(
+                    car_id=car_id,
+                    employee_id=session['employe_id'],
+                    date_sinistre=__import__('datetime').date.today().isoformat(),
+                    type_sinistre='autre',
+                    description=full_description,
+                    n_constat=None,
+                    date_constat=None,
+                    file_path=file_path,
+                    set_maintenance=False,
+                    replacement_car_id=None,
+                    prise_en_charge='societe'
+                )
+
+                return jsonify({'status': 'success', 'message': 'Problème signalé avec succès'})
+
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/analyze-problem', methods=['POST'])
+        def analyze_problem():
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+
+                if 'file' not in request.files:
+                    return jsonify({'status': 'failed', 'message': 'Aucun fichier reçu'})
+
+                file = request.files['file']
+                if file.filename == '':
+                    return jsonify({'status': 'failed', 'message': 'Fichier vide'})
+
+                upload_folder = 'static/uploads/problems'
+                os.makedirs(upload_folder, exist_ok=True)
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(upload_folder, filename)
+                file.save(file_path)
+
+                ocr = OCRTools()
+                result = ocr.analyze_car_damage(file_path)
+
+                return jsonify({
+                    'status': 'success',
+                    'analysis': result.get('description', ''),
+                    'severity': result.get('severity', 'unknown'),
+                    'file_path': file_path
+                })
+
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500

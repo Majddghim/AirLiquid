@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMonthlyChart();
     loadTopCars();
     loadAlerts();
+    loadRiskScore();
+    loadPredictions();
+    loadAnomalies();
+    loadGmailStatus()
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,4 +339,307 @@ function escapeHtml(str) {
     return String(str)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+// FLEET RISK SCORE
+
+async function loadRiskScore() {
+    try {
+        const res  = await fetch('/dashboard/api/fleet-risk');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const d     = data.data;
+        const score = d.score;
+
+        // update score text
+        document.getElementById('risk_score_text').innerText = score;
+
+        // update label
+        const labelEl = document.getElementById('risk_label');
+        labelEl.innerText = d.label;
+
+        // colors
+        const colors = {
+            success: '#198754',
+            warning: '#ffc107',
+            orange:  '#fd7e14',
+            danger:  '#dc3545'
+        };
+        const color = colors[d.level] || '#198754';
+
+        labelEl.style.color = color;
+
+        // animate circle
+        const circle        = document.getElementById('risk_circle');
+        const circumference = 213.6;
+        const offset        = circumference - (score / 100) * circumference;
+        circle.style.stroke          = color;
+        circle.style.strokeDashoffset = offset;
+
+        // card border color
+        const card = document.getElementById('risk_card');
+        card.style.borderLeft = `4px solid ${color}`;
+
+        // sublabel
+        const subLabels = {
+            success: 'Flotte en bonne santé — continuez ainsi',
+            warning: 'Quelques points à améliorer',
+            orange:  'Attention requise — plusieurs problèmes détectés',
+            danger:  'Situation critique — action immédiate requise'
+        };
+        document.getElementById('risk_sublabel').innerText = subLabels[d.level] || '';
+
+        // issues
+        const issuesEl = document.getElementById('risk_issues');
+        if (d.issues.length === 0) {
+            issuesEl.innerHTML = `
+                <span class="badge bg-success-subtle text-success px-3 py-2">
+                    <i class="fas fa-check-circle me-1"></i>Aucun problème détecté
+                </span>`;
+        } else {
+            issuesEl.innerHTML = d.issues.map(issue => `
+                <a href="${issue.link}" class="text-decoration-none">
+                    <span class="badge bg-${issue.color === 'danger' ? 'danger' : 'warning'}-subtle
+                        text-${issue.color === 'danger' ? 'danger' : 'warning'} px-3 py-2">
+                        <i class="fas ${issue.icon} me-1"></i>${escapeHtml(issue.text)}
+                    </span>
+                </a>`).join('');
+        }
+
+    } catch (e) {
+        console.error('loadRiskScore error:', e);
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+// ML PREDICTIONS
+
+async function loadPredictions() {
+    try {
+        const res  = await fetch('/dashboard/api/predictions');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const el = document.getElementById('predictions_list');
+        const predictions = data.data.filter(p =>
+            p.maintenance && p.maintenance.predictions.length > 0
+        );
+
+        if (!predictions.length) {
+            el.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                    <p class="small mb-0">Aucune maintenance prédite — données insuffisantes.</p>
+                    <p class="text-xs mt-1">Enregistrez des relevés KM pour activer les prédictions.</p>
+                </div>`;
+            return;
+        }
+
+        // show top 5 most urgent predictions
+        const allPreds = [];
+        predictions.forEach(p => {
+            p.maintenance.predictions.forEach(pred => {
+                if (pred.days_until !== null) {
+                    allPreds.push({
+                        car:       p.car,
+                        km_rate:   p.maintenance.km_rate,
+                        current_km: p.maintenance.current_km,
+                        pred
+                    });
+                }
+            });
+        });
+
+        allPreds.sort((a, b) => a.pred.days_until - b.pred.days_until);
+        const top = allPreds.slice(0, 6);
+
+        el.innerHTML = top.map(item => {
+            const days      = item.pred.days_until;
+            const urgency   = days <= 0  ? 'danger'  :
+                              days <= 15 ? 'warning' : 'success';
+            const urgLabel  = days <= 0  ? 'En retard'      :
+                              days <= 15 ? `Dans ${days}j`  :
+                              `Dans ${days}j`;
+            const confidence = item.pred.confidence === 'high' ? '🎯' :
+                               item.pred.confidence === 'medium' ? '📊' : '📉';
+
+            return `
+            <a href="/car/detail/${item.car.id}"
+                class="d-flex align-items-center px-4 py-3 border-bottom text-decoration-none text-dark">
+                <div class="bg-${urgency} bg-opacity-10 p-2 rounded me-3" style="min-width:36px;text-align:center;">
+                    <i class="fas fa-tools text-${urgency}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold small">
+                        ${escapeHtml(item.pred.part_name)}
+                        <span class="text-muted fw-normal">— ${escapeHtml(item.car.brand || '')} ${escapeHtml(item.car.model || '')} (${escapeHtml(item.car.plate_number)})</span>
+                    </div>
+                    <div class="text-muted text-xs mt-1">
+                        ${confidence} Prédit: <strong>${item.pred.predicted_date || '—'}</strong>
+                        ${item.km_rate ? `· ${item.km_rate} km/jour` : ''}
+                        ${item.pred.due_km ? `· Échéance: ${item.pred.due_km.toLocaleString()} km` : ''}
+                    </div>
+                </div>
+                <span class="badge bg-${urgency}-subtle text-${urgency} ms-2">${urgLabel}</span>
+            </a>`;
+        }).join('');
+
+    } catch (e) {
+        console.error('loadPredictions error:', e);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// ML ANOMALY DETECTION
+
+async function loadAnomalies() {
+    try {
+        const res  = await fetch('/dashboard/api/anomalies');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const el = document.getElementById('anomalies_list');
+
+        if (!data.data.length) {
+            el.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                    <p class="small mb-0">Aucune anomalie détectée</p>
+                    <p class="text-xs mt-1">Toutes les dépenses sont dans la normale.</p>
+                </div>`;
+            return;
+        }
+
+        el.innerHTML = data.data.map(a => `
+            <a href="/car/detail/${a.car_id}"
+                class="d-flex align-items-center px-3 py-3 border-bottom text-decoration-none text-dark">
+                <div class="bg-danger bg-opacity-10 p-2 rounded me-3" style="min-width:36px;text-align:center;">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold small">
+                        ${escapeHtml(a.brand || '')} ${escapeHtml(a.model || '')}
+                        <span class="font-monospace text-muted fw-normal small">${escapeHtml(a.plate_number)}</span>
+                    </div>
+                    <div class="text-muted text-xs mt-1">
+                        ${formatDT(a.total)} vs moyenne ${formatDT(a.fleet_avg)}
+                    </div>
+                </div>
+                <span class="badge bg-danger-subtle text-danger ms-2">${a.ratio}x</span>
+            </a>`).join('');
+
+    } catch (e) {
+        console.error('loadAnomalies error:', e);
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+// GMAIL INTEGRATION
+
+async function loadGmailStatus() {
+    try {
+        const res  = await fetch('/gmail/status');
+        const data = await res.json();
+
+        const connectBtn = document.getElementById('gmail_connect_btn');
+        const refreshBtn = document.getElementById('gmail_refresh_btn');
+        const badge      = document.getElementById('gmail_status_badge');
+
+        if (data.connected) {
+            badge.innerHTML  = '<span class="badge bg-success">Connecté</span>';
+            refreshBtn.style.display = 'block';
+            connectBtn.style.display = 'none';
+            await loadGmailEmails();
+        } else {
+            badge.innerHTML  = '<span class="badge bg-secondary">Non connecté</span>';
+            connectBtn.style.display = 'block';
+            refreshBtn.style.display = 'none';
+            document.getElementById('gmail_emails_list').innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="fab fa-google fa-3x mb-3 opacity-25"></i>
+                    <p class="fw-bold mb-1">Connectez votre Gmail</p>
+                    <p class="small mb-3">Recevez les emails liés à la flotte directement ici</p>
+                    <button class="btn btn-primary" onclick="connectGmail()">
+                        <i class="fab fa-google me-2"></i>Connecter Gmail
+                    </button>
+                </div>`;
+        }
+    } catch (e) {
+        console.error('loadGmailStatus error:', e);
+    }
+}
+
+function connectGmail() {
+    window.location.href = '/gmail/connect';
+}
+
+async function loadGmailEmails() {
+    const el = document.getElementById('gmail_emails_list');
+    el.innerHTML = `
+        <div class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Analyse des emails en cours... (peut prendre 30 secondes)
+        </div>`;
+
+    try {
+        const res  = await fetch('/gmail/emails');
+        const data = await res.json();
+
+        if (data.status !== 'success') {
+            el.innerHTML = `<div class="text-center py-4 text-danger">${data.message}</div>`;
+            return;
+        }
+
+        if (!data.data.length) {
+            el.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                    <p class="small mb-0">Aucun email lié à la flotte trouvé.</p>
+                </div>`;
+            return;
+        }
+
+        el.innerHTML = data.data.map(email => `
+    <div class="d-flex align-items-start px-4 py-3 border-bottom"
+        style="cursor:pointer;"
+        onclick="ouvrirEmail('${escapeHtml(email.id)}', \`${escapeHtml(email.subject)}\`, \`${escapeHtml(email.sender)}\`, \`${escapeHtml(email.date)}\`, \`${escapeHtml(email.body)}\`)">
+        <div class="bg-primary bg-opacity-10 p-2 rounded me-3 mt-1"
+            style="min-width:36px;text-align:center;">
+            <i class="fas fa-envelope text-primary"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="fw-bold small">${escapeHtml(email.subject)}</div>
+            <div class="text-muted" style="font-size:11px;">
+                ${escapeHtml(email.sender)} · ${escapeHtml(email.date)}
+            </div>
+            <div class="text-muted small mt-1" style="font-size:12px;line-height:1.4;">
+                ${escapeHtml(email.preview)}...
+            </div>
+        </div>
+        <i class="fas fa-chevron-right text-muted small ms-2 mt-2"></i>
+    </div>`).join('');
+
+    } catch (e) {
+        console.error('loadGmailEmails error:', e);
+        el.innerHTML = `<div class="text-center py-4 text-danger">Erreur de chargement.</div>`;
+    }
+}
+function ouvrirEmail(id, subject, sender, date, body) {
+    Swal.fire({
+        title: subject,
+        html: `
+            <div class="text-start">
+                <div class="text-muted small mb-3">
+                    <i class="fas fa-user me-1"></i>${sender}<br>
+                    <i class="fas fa-calendar me-1"></i>${date}
+                </div>
+                <hr>
+                <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;
+                    max-height:300px;overflow-y:auto;text-align:left;">
+                    ${body}
+                </div>
+            </div>`,
+        width: 600,
+        confirmButtonText: 'Fermer',
+        confirmButtonColor: '#0d6efd'
+    });
 }

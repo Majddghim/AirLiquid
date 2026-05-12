@@ -9,6 +9,9 @@ from blueprints.settings import settings_bp
 from blueprints.maintenance import maintenance_bp
 from dotenv import load_dotenv
 from blueprints.reports import reports_bp
+from apscheduler.schedulers.background import BackgroundScheduler
+from services.digest_service import DigestService
+from blueprints.gmail import gmail_bp
 
 import os
 load_dotenv()
@@ -21,10 +24,28 @@ class CustomJSONProvider(DefaultJSONProvider):
         if isinstance(obj, (datetime.date, datetime.datetime)):
             return obj.isoformat()
         return super().default(obj)
-
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app = Flask(__name__)
 app.json = CustomJSONProvider(app)
 app.secret_key = 'xxx'
+
+def start_scheduler():
+    digest_service = DigestService()
+    scheduler = BackgroundScheduler()
+
+    # every Monday at 8:00 AM
+    scheduler.add_job(
+        func=lambda: digest_service.send_digest('majddghim25@gmail.com'),
+        trigger='cron',
+        day_of_week='mon',
+        hour=8,
+        minute=0,
+        id='weekly_digest'
+    )
+    scheduler.start()
+    print('✅ Scheduler started — weekly digest every Monday at 8:00')
+
+start_scheduler()
 
 # Initialize and register blueprints
 auth_views = AuthViews()
@@ -36,6 +57,7 @@ app.register_blueprint(guest_bp, url_prefix='/guest')
 app.register_blueprint(settings_bp, url_prefix='/settings')
 app.register_blueprint(maintenance_bp, url_prefix='/maintenance')
 app.register_blueprint(reports_bp, url_prefix='/reports')
+app.register_blueprint(gmail_bp, url_prefix='/gmail')
 
 
 app.register_blueprint(sinistre_bp, url_prefix='/sinistre')

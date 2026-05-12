@@ -394,3 +394,145 @@ class DashboardService:
         # re-sort
         alerts.sort(key=lambda a: (0 if a['level'] == 'danger' else 1, a['days'] or 999))
         return alerts
+
+    def get_fleet_risk_score(self):
+        """Calculate fleet health risk score 0-100 (100 = perfect health)"""
+        con, cursor = self.db_tools.find_connection()
+        try:
+            issues = []
+            penalties = 0
+
+            # 1. Expired documents (25 points max)
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM insurances
+                WHERE end_date < CURDATE() AND status != 'cancelled'
+            """)
+            expired_insurance = cursor.fetchone()['cnt']
+
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM vignettes
+                WHERE expiration_date < CURDATE()
+            """)
+            expired_vignettes = cursor.fetchone()['cnt']
+
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM visite_technique
+                WHERE expiration_date < CURDATE()
+            """)
+            expired_visites = cursor.fetchone()['cnt']
+
+            expired_docs = expired_insurance + expired_vignettes + expired_visites
+            doc_penalty = min(25, expired_docs * 5)
+            penalties += doc_penalty
+            if expired_docs > 0:
+                issues.append({
+                    'icon': 'fa-file-times',
+                    'color': 'danger',
+                    'text': f"{expired_docs} document(s) expiré(s)",
+                    'link': '/dashboard/cars'
+                })
+
+            # 2. Open sinistres (20 points max)
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM sinistres
+                WHERE status IN ('ouvert', 'en_cours')
+            """)
+            open_sinistres = cursor.fetchone()['cnt']
+            sin_penalty = min(20, open_sinistres * 5)
+            penalties += sin_penalty
+            if open_sinistres > 0:
+                issues.append({
+                    'icon': 'fa-car-crash',
+                    'color': 'danger',
+                    'text': f"{open_sinistres} sinistre(s) ouvert(s)",
+                    'link': '/dashboard/cars'
+                })
+
+            # 3. Overdue maintenance alerts (25 points max)
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM maintenance_alerts
+                WHERE status = 'open'
+                AND (
+                    (due_date IS NOT NULL AND due_date < CURDATE())
+                    OR
+                    (due_km IS NOT NULL AND due_km < (
+                        SELECT COALESCE(MAX(km), 0) FROM car_km
+                        WHERE car_id = maintenance_alerts.car_id
+                    ))
+                )
+            """)
+            overdue_maintenance = cursor.fetchone()['cnt']
+            maint_penalty = min(25, overdue_maintenance * 5)
+            penalties += maint_penalty
+            if overdue_maintenance > 0:
+                issues.append({
+                    'icon': 'fa-tools',
+                    'color': 'warning',
+                    'text': f"{overdue_maintenance} alerte(s) maintenance en retard",
+                    'link': '/dashboard/maintenance-alerts'
+                })
+
+            # 4. Unassigned active cars (15 points max)
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM cars c
+                WHERE c.status = 'active'
+                AND NOT EXISTS (
+                    SELECT 1 FROM car_assignments ca
+                    WHERE ca.car_id = c.id AND ca.end_date IS NULL
+                )
+            """)
+            unassigned = cursor.fetchone()['cnt']
+            unassigned_penalty = min(15, unassigned * 3)
+            penalties += unassigned_penalty
+            if unassigned > 0:
+                issues.append({
+                    'icon': 'fa-user-slash',
+                    'color': 'warning',
+                    'text': f"{unassigned} véhicule(s) actif(s) non affecté(s)",
+                    'link': '/dashboard/cars'
+                })
+
+            # 5. Incomplete dossiers (15 points max)
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM cars c
+                WHERE c.status != 'retired'
+                AND (
+                    NOT EXISTS (SELECT 1 FROM insurances WHERE car_id = c.id)
+                    OR NOT EXISTS (SELECT 1 FROM vignettes WHERE car_id = c.id)
+                    OR NOT EXISTS (SELECT 1 FROM visite_technique WHERE car_id = c.id)
+                )
+            """)
+            incomplete = cursor.fetchone()['cnt']
+            incomplete_penalty = min(15, incomplete * 3)
+            penalties += incomplete_penalty
+            if incomplete > 0:
+                issues.append({
+                    'icon': 'fa-folder-open',
+                    'color': 'warning',
+                    'text': f"{incomplete} dossier(s) incomplet(s)",
+                    'link': '/dashboard/cars'
+                })
+
+            score = max(0, 100 - penalties)
+
+            if score >= 81:
+                level = 'success'
+                label = 'Bon'
+            elif score >= 61:
+                level = 'warning'
+                label = 'Acceptable'
+            elif score >= 31:
+                level = 'orange'
+                label = 'Attention'
+            else:
+                level = 'danger'
+                label = 'Critique'
+
+            return {
+                'score': score,
+                'level': level,
+                'label': label,
+                'issues': issues
+            }
+        finally:
+            con.close()

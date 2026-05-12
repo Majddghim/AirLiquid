@@ -322,10 +322,10 @@ class EmployeService:
                        -- latest km
                        (SELECT km FROM car_km
                         WHERE car_id = c.id
-                        ORDER BY recorded_at DESC LIMIT 1) AS current_km,
-                       (SELECT recorded_at FROM car_km
+                        ORDER BY recorded_at DESC, id DESC LIMIT 1) AS current_km,
+                        (SELECT recorded_at FROM car_km
                         WHERE car_id = c.id
-                        ORDER BY recorded_at DESC LIMIT 1) AS km_date
+                        ORDER BY recorded_at DESC, id DESC LIMIT 1) AS km_date
                 FROM car_assignments ca
                 JOIN cars c ON ca.car_id = c.id
                 LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id

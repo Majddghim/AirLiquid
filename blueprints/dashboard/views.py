@@ -138,3 +138,61 @@ class DashboardViews:
             if 'user_id' not in session:
                 return redirect(url_for("auth.login_template"))
             return render_template('maintenance-alerts.html')
+
+        @self.admin_bp.route('/api/fleet-risk', methods=['GET'])
+        def fleet_risk():
+            try:
+                data = self.DashboardService.get_fleet_risk_score()
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        from services.ml_service import MLService
+
+        # add in __init__:
+        self.MLService = MLService()
+
+        # add these routes:
+        @self.admin_bp.route('/api/predictions', methods=['GET'])
+        def predictions():
+            try:
+                data = self.MLService.get_fleet_predictions()
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.admin_bp.route('/api/car-prediction/<int:car_id>', methods=['GET'])
+        def car_prediction(car_id):
+            try:
+                maintenance = self.MLService.predict_maintenance(car_id)
+                expenses = self.MLService.predict_expenses(car_id)
+                return jsonify({
+                    'status': 'success',
+                    'data': {
+                        'maintenance': maintenance,
+                        'expenses': expenses
+                    }
+                })
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.admin_bp.route('/api/anomalies', methods=['GET'])
+        def anomalies():
+            try:
+                data = self.MLService.detect_expense_anomalies()
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.admin_bp.route('/api/send-digest', methods=['POST'])
+        def send_digest():
+            try:
+                from services.digest_service import DigestService
+                digest = DigestService()
+                email = request.json.get('email', 'test@example.com')
+                result = digest.send_digest(email)
+                if result:
+                    return jsonify({'status': 'success', 'message': f'Digest envoyé à {email}'})
+                return jsonify({'status': 'failed', 'message': 'Erreur envoi email'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
