@@ -354,3 +354,125 @@ class EmployeService:
             }
         finally:
             con.close()
+
+    def get_employee_documents(self, car_id):
+        """Get document status for employee's car"""
+        con, cursor = self.db.find_connection()
+        try:
+            import datetime
+            today = datetime.date.today()
+
+            # assurance
+            cursor.execute("""
+                SELECT insurer, policy_number, start_date, end_date
+                FROM insurances WHERE car_id = %s
+                ORDER BY end_date DESC LIMIT 1
+            """, (car_id,))
+            ass = cursor.fetchone()
+
+            # vignette
+            cursor.execute("""
+                SELECT year, expiration_date, montant
+                FROM vignettes WHERE car_id = %s
+                ORDER BY expiration_date DESC LIMIT 1
+            """, (car_id,))
+            vig = cursor.fetchone()
+
+            # visite technique
+            cursor.execute("""
+                SELECT expiration_date, montant
+                FROM visite_technique WHERE car_id = %s
+                ORDER BY expiration_date DESC LIMIT 1
+            """, (car_id,))
+            vt = cursor.fetchone()
+
+            def doc_status(expiry_date):
+                if not expiry_date:
+                    return 'missing'
+                exp = expiry_date if isinstance(expiry_date, datetime.date) else datetime.date.fromisoformat(
+                    str(expiry_date))
+                if exp < today:
+                    return 'expired'
+                if (exp - today).days <= 30:
+                    return 'expiring'
+                return 'valid'
+
+            return {
+                'assurance': {
+                    'insurer': ass.get('insurer') if ass else None,
+                    'policy_number': ass.get('policy_number') if ass else None,
+                    'end_date': str(ass.get('end_date')) if ass else None,
+                    'status': doc_status(ass.get('end_date') if ass else None)
+                },
+                'vignette': {
+                    'year': ass.get('year') if vig else None,
+                    'expiration_date': str(vig.get('expiration_date')) if vig else None,
+                    'status': doc_status(vig.get('expiration_date') if vig else None)
+                },
+                'visite': {
+                    'expiration_date': str(vt.get('expiration_date')) if vt else None,
+                    'status': doc_status(vt.get('expiration_date') if vt else None)
+                }
+            }
+        finally:
+            con.close()
+
+    def get_employee_maintenance(self, car_id):
+        """Get maintenance history and upcoming alerts for employee's car"""
+        con, cursor = self.db.find_connection()
+        try:
+            import datetime
+            today = datetime.date.today()
+
+            # last 5 maintenance records
+            cursor.execute("""
+                SELECT mr.done_at, mr.km_at_service, mr.notes,
+                       cp.name AS part_name, g.name AS garage_name
+                FROM maintenance_records mr
+                JOIN car_parts cp ON mr.part_id = cp.id
+                LEFT JOIN garages g ON mr.garage_id = g.id
+                WHERE mr.car_id = %s
+                ORDER BY mr.done_at DESC
+                LIMIT 5
+            """, (car_id,))
+            records = [dict(r) for r in cursor.fetchall()]
+            for r in records:
+                r['done_at'] = str(r['done_at'])
+
+            # open alerts
+            cursor.execute("""
+                SELECT ma.due_date, ma.due_km, ma.alert_type,
+                       cp.name AS part_name
+                FROM maintenance_alerts ma
+                JOIN car_parts cp ON ma.part_id = cp.id
+                WHERE ma.car_id = %s AND ma.status = 'open'
+                ORDER BY ma.due_date ASC
+            """, (car_id,))
+            alerts = []
+            for r in cursor.fetchall():
+                r = dict(r)
+                if r.get('due_date'):
+                    days = (r['due_date'] - today).days
+                    r['days_left'] = days
+                    r['due_date'] = str(r['due_date'])
+                else:
+                    r['days_left'] = None
+                alerts.append(r)
+
+            return {'records': records, 'alerts': alerts}
+        finally:
+            con.close()
+
+    def get_emergency_contacts(self):
+        """Get emergency contacts — garages + hardcoded"""
+        con, cursor = self.db.find_connection()
+        try:
+            cursor.execute("""
+                SELECT name, phone, type, brand, address
+                FROM garages WHERE status = 'active'
+                ORDER BY type ASC, name ASC
+            """)
+            garages = [dict(r) for r in cursor.fetchall()]
+            return garages
+        finally:
+            con.close()

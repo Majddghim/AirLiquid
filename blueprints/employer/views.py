@@ -375,3 +375,33 @@ class employe:
 
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/documents/<int:car_id>', methods=['GET'])
+        def get_documents(car_id):
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+                data = self.EmployeService.get_employee_documents(car_id)
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/maintenance/<int:car_id>', methods=['GET'])
+        def get_maintenance(car_id):
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+                data = self.EmployeService.get_employee_maintenance(car_id)
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/emergency-contacts', methods=['GET'])
+        def emergency_contacts():
+            try:
+                if 'employe_id' not in session:
+                    return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
+                garages = self.EmployeService.get_emergency_contacts()
+                return jsonify({'status': 'success', 'data': garages})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

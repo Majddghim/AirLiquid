@@ -3,6 +3,9 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadDashboard();
+    loadUrgences();
+    loadMobileMessages();
+    mobilePolling = setInterval(loadMobileMessages, 5000);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,42 +89,52 @@ function renderCar(cars) {
                 </span>
             </div>
             <div class="dash-card-body">
-    ${isReplacement ? `
-    <div class="replacement-badge mb-3">
-        <i class="fas fa-exchange-alt"></i>
-        Véhicule de remplacement temporaire
-    </div>` : ''}
-    <div class="info-row">
-        <span class="info-label">Modèle</span>
-        <span class="info-value">${escapeHtml(c.model || '—')} (${c.year || '—'})</span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Marque</span>
-        <span class="info-value">${escapeHtml(c.brand || '—')}</span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Affecté depuis</span>
-        <span class="info-value">${formatDate(c.start_date)}</span>
-    </div>
-    ${c.current_km ? `
-    <div class="km-box">
-        <div class="info-label">Kilométrage actuel</div>
-        <div class="km-number">${Number(c.current_km).toLocaleString()}</div>
-        <div class="km-label">km — relevé le ${formatDate(c.km_date)}</div>
-    </div>` : ''}
-    <div class="d-flex gap-2 mt-3">
-        <button class="auth-btn" style="flex:1;padding:10px;font-size:13px;"
-            onclick="ouvrirOdometer(${c.car_id})">
-            <i class="fas fa-tachometer-alt me-1"></i>MAJ KM
-        </button>
-        <button class="auth-btn" style="flex:1;padding:10px;font-size:13px;background:linear-gradient(135deg,#dc3545,#c82333);"
-            onclick="ouvrirSignalement(${c.car_id})">
-            <i class="fas fa-exclamation-triangle me-1"></i>Problème
-        </button>
-    </div>
-</div>
+                ${isReplacement ? `
+                <div class="replacement-badge mb-3">
+                    <i class="fas fa-exchange-alt"></i>
+                    Véhicule de remplacement temporaire
+                </div>` : ''}
+                <div class="info-row">
+                    <span class="info-label">Modèle</span>
+                    <span class="info-value">${escapeHtml(c.model || '—')} (${c.year || '—'})</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Marque</span>
+                    <span class="info-value">${escapeHtml(c.brand || '—')}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Affecté depuis</span>
+                    <span class="info-value">${formatDate(c.start_date)}</span>
+                </div>
+                ${c.current_km ? `
+                <div class="km-box">
+                    <div class="info-label">Kilométrage actuel</div>
+                    <div class="km-number">${Number(c.current_km).toLocaleString()}</div>
+                    <div class="km-label">km — relevé le ${formatDate(c.km_date)}</div>
+                </div>` : ''}
+                <div class="d-flex gap-2 mt-3">
+                    <button class="auth-btn"
+                        style="flex:1;padding:10px;font-size:13px;"
+                        onclick="ouvrirOdometer(${c.car_id})">
+                        <i class="fas fa-tachometer-alt me-1"></i>MAJ KM
+                    </button>
+                    <button class="auth-btn"
+                        style="flex:1;padding:10px;font-size:13px;
+                               background:linear-gradient(135deg,#dc3545,#c82333);"
+                        onclick="ouvrirSignalement(${c.car_id})">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Problème
+                    </button>
+                </div>
+            </div>
         </div>`;
     }).join('');
+
+    // load docs and maintenance for first car automatically
+    if (cars.length > 0) {
+        const firstCarId = cars[0].car_id;
+        loadDocuments(firstCarId);
+        loadMaintenance(firstCarId);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,3 +537,283 @@ document.addEventListener('DOMContentLoaded', () => {
     mobilePolling = setInterval(loadMobileMessages, 5000);
     loadMobileMessages();
 });
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCUMENTS VIEWER
+
+async function loadDocuments(carId) {
+    const el = document.getElementById('documents_content');
+    try {
+        const res  = await fetch(`/employe/documents/${carId}`);
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const d = data.data;
+
+        const statusColor = (s) =>
+            s === 'valid'    ? '#198754' :
+            s === 'expiring' ? '#ffc107' :
+            s === 'expired'  ? '#dc3545' : '#adb5bd';
+
+        const statusLabel = (s) =>
+            s === 'valid'    ? 'Valide' :
+            s === 'expiring' ? 'Expire bientôt' :
+            s === 'expired'  ? 'Expiré' : 'Manquant';
+
+        const statusClass = (s) =>
+            s === 'valid'    ? 'doc-status-valid' :
+            s === 'expired'  ? 'doc-status-expired' :
+            s === 'expiring' ? 'doc-status-expired' : 'doc-status-missing';
+
+        el.innerHTML = `
+            <div style="padding:16px;">
+                <div class="section-title-mobile">Documents du véhicule</div>
+
+                <!-- Assurance -->
+                <div class="doc-status-card ${statusClass(d.assurance.status)}">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <div class="doc-icon-box"
+                            style="background:${statusColor(d.assurance.status)}20;">
+                            <i class="fas fa-shield-alt"
+                                style="color:${statusColor(d.assurance.status)};"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:13px;">Assurance</div>
+                            <div class="text-muted" style="font-size:11px;">
+                                ${d.assurance.insurer || '—'}
+                            </div>
+                            <div style="font-size:11px;color:#718096;">
+                                Expire: ${d.assurance.end_date || '—'}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-pill fw-bold"
+                        style="background:${statusColor(d.assurance.status)}20;
+                               color:${statusColor(d.assurance.status)};">
+                        ${statusLabel(d.assurance.status)}
+                    </span>
+                </div>
+
+                <!-- Vignette -->
+                <div class="doc-status-card ${statusClass(d.vignette.status)}">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <div class="doc-icon-box"
+                            style="background:${statusColor(d.vignette.status)}20;">
+                            <i class="fas fa-receipt"
+                                style="color:${statusColor(d.vignette.status)};"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:13px;">Vignette</div>
+                            <div style="font-size:11px;color:#718096;">
+                                Expire: ${d.vignette.expiration_date || '—'}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-pill fw-bold"
+                        style="background:${statusColor(d.vignette.status)}20;
+                               color:${statusColor(d.vignette.status)};">
+                        ${statusLabel(d.vignette.status)}
+                    </span>
+                </div>
+
+                <!-- Visite Technique -->
+                <div class="doc-status-card ${statusClass(d.visite.status)}">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <div class="doc-icon-box"
+                            style="background:${statusColor(d.visite.status)}20;">
+                            <i class="fas fa-clipboard-check"
+                                style="color:${statusColor(d.visite.status)};"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:13px;">Visite Technique</div>
+                            <div style="font-size:11px;color:#718096;">
+                                Expire: ${d.visite.expiration_date || '—'}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-pill fw-bold"
+                        style="background:${statusColor(d.visite.status)}20;
+                               color:${statusColor(d.visite.status)};">
+                        ${statusLabel(d.visite.status)}
+                    </span>
+                </div>
+            </div>`;
+    } catch (e) {
+        console.error('loadDocuments error:', e);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// MAINTENANCE HISTORY
+
+async function loadMaintenance(carId) {
+    const el = document.getElementById('maintenance_content');
+    try {
+        const res  = await fetch(`/employe/maintenance/${carId}`);
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        const { records, alerts } = data.data;
+
+        let html = '<div style="padding:16px;">';
+
+        // upcoming alerts
+        html += '<div class="section-title-mobile">Maintenance à venir</div>';
+        if (alerts.length === 0) {
+            html += `
+                <div class="empty-state" style="padding:20px;">
+                    <i class="fas fa-check-circle" style="color:#198754;opacity:0.5;"></i>
+                    <p>Aucune maintenance planifiée</p>
+                </div>`;
+        } else {
+            html += alerts.map(a => {
+                const isOverdue = a.days_left !== null && a.days_left <= 0;
+                const color     = isOverdue ? '#dc3545' : '#ffc107';
+                const label     = isOverdue ? 'En retard' :
+                                  a.days_left !== null ? `Dans ${a.days_left}j` : '—';
+                return `
+                <div class="maintenance-alert-item ${isOverdue ? 'overdue' : ''}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold" style="font-size:13px;">
+                                ${escapeHtml(a.part_name)}
+                            </div>
+                            <div style="font-size:11px;color:#718096;">
+                                ${a.due_date ? 'Date: ' + a.due_date : ''}
+                                ${a.due_km ? ' · KM: ' + Number(a.due_km).toLocaleString() : ''}
+                            </div>
+                        </div>
+                        <span class="status-pill fw-bold"
+                            style="background:${color}20;color:${color};">
+                            ${label}
+                        </span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // history
+        html += '<div class="section-title-mobile" style="margin-top:8px;">Derniers entretiens</div>';
+        if (records.length === 0) {
+            html += `
+                <div class="empty-state" style="padding:20px;">
+                    <i class="fas fa-history"></i>
+                    <p>Aucun entretien enregistré</p>
+                </div>`;
+        } else {
+            html += records.map(r => `
+                <div class="maintenance-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold" style="font-size:13px;">
+                                ${escapeHtml(r.part_name)}
+                            </div>
+                            <div style="font-size:11px;color:#718096;">
+                                ${r.garage_name ? escapeHtml(r.garage_name) + ' · ' : ''}
+                                ${r.done_at}
+                            </div>
+                            ${r.notes ? `<div style="font-size:11px;color:#a0aec0;margin-top:3px;">
+                                ${escapeHtml(r.notes)}</div>` : ''}
+                        </div>
+                        ${r.km_at_service ? `
+                        <span class="status-pill"
+                            style="background:#ebf4ff;color:#0d6efd;font-weight:700;">
+                            ${Number(r.km_at_service).toLocaleString()} km
+                        </span>` : ''}
+                    </div>
+                </div>`).join('');
+        }
+
+        html += '</div>';
+        el.innerHTML = html;
+
+    } catch (e) {
+        console.error('loadMaintenance error:', e);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// EMERGENCY CONTACTS
+
+async function loadUrgences() {
+    const el = document.getElementById('urgences_content');
+    try {
+        const res  = await fetch('/employe/emergency-contacts');
+        const data = await res.json();
+
+        let html = '<div style="padding:16px;">';
+
+        // hardcoded emergency numbers
+        html += '<div class="section-title-mobile">Numéros d\'urgence</div>';
+        const urgences = [
+            { label: 'Police',       number: '197', icon: 'fa-shield-alt', color: '#0d6efd' },
+            { label: 'SAMU',         number: '190', icon: 'fa-ambulance',  color: '#dc3545' },
+            { label: 'Protection Civile', number: '198', icon: 'fa-fire-extinguisher', color: '#fd7e14' },
+        ];
+
+        html += urgences.map(u => `
+            <a href="tel:${u.number}" class="emergency-card">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <div class="emergency-icon" style="background:${u.color}20;">
+                        <i class="fas ${u.icon}" style="color:${u.color};"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="font-size:14px;">${u.label}</div>
+                        <div style="font-size:13px;color:#718096;">${u.number}</div>
+                    </div>
+                </div>
+                <a href="tel:${u.number}" class="call-btn">
+                    <i class="fas fa-phone"></i> Appeler
+                </a>
+            </a>`).join('');
+
+        // RH contact (hardcoded for now)
+        html += '<div class="section-title-mobile" style="margin-top:8px;">Service RH</div>';
+        html += `
+            <a href="tel:+21650387025" class="emergency-card">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <div class="emergency-icon" style="background:#19875420;">
+                        <i class="fas fa-user-tie" style="color:#198754;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="font-size:14px;">Responsable RH</div>
+                        <div style="font-size:13px;color:#718096;">+216 50 387 025</div>
+                    </div>
+                </div>
+                <a href="tel:+21650387025" class="call-btn" style="background:linear-gradient(135deg,#198754,#157347);">
+                    <i class="fas fa-phone"></i> Appeler
+                </a>
+            </a>`;
+
+        // garages from DB
+        if (data.status === 'success' && data.data.length) {
+            html += '<div class="section-title-mobile" style="margin-top:8px;">Garages</div>';
+            html += data.data.filter(g => g.phone).map(g => `
+                <a href="tel:${g.phone}" class="emergency-card">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <div class="emergency-icon" style="background:#0d6efd20;">
+                            <i class="fas fa-wrench" style="color:#0d6efd;"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:13px;">
+                                ${escapeHtml(g.name)}
+                            </div>
+                            <div style="font-size:11px;color:#718096;">
+                                ${g.type === 'dealership' ? 'Concessionnaire' : 'Indépendant'}
+                                ${g.brand ? ' · ' + escapeHtml(g.brand) : ''}
+                            </div>
+                            <div style="font-size:12px;color:#0d6efd;">${g.phone}</div>
+                        </div>
+                    </div>
+                    <a href="tel:${g.phone}" class="call-btn">
+                        <i class="fas fa-phone"></i> Appeler
+                    </a>
+                </a>`).join('');
+        }
+
+        html += '</div>';
+        el.innerHTML = html;
+
+    } catch (e) {
+        console.error('loadUrgences error:', e);
+    }
+}

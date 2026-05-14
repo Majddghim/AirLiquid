@@ -86,28 +86,62 @@
 
     </div>
 
+    <!-- DOCUMENTS -->
+<div class="section" id="section_documents">
+    <div id="documents_content">
+        <div class="loading-state">
+            <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;"></div>
+            <p>Chargement...</p>
+        </div>
+    </div>
+</div>
+
+<!-- MAINTENANCE -->
+<div class="section" id="section_maintenance">
+    <div id="maintenance_content">
+        <div class="loading-state">
+            <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;"></div>
+            <p>Chargement...</p>
+        </div>
+    </div>
+</div>
+
+<!-- URGENCES -->
+<div class="section" id="section_urgences">
+    <div id="urgences_content">
+        <div class="loading-state">
+            <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem;"></div>
+            <p>Chargement...</p>
+        </div>
+    </div>
+</div>
+
     <!-- BOTTOM NAV -->
     <div class="bottom-nav">
-        <button class="nav-btn active" id="nav_car" onclick="switchSection('car')">
-            <i class="fas fa-car"></i>
-            <span>Véhicule</span>
-        </button>
-        <button class="nav-btn" id="nav_sinistres" onclick="switchSection('sinistres')">
-            <i class="fas fa-car-crash"></i>
-            <span>Sinistres</span>
-        </button>
-        <button class="nav-btn position-relative" id="nav_messages" onclick="switchSection('messages')">
-            <i class="fas fa-comments"></i>
-            <span class="badge bg-danger rounded-pill position-absolute"
-                id="mobile_unread_badge"
-                style="display:none;top:4px;right:8px;font-size:9px;padding:2px 5px;">0</span>
-            <span>Messages</span>
-        </button>
-        <button class="nav-btn" id="nav_profil" onclick="switchSection('profil')">
-            <i class="fas fa-user"></i>
-            <span>Profil</span>
-        </button>
-    </div>
+    <button class="nav-btn active" id="nav_car" onclick="switchSection('car')">
+        <i class="fas fa-car"></i>
+        <span>Véhicule</span>
+    </button>
+    <button class="nav-btn" id="nav_documents" onclick="switchSection('documents')">
+        <i class="fas fa-file-alt"></i>
+        <span>Docs</span>
+    </button>
+    <button class="nav-btn" id="nav_maintenance" onclick="switchSection('maintenance')">
+        <i class="fas fa-tools"></i>
+        <span>Entretien</span>
+    </button>
+    <button class="nav-btn position-relative" id="nav_messages" onclick="switchSection('messages')">
+        <i class="fas fa-comments"></i>
+        <span class="badge bg-danger rounded-pill position-absolute"
+            id="mobile_unread_badge"
+            style="display:none;top:4px;right:4px;font-size:9px;padding:2px 5px;">0</span>
+        <span>Messages</span>
+    </button>
+    <button class="nav-btn" id="nav_urgences" onclick="switchSection('urgences')">
+        <i class="fas fa-phone-alt"></i>
+        <span>Urgences</span>
+    </button>
+</div>
 
     <!-- ODOMETER MODAL -->
     <div class="modal fade" id="odometerModal" tabindex="-1" data-bs-backdrop="static">
