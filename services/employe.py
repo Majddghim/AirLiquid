@@ -357,7 +357,7 @@ class EmployeService:
 
     def get_employee_documents(self, car_id):
         """Get document status for employee's car"""
-        con, cursor = self.db.find_connection()
+        con, cursor = self.db_tools.find_connection()
         try:
             import datetime
             today = datetime.date.today()
@@ -419,7 +419,7 @@ class EmployeService:
 
     def get_employee_maintenance(self, car_id):
         """Get maintenance history and upcoming alerts for employee's car"""
-        con, cursor = self.db.find_connection()
+        con, cursor = self.db_tools.find_connection()
         try:
             import datetime
             today = datetime.date.today()
@@ -465,7 +465,7 @@ class EmployeService:
 
     def get_emergency_contacts(self):
         """Get emergency contacts — garages + hardcoded"""
-        con, cursor = self.db.find_connection()
+        con, cursor = self.db_tools.find_connection()
         try:
             cursor.execute("""
                 SELECT name, phone, type, brand, address

@@ -554,6 +554,10 @@ async function confirmerLogMaintenance() {
         Swal.fire({ icon: 'warning', title: 'Champ manquant', text: 'Veuillez saisir la date.' });
         return;
     }
+    if (!document.getElementById('log_garage_id').value) {
+    Swal.fire({ icon: 'warning', title: 'Garage manquant', text: 'Veuillez sélectionner un garage.' });
+    return;
+}
 
     const payload = {
         part_id:       parseInt(partId),
