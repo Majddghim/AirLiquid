@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadMaintenance();
     await loadKmSection();
     await loadSinistres();
+    await loadEmployeeHistory();
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,6 +213,7 @@ async function loadKmSection() {
         }
 
         await loadKmHistory();
+        await loadOdometerPhotos();
     } catch (e) {
         console.error('loadKmSection error:', e);
     }
@@ -1533,3 +1535,100 @@ async function scannerFacture(prefix) {
             console.error('verifierFactureExistante error:', e);
         }
     }
+    async function loadOdometerPhotos() {
+    try {
+        const res  = await fetch(`/maintenance/odometer-photos/${carId}`);
+        const data = await res.json();
+
+        if (data.status !== 'success' || !data.data.length) return;
+
+        const existing = document.getElementById('km_history_content');
+        const photosHtml = `
+            <div class="mt-3">
+                <h6 class="fw-bold text-dark mb-2" style="font-size:13px;">
+                    <i class="fas fa-camera text-secondary me-1"></i>
+                    Photos compteur (employé)
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    ${data.data.map(p => `
+                        <div class="text-center">
+                            <a href="/${p.file_path}" target="_blank">
+                                <img src="/${p.file_path}"
+                                    style="width:80px;height:80px;object-fit:cover;
+                                           border-radius:8px;border:1px solid #dee2e6;">
+                            </a>
+                            <div class="text-muted" style="font-size:10px;">
+                                ${p.km ? Number(p.km).toLocaleString() + ' km' : '—'}<br>
+                                ${formatDate(p.recorded_at)}
+                            </div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+
+        existing.insertAdjacentHTML('beforeend', photosHtml);
+    } catch (e) {
+        console.error('loadOdometerPhotos error:', e);
+    }
+}
+async function loadEmployeeHistory() {
+    try {
+        const res  = await fetch(`/car/employee-history/${carId}`);
+        const data = await res.json();
+        const el   = document.getElementById('employee_history_content');
+        const badge = document.getElementById('employee_history_badge');
+
+        if (data.status !== 'success' || !data.data.length) {
+            el.innerHTML = `
+                <div class="text-center py-3 text-muted small">
+                    <i class="fas fa-users-slash me-1"></i>
+                    Aucun historique d'affectation
+                </div>`;
+            return;
+        }
+
+        badge.style.display = 'inline';
+        badge.innerText     = data.data.length;
+
+        el.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr class="text-xs text-uppercase text-muted">
+                            <th class="ps-3">Employé</th>
+                            <th>Poste</th>
+                            <th>Département</th>
+                            <th>Début</th>
+                            <th>Fin</th>
+                            <th>Durée</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.data.map(a => {
+                            const isActive = !a.end_date;
+                            const isReplacement = a.notes && a.notes.includes('Remplacement');
+                            return `
+                            <tr class="${isActive ? 'table-success bg-opacity-25' : ''}"
+                                style="cursor:pointer;"
+                                onclick="window.location.href='/dashboard/employe-profil/${a.employee_id}'">
+                                <td class="ps-3">
+                                    <div class="fw-bold">${escapeHtml(a.prenom)} ${escapeHtml(a.nom)}</div>
+                                    ${isReplacement ? '<span class="badge bg-warning text-dark" style="font-size:10px;">Remplacement</span>' : ''}
+                                </td>
+                                <td>${escapeHtml(a.poste || '—')}</td>
+                                <td>${escapeHtml(a.departement || '—')}</td>
+                                <td>${formatDate(a.start_date)}</td>
+                                <td>${a.end_date ? formatDate(a.end_date) : '<span class="text-success fw-bold">En cours</span>'}</td>
+                                <td>${a.duree_jours ? a.duree_jours + ' j' : '—'}</td>
+                                <td>${isActive
+                                    ? '<span class="badge bg-success">Actif</span>'
+                                    : '<span class="badge bg-secondary">Terminé</span>'}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (e) {
+        console.error('loadEmployeeHistory error:', e);
+    }
+}

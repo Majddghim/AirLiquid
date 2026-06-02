@@ -268,10 +268,11 @@ class employe:
                 ocr = OCRTools()
                 result = ocr.scan_odometer(file_path)
 
-                if not result or not result.get('km'):
-                    return jsonify({'status': 'failed', 'message': 'Impossible de lire le kilométrage'})
-
-                return jsonify({'status': 'success', 'km': result['km']})
+                return jsonify({
+                    'status': 'success',
+                    'km': result.get('km') if result else None,
+                    'file_path': file_path  # ← return file path
+                })
 
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
@@ -284,20 +285,28 @@ class employe:
 
                 data = request.get_json()
                 km = data.get('km')
+                file_path = data.get('file_path')
 
                 if not km:
                     return jsonify({'status': 'failed', 'message': 'KM requis'})
 
                 maintenance_service = MaintenanceService()
-                maintenance_service.log_km(
-                    car_id=car_id,
-                    km=int(km),
-                    recorded_at=__import__('datetime').date.today().isoformat(),
-                    notes=f"Relevé par employé via app mobile"
-                )
+                con, cursor = maintenance_service.db.find_connection()
+                try:
+                    cursor.execute("""
+                        INSERT INTO car_km (car_id, km, recorded_at, notes, file_path)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (
+                        car_id, int(km),
+                        __import__('datetime').date.today().isoformat(),
+                        f"Relevé par employé via app mobile",
+                        file_path or None
+                    ))
+                    con.commit()
+                finally:
+                    con.close()
 
                 return jsonify({'status': 'success', 'message': 'Kilométrage mis à jour'})
-
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 

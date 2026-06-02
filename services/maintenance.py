@@ -521,3 +521,16 @@ class MaintenanceService:
             return created
         finally:
             con.close()
+
+    def get_odometer_photos(self, car_id):
+        con, cursor = self.db.find_connection()
+        try:
+            cursor.execute("""
+                SELECT km, recorded_at, notes, file_path
+                FROM car_km
+                WHERE car_id = %s AND file_path IS NOT NULL
+                ORDER BY recorded_at DESC, id DESC
+            """, (car_id,))
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            con.close()

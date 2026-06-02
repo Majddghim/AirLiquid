@@ -300,9 +300,10 @@ async function scanOdometer() {
 }
 
 async function confirmerUpdateKm() {
-    const carId  = document.getElementById('odometer_car_id').value;
-    const km     = document.getElementById('odometer_km').value;
-    const saveBtn = document.getElementById('odometer_save_btn');
+    const carId    = document.getElementById('odometer_car_id').value;
+    const km       = document.getElementById('odometer_km').value;
+    const saveBtn  = document.getElementById('odometer_save_btn');
+    const fileInput = document.getElementById('odometer_file');
 
     if (!km || parseInt(km) <= 0) {
         alert('Veuillez saisir un kilométrage valide.');
@@ -312,18 +313,37 @@ async function confirmerUpdateKm() {
     saveBtn.disabled  = true;
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enregistrement...';
 
+    // first upload the photo if exists
+    let filePath = null;
+    if (fileInput.files.length) {
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        try {
+            const uploadRes  = await fetch(`/employe/scan-odometer/${carId}`, {
+                method: 'POST', body: formData
+            });
+            const uploadData = await uploadRes.json();
+            filePath = uploadData.file_path || null;
+        } catch (e) {
+            console.error('upload error:', e);
+        }
+    }
+
     try {
         const res    = await fetch(`/employe/update-km/${carId}`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ km: parseInt(km) })
+            body:    JSON.stringify({
+                km:        parseInt(km),
+                file_path: filePath
+            })
         });
         const result = await res.json();
 
         if (result.status === 'success') {
-    bootstrap.Modal.getInstance(document.getElementById('odometerModal')).hide();
-    alert('✅ Kilométrage mis à jour avec succès !');
-    setTimeout(() => window.location.reload(), 500);
+            bootstrap.Modal.getInstance(document.getElementById('odometerModal')).hide();
+            alert('✅ Kilométrage mis à jour avec succès !');
+            setTimeout(() => window.location.reload(), 500);
         } else {
             alert('Erreur: ' + result.message);
             saveBtn.disabled  = false;

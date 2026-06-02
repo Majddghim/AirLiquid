@@ -305,3 +305,22 @@ class MaintenanceViews:
                 return jsonify({'status': 'success', 'message': 'Facture attachée avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.maintenance_bp.route('/odometer-photos/<int:car_id>', methods=['GET'])
+        def get_odometer_photos(car_id):
+            try:
+                con, cursor = self.service.db.find_connection()
+                cursor.execute("""
+                    SELECT km, recorded_at, notes, file_path
+                    FROM car_km
+                    WHERE car_id = %s AND file_path IS NOT NULL
+                    ORDER BY recorded_at DESC, id DESC
+                    LIMIT 10
+                """, (car_id,))
+                rows = [dict(r) for r in cursor.fetchall()]
+                for r in rows:
+                    r['recorded_at'] = str(r['recorded_at'])
+                con.close()
+                return jsonify({'status': 'success', 'data': rows})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

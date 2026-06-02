@@ -655,3 +655,11 @@ class CarViews:
                 import traceback
                 print(traceback.format_exc())
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.car_bp.route('/employee-history/<int:car_id>', methods=['GET'])
+        def employee_history(car_id):
+            try:
+                data = self.VoitureService.get_employee_history(car_id)
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

@@ -218,6 +218,27 @@
 
                 </div>
             </div>
+            <!-- EMPLOYEE HISTORY -->
+<div class="accordion-item border-0 mb-2 rounded shadow-sm overflow-hidden">
+    <h2 class="accordion-header">
+        <button class="accordion-button collapsed rounded" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseEmployeeHistory">
+            <div class="section-icon bg-success bg-opacity-10">
+                <i class="fas fa-users text-success" style="font-size:13px;"></i>
+            </div>
+            Historique des employés
+            <span class="badge bg-secondary ms-2" id="employee_history_badge" style="display:none;"></span>
+        </button>
+    </h2>
+    <div id="collapseEmployeeHistory" class="accordion-collapse collapse"
+        data-bs-parent="#carAccordion">
+        <div class="accordion-body bg-white">
+            <div id="employee_history_content">
+                <div class="text-center py-3 text-muted small">Chargement...</div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Loading -->
             <div class="container-fluid" id="detail-loading">

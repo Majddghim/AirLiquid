@@ -494,3 +494,24 @@ class VoitureService:
             raise e
         finally:
             con.close()
+
+    def get_employee_history(self, car_id):
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("""
+                SELECT ca.id, ca.start_date, ca.end_date, ca.notes,
+                       e.id AS employee_id, e.nom, e.prenom, e.poste, e.departement,
+                       DATEDIFF(COALESCE(ca.end_date, CURDATE()), ca.start_date) AS duree_jours
+                FROM car_assignments ca
+                JOIN employees e ON ca.employee_id = e.id
+                WHERE ca.car_id = %s
+                ORDER BY ca.start_date DESC
+            """, (car_id,))
+            rows = [dict(r) for r in cursor.fetchall()]
+            for r in rows:
+                r['start_date'] = str(r['start_date'])
+                if r['end_date']:
+                    r['end_date'] = str(r['end_date'])
+            return rows
+        finally:
+            con.close()
