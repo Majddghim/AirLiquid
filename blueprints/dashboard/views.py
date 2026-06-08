@@ -118,6 +118,12 @@ class DashboardViews:
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
+        @self.admin_bp.route('/gmail-email', methods=['GET'])
+        def gmail_email_page():
+            if 'user_id' not in session:
+                return redirect(url_for("auth.login_template"))
+            return render_template('gmail-email.html')
+
         @self.admin_bp.route('/api/alerts', methods=['GET'])
         def alerts():
             try:
@@ -138,6 +144,22 @@ class DashboardViews:
             if 'user_id' not in session:
                 return redirect(url_for("auth.login_template"))
             return render_template('maintenance-alerts.html')
+
+        @self.admin_bp.route('/top-cars', methods=['GET'])
+        def top_cars_page():
+            if 'user_id' not in session:
+                return redirect(url_for("auth.login_template"))
+            return render_template('top-cars.html')
+
+        @self.admin_bp.route('/api/all-cars-expenses', methods=['GET'])
+        def all_cars_expenses():
+            try:
+                date_from = request.args.get('from')
+                date_to = request.args.get('to')
+                data = self.DashboardService.get_all_cars_expenses(date_from, date_to)
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
 
         @self.admin_bp.route('/api/fleet-risk', methods=['GET'])
         def fleet_risk():

@@ -624,22 +624,6 @@ async function loadGmailEmails() {
     }
 }
 function ouvrirEmail(id, subject, sender, date, body) {
-    Swal.fire({
-        title: subject,
-        html: `
-            <div class="text-start">
-                <div class="text-muted small mb-3">
-                    <i class="fas fa-user me-1"></i>${sender}<br>
-                    <i class="fas fa-calendar me-1"></i>${date}
-                </div>
-                <hr>
-                <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;
-                    max-height:300px;overflow-y:auto;text-align:left;">
-                    ${body}
-                </div>
-            </div>`,
-        width: 600,
-        confirmButtonText: 'Fermer',
-        confirmButtonColor: '#0d6efd'
-    });
+    const params = new URLSearchParams({ subject, sender, date, body });
+    window.location.href = `/dashboard/gmail-email?${params.toString()}`;
 }

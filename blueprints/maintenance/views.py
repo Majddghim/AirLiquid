@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify, render_template_string
 from services.maintenance import MaintenanceService
 import os
 from werkzeug.utils import secure_filename
+from tools.database_tools import DatabaseTools
+from tools.email_tools import send_bon_commande_email
 
 
 class MaintenanceViews:
@@ -97,8 +99,9 @@ class MaintenanceViews:
                 garage = data.get('garage')
                 items = data.get('items', [])
                 date = data.get('date')
+                car_id = car.get('id')
 
-                # build rows separately to avoid nested f-string issue
+                # build rows
                 rows = ""
                 for i, item in enumerate(items):
                     rows += f"""
@@ -136,17 +139,10 @@ class MaintenanceViews:
                 .footer {{ margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }}
                 .signature-box {{ border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 80px; }}
                 .signature-label {{ font-size: 11px; font-weight: bold; text-transform: uppercase; color: #888; margin-bottom: 8px; }}
-                .badge {{ display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }}
-                .badge-warning {{ background: #fff3cd; color: #856404; }}
-                .badge-info {{ background: #cff4fc; color: #055160; }}
-                @media print {{
-                    body {{ padding: 20px; }}
-                    .no-print {{ display: none; }}
-                }}
+                @media print {{ body {{ padding: 20px; }} .no-print {{ display: none; }} }}
             </style>
         </head>
         <body>
-
             <div class="header">
                 <div>
                     <div class="company-name">AIR LIQUIDE TUNISIA</div>
@@ -157,7 +153,6 @@ class MaintenanceViews:
                     <div class="bon-num">Date: {date}</div>
                 </div>
             </div>
-
             <div class="section">
                 <div class="section-title">Véhicule</div>
                 <div class="info-grid">
@@ -167,7 +162,6 @@ class MaintenanceViews:
                     <div class="info-item"><label>Propriétaire</label><span>{car.get('owner_name', '—')}</span></div>
                 </div>
             </div>
-
             <div class="section">
                 <div class="section-title">Garage</div>
                 <div class="info-grid">
@@ -177,36 +171,43 @@ class MaintenanceViews:
                     <div class="info-item"><label>Contact</label><span>{garage.get('contact_person', '—')}</span></div>
                 </div>
             </div>
-
             <div class="section">
                 <div class="section-title">Travaux à effectuer</div>
                 <table>
                     <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Pièce / Travail</th>
-                            <th>Catégorie</th>
-                            <th>Remarques</th>
-                        </tr>
+                        <tr><th>#</th><th>Pièce / Travail</th><th>Catégorie</th><th>Remarques</th></tr>
                     </thead>
-                    <tbody>
-                        {rows}
-                    </tbody>
+                    <tbody>{rows}</tbody>
                 </table>
             </div>
-
             <div class="footer">
-                <div class="signature-box">
-                    <div class="signature-label">Signature Responsable Fleet</div>
-                </div>
-                <div class="signature-box">
-                    <div class="signature-label">Signature Garage</div>
-                </div>
+                <div class="signature-box"><div class="signature-label">Signature Responsable Fleet</div></div>
+                <div class="signature-box"><div class="signature-label">Signature Garage</div></div>
             </div>
-
             <script>window.onload = () => window.print();</script>
         </body>
         </html>"""
+
+                # generate PDF + send email to assigned employee (non-blocking)
+                try:
+                    emp = self.service.get_assigned_employee(car_id)
+                    print(f'Employee found: {emp}')
+                    if emp and emp.get('email'):
+                        pdf_path = self.service.generate_bon_pdf(car, garage, items, date)
+                        print(f'PDF generated at: {pdf_path}')
+                        send_bon_commande_email(
+                            to_email=emp['email'],
+                            prenom=emp['prenom'],
+                            nom=emp['nom'],
+                            plate_number=car.get('plate_number', ''),
+                            garage_name=garage.get('name', ''),
+                            pdf_path=pdf_path
+                        )
+                        print('Email sent successfully')
+                except Exception as email_err:
+                    import traceback
+                    print(f'BDC email error: {email_err}')
+                    print(traceback.format_exc())
 
                 return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
             except Exception as e:
@@ -324,3 +325,22 @@ class MaintenanceViews:
                 return jsonify({'status': 'success', 'data': rows})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        def _send_bon_email(self, car_id, car, garage, items, date):
+            """Generate PDF and send to assigned employee — non-blocking"""
+            try:
+                emp = self.service.get_assigned_employee(car_id)
+                if not emp or not emp.get('email'):
+                    return
+
+                pdf_path = self.service.generate_bon_pdf(car, garage, items, date)
+                send_bon_commande_email(
+                    to_email=emp['email'],
+                    prenom=emp['prenom'],
+                    nom=emp['nom'],
+                    plate_number=car.get('plate_number', ''),
+                    garage_name=garage.get('name', ''),
+                    pdf_path=pdf_path
+                )
+            except Exception as e:
+                print(f'BDC email error: {e}')

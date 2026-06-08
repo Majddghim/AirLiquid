@@ -416,9 +416,9 @@ async function genererBon() {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         const html = await res.text();
-        const tab  = window.open('', '_blank');
-        tab.document.write(html);
-        tab.document.close();
+        const blob = new Blob([html], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        window.open(url, '_blank');
         bootstrap.Modal.getInstance(document.getElementById('bonCommandeModal')).hide();
     } catch (e) {
         console.error('genererBon error:', e);

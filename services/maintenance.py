@@ -1,5 +1,13 @@
 from tools.database_tools import DatabaseTools
 import datetime
+import os
+import math
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable
+from reportlab.lib.enums import TA_CENTER
 
 
 class MaintenanceService:
@@ -534,3 +542,146 @@ class MaintenanceService:
             return [dict(r) for r in cursor.fetchall()]
         finally:
             con.close()
+
+    def get_assigned_employee(self, car_id):
+        """Get currently assigned employee for a car"""
+        con, cursor = self.db.find_connection()
+        try:
+            cursor.execute("""
+                SELECT e.email, e.prenom, e.nom
+                FROM car_assignments ca
+                JOIN employees e ON ca.employee_id = e.id
+                WHERE ca.car_id = %s AND ca.end_date IS NULL
+                LIMIT 1
+            """, (car_id,))
+            result = cursor.fetchone()
+            return dict(result) if result else None
+        finally:
+            con.close()
+
+    def generate_bon_pdf(self, car, garage, items, date):
+        """Generate BDC as PDF using ReportLab, save to disk, return file path"""
+
+        upload_folder = 'static/uploads/bdc'
+        os.makedirs(upload_folder, exist_ok=True)
+        filename = f"bdc_{car.get('plate_number', '').replace(' ', '_')}_{datetime.date.today().isoformat()}.pdf"
+        file_path = os.path.join(upload_folder, filename)
+
+        BLUE = colors.HexColor('#0d6efd')
+        GRAY = colors.HexColor('#6c757d')
+        LIGHT = colors.HexColor('#f8f9fc')
+
+        styles = getSampleStyleSheet()
+        title_s = ParagraphStyle('T', parent=styles['Title'],
+                                 fontSize=18, textColor=BLUE, alignment=TA_CENTER, spaceAfter=2)
+        sub_s = ParagraphStyle('S', parent=styles['Normal'],
+                               fontSize=9, textColor=GRAY, alignment=TA_CENTER, spaceAfter=4)
+        section_s = ParagraphStyle('SEC', parent=styles['Normal'],
+                                   fontSize=9, textColor=GRAY, spaceBefore=10, spaceAfter=4,
+                                   fontName='Helvetica-Bold')
+
+        doc = SimpleDocTemplate(file_path, pagesize=A4,
+                                rightMargin=1.5 * cm, leftMargin=1.5 * cm,
+                                topMargin=1.5 * cm, bottomMargin=1.5 * cm)
+        elements = []
+
+        elements.append(Paragraph('AIR LIQUIDE TUNISIA', title_s))
+        elements.append(Paragraph('Gestion de Flotte', sub_s))
+        elements.append(HRFlowable(width='100%', thickness=3, color=BLUE))
+        elements.append(Spacer(1, 0.3 * cm))
+        elements.append(Paragraph('BON DE COMMANDE', ParagraphStyle('BDC',
+                                                                    parent=styles['Heading1'], fontSize=14,
+                                                                    textColor=colors.HexColor('#2d3748'),
+                                                                    alignment=TA_CENTER, spaceAfter=4)))
+        elements.append(Paragraph(f'Date: {date}', sub_s))
+        elements.append(Spacer(1, 0.3 * cm))
+
+        # car + garage info table
+        elements.append(Paragraph('VEHICULE', section_s))
+        car_table = Table([
+            ['Modèle', f"{car.get('model', '—')} {car.get('brand', '')}",
+             'Immatriculation', car.get('plate_number', '—')],
+            ['Année', str(car.get('year', '—')),
+             'Propriétaire', car.get('owner_name', '—')],
+        ], colWidths=[3 * cm, 6 * cm, 3 * cm, 6 * cm])
+        car_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), LIGHT),
+            ('BACKGROUND', (2, 0), (2, -1), LIGHT),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(car_table)
+        elements.append(Spacer(1, 0.3 * cm))
+
+        elements.append(Paragraph('GARAGE', section_s))
+        garage_table = Table([
+            ['Nom', garage.get('name', '—'),
+             'Téléphone', garage.get('phone', '—')],
+            ['Adresse', garage.get('address', '—'),
+             'Contact', garage.get('contact_person', '—')],
+        ], colWidths=[3 * cm, 6 * cm, 3 * cm, 6 * cm])
+        garage_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), LIGHT),
+            ('BACKGROUND', (2, 0), (2, -1), LIGHT),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(garage_table)
+        elements.append(Spacer(1, 0.3 * cm))
+
+        # items table
+        elements.append(Paragraph('TRAVAUX A EFFECTUER', section_s))
+        item_rows = [['#', 'Pièce / Travail', 'Catégorie', 'Remarques']]
+        for i, item in enumerate(items):
+            item_rows.append([
+                str(i + 1),
+                item.get('part_name', '—'),
+                item.get('category', '—'),
+                item.get('notes', ''),
+            ])
+        items_table = Table(item_rows, colWidths=[1 * cm, 6 * cm, 4 * cm, 7 * cm])
+        items_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), BLUE),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dee2e6')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT]),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 18),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(items_table)
+        elements.append(Spacer(1, 1 * cm))
+
+        # signatures
+        sig_table = Table(
+            [['Signature Responsable Fleet', 'Signature Garage']],
+            colWidths=[9 * cm, 9 * cm]
+        )
+        sig_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('TEXTCOLOR', (0, 0), (-1, -1), GRAY),
+            ('BOX', (0, 0), (0, 0), 0.5, colors.HexColor('#dee2e6')),
+            ('BOX', (1, 0), (1, 0), 0.5, colors.HexColor('#dee2e6')),
+            ('ROWHEIGHT', (0, 0), (-1, -1), 60),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(sig_table)
+
+        doc.build(elements)
+        return file_path

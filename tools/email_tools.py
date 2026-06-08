@@ -243,3 +243,57 @@ def send_weekly_digest(to_email, data):
     </html>"""
 
     return send_email(to_email, subject, html)
+
+def send_bon_commande_email(to_email, prenom, nom, plate_number, garage_name, pdf_path):
+    subject = f'ALT Fleet — Bon de Commande — {plate_number}'
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;">
+        <div style="max-width:500px;margin:auto;background:white;border-radius:10px;
+                    padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align:center;margin-bottom:20px;">
+                <h2 style="color:#0d6efd;">AIR LIQUIDE TUNISIA</h2>
+                <p style="color:#666;font-size:13px;">Système de Gestion de Flotte</p>
+            </div>
+            <p>Bonjour <strong>{prenom} {nom}</strong>,</p>
+            <p>Un bon de commande a été généré pour votre véhicule
+               <strong>{plate_number}</strong>.</p>
+            <div style="background:#f8f9fc;border-radius:8px;padding:15px;margin:20px 0;">
+                <p style="margin:5px 0;"><strong>Garage:</strong> {garage_name}</p>
+                <p style="margin:5px 0;"><strong>Véhicule:</strong> {plate_number}</p>
+            </div>
+            <p style="color:#666;font-size:13px;">
+                Le bon de commande est joint à cet email en PDF.
+                Veuillez le présenter au garage lors de votre visite.
+            </p>
+            <p style="color:#aaa;font-size:12px;margin-top:20px;">
+                Ce message est automatique, merci de ne pas y répondre.
+            </p>
+        </div>
+    </body>
+    </html>"""
+
+    try:
+        from email.mime.application import MIMEApplication
+
+        msg = MIMEMultipart('mixed')
+        msg['Subject'] = subject
+        msg['From']    = f'{FROM_NAME} <{FROM_EMAIL}>'
+        msg['To']      = to_email
+        msg.attach(MIMEText(html, 'html'))
+
+        with open(pdf_path, 'rb') as f:
+            pdf_part = MIMEApplication(f.read(), _subtype='pdf')
+            pdf_part.add_header('Content-Disposition', 'attachment',
+                filename=f'bon_commande_{plate_number}.pdf')
+            msg.attach(pdf_part)
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f'BDC email error: {e}')
+        return False

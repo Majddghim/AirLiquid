@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Classement des dépenses — ALT Fleet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+</head>
+<body id="page-top">
+<div id="wrapper">
+    {% include 'elements/side-bar/side-bar.html' %}
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
+
+            <div class="container-fluid">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="text-dark mb-0">
+                            <i class="fas fa-trophy text-warning me-2"></i>
+                            Classement des dépenses
+                        </h3>
+                        <p class="text-muted small mb-0">Tous les véhicules classés par coût total</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <select class="form-select form-select-sm bg-light border-0"
+                            id="period_preset" onchange="onPeriodChange(this.value)"
+                            style="width:160px;">
+                            <option value="this_year" selected>Cette année</option>
+                            <option value="last_year">Année dernière</option>
+                            <option value="this_month">Ce mois-ci</option>
+                            <option value="custom">Personnalisée</option>
+                        </select>
+                        <div id="custom_dates" class="d-none d-flex gap-2">
+                            <input type="date" class="form-control form-control-sm bg-light border-0"
+                                id="date_from" style="width:140px;">
+                            <input type="date" class="form-control form-control-sm bg-light border-0"
+                                id="date_to" style="width:140px;">
+                            <button class="btn btn-primary btn-sm" onclick="loadData()">OK</button>
+                        </div>
+                        <a href="/dashboard/" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="card shadow border-0">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="text-primary fw-bold m-0">
+                            <i class="fas fa-list me-2"></i>Tous les véhicules
+                        </h6>
+                        <span class="badge bg-primary rounded-pill" id="cars_count">—</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="text-xs text-uppercase text-muted">
+                                        <th class="ps-3">#</th>
+                                        <th>Véhicule</th>
+                                        <th>Immatriculation</th>
+                                        <th>Employé</th>
+                                        <th>KM actuel</th>
+                                        <th class="text-end">Maintenance</th>
+                                        <th class="text-end">Sinistres</th>
+                                        <th class="text-end">Carburant</th>
+                                        <th class="text-end pe-3">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cars_tbody">
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5 text-muted">
+                                            <div class="spinner-border text-primary mb-2"></div>
+                                            <p>Chargement...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/top-cars.js') }}"></script>
+</body>
+</html>

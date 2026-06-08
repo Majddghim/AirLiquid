@@ -536,3 +536,70 @@ class DashboardService:
             }
         finally:
             con.close()
+
+    def get_all_cars_expenses(self, date_from=None, date_to=None):
+        if not date_from:
+            date_from = f"{datetime.date.today().year}-01-01"
+        if not date_to:
+            date_to = datetime.date.today().isoformat()
+
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("""
+                SELECT
+                    c.id,
+                    c.plate_number,
+                    c.brand,
+                    cg.model,
+                    cg.year,
+                    c.status,
+                    COALESCE(f.total_factures, 0)  AS total_maintenance,
+                    COALESCE(s.total_sinistres, 0)  AS total_sinistres,
+                    COALESCE(cb.total_carburant, 0) AS total_carburant,
+                    COALESCE(f.total_factures, 0) +
+                    COALESCE(s.total_sinistres, 0) +
+                    COALESCE(cb.total_carburant, 0) AS grand_total,
+                    (SELECT km FROM car_km
+                     WHERE car_id = c.id
+                     ORDER BY recorded_at DESC, id DESC LIMIT 1) AS current_km,
+                    (SELECT CONCAT(e.prenom, ' ', e.nom)
+                     FROM car_assignments ca
+                     JOIN employees e ON ca.employee_id = e.id
+                     WHERE ca.car_id = c.id AND ca.end_date IS NULL
+                     LIMIT 1) AS assigned_to
+                FROM cars c
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant_ttc) AS total_factures
+                    FROM factures
+                    WHERE type = 'maintenance'
+                    AND date_facture BETWEEN %s AND %s
+                    AND montant_ttc IS NOT NULL
+                    GROUP BY car_id
+                ) f ON f.car_id = c.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant_ttc) AS total_sinistres
+                    FROM factures
+                    WHERE type = 'sinistre'
+                    AND date_facture BETWEEN %s AND %s
+                    AND montant_ttc IS NOT NULL
+                    GROUP BY car_id
+                ) s ON s.car_id = c.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant_ttc) AS total_carburant
+                    FROM carburant_expenses
+                    WHERE periode BETWEEN %s AND %s
+                    GROUP BY car_id
+                ) cb ON cb.car_id = c.id
+                ORDER BY grand_total DESC
+            """, (date_from, date_to, date_from, date_to, date_from, date_to))
+            rows = cursor.fetchall()
+            result = []
+            for r in rows:
+                d = dict(r)
+                for k in ['total_maintenance', 'total_sinistres', 'total_carburant', 'grand_total']:
+                    d[k] = float(d[k]) if d[k] else 0.0
+                result.append(d)
+            return result
+        finally:
+            con.close()

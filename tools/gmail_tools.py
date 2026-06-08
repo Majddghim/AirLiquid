@@ -222,3 +222,4 @@ Réponds UNIQUEMENT avec: OUI ou NON"""
         except Exception as e:
             print(f'Gmail fetch error: {e}')
             return []
+
