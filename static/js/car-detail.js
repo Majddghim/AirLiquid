@@ -883,11 +883,14 @@ function renderAffectation(affectation, carStatus) {
         return;
     }
     el.innerHTML = `
-        <div class="bg-success bg-opacity-10 p-2 rounded me-3">
-            <i class="fas fa-user-tag text-success fa-lg"></i>
+    <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+        <i class="fas fa-user-tag text-success fa-lg"></i>
+    </div>
+    <div class="flex-grow-1" style="cursor:pointer;"
+        onclick="window.location.href='/employe/profil/${affectation.employee_id}'">
+        <div class="fw-bold text-dark text-decoration-underline">
+            ${escapeHtml(affectation.prenom)} ${escapeHtml(affectation.nom)}
         </div>
-        <div class="flex-grow-1">
-            <div class="fw-bold text-dark">${escapeHtml(affectation.prenom)} ${escapeHtml(affectation.nom)}</div>
             <div class="text-muted small">
                 ${escapeHtml(affectation.poste || '')}
                 ${affectation.departement ? ' — ' + escapeHtml(affectation.departement) : ''}
@@ -1610,7 +1613,7 @@ async function loadEmployeeHistory() {
                             return `
                             <tr class="${isActive ? 'table-success bg-opacity-25' : ''}"
                                 style="cursor:pointer;"
-                                onclick="window.location.href='/dashboard/employe-profil/${a.employee_id}'">
+                                onclick="window.location.href='/employe/profil/${a.employee_id}'">
                                 <td class="ps-3">
                                     <div class="fw-bold">${escapeHtml(a.prenom)} ${escapeHtml(a.nom)}</div>
                                     ${isReplacement ? '<span class="badge bg-warning text-dark" style="font-size:10px;">Remplacement</span>' : ''}

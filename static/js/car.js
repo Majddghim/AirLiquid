@@ -661,6 +661,47 @@ function updateTableInfo() {
 function changePage(page) { currentPage = page; renderTable(); }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+// FILTER
+
+let allCars = [];
+
+async function loadCars() {
+    const tbody = document.querySelector("#dataTable tbody");
+    if (!tbody) return;
+    try {
+        const response = await fetch("/car/get-all-voitures");
+        const result   = await response.json();
+        if (result.status !== "success") return;
+        allCars = Array.isArray(result.data) ? result.data : [];
+        cars    = [...allCars];
+        renderTable();
+    } catch (error) {
+        console.error("Erreur interne :", error);
+    }
+}
+
+function filterCars() {
+    const search   = document.getElementById('search_by_name').value.toLowerCase();
+    const status   = document.getElementById('filter_status').value;
+    const assigned = document.getElementById('filter_assigned').value;
+
+    cars = allCars.filter(car => {
+        const matchSearch = !search ||
+            (car.model        || '').toLowerCase().includes(search) ||
+            (car.plate_number || '').toLowerCase().includes(search) ||
+            (car.brand        || '').toLowerCase().includes(search);
+        const matchStatus   = !status   || car.status === status;
+        const matchAssigned = !assigned ||
+            (assigned === 'assigned'   &&  car.employee_id) ||
+            (assigned === 'unassigned' && !car.employee_id);
+        return matchSearch && matchStatus && matchAssigned;
+    });
+
+    currentPage = 1;
+    renderTable();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 // INIT
 
 document.addEventListener("DOMContentLoaded", () => { loadCars(); });

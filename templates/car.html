@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
@@ -10,210 +9,203 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
-
 <body id="page-top">
-    <div id="wrapper">
+<div id="wrapper">
 
-        {% include 'elements/side-bar/side-bar.html' %}
+    {% include 'elements/side-bar/side-bar.html' %}
 
-        <div class="d-flex flex-column" id="content-wrapper">
-            <div id="content">
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
 
-                <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
-                    {% include 'elements/header/header.html' %}
-                </nav>
+            <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
+                {% include 'elements/header/header.html' %}
+            </nav>
 
-                <div class="container-fluid">
+            <div class="container-fluid">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="text-dark mb-0">Liste des Voitures</h3>
-                        <a href="/dashboard/ajout-voiture" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Ajouter Voiture
-                        </a>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-dark mb-0">Liste des Voitures</h3>
+                    <a href="/dashboard/ajout-voiture" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Ajouter Voiture
+                    </a>
+                </div>
 
-                    <div class="card shadow border-0">
-                        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                <div class="card shadow border-0">
+                    <div class="card-header py-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h6 class="text-primary fw-bold m-0">
                                 <i class="fas fa-car me-2"></i>Gestion de la Flotte
                             </h6>
-                            <div class="dataTables_filter d-none d-md-block" id="dataTable_filter">
-                                <div class="input-group input-group-sm">
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <select class="form-select form-select-sm bg-light border-0"
+                                    id="filter_status" onchange="filterCars()"
+                                    style="width:150px;">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="active">Opérationnel</option>
+                                    <option value="maintenance">Maintenance</option>
+                                    <option value="inactive">Hors Service</option>
+                                    <option value="retired">Retiré</option>
+                                </select>
+                                <select class="form-select form-select-sm bg-light border-0"
+                                    id="filter_assigned" onchange="filterCars()"
+                                    style="width:155px;">
+                                    <option value="">Toutes affectations</option>
+                                    <option value="assigned">Affecté</option>
+                                    <option value="unassigned">Non affecté</option>
+                                </select>
+                                <div class="input-group input-group-sm" style="width:200px;">
                                     <span class="input-group-text bg-light border-0">
                                         <i class="fas fa-search"></i>
                                     </span>
                                     <input type="search" class="form-control form-control-sm bg-light border-0"
-                                        id="search_by_name" placeholder="Recherche rapide...">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="table-responsive" id="dataTable-container" role="grid">
-                                <table class="table table-hover align-middle my-0" id="dataTable">
-                                    <thead class="table-light">
-                                        <tr class="text-xs text-uppercase text-muted">
-                                            <th>Véhicule</th>
-                                            <th>Immatriculation</th>
-                                            <th>Propriétaire</th>
-                                            <th>Infos Techniques</th>
-                                            <th class="text-center">Statut</th>
-                                            <th>Administration</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="carsTableBody"></tbody>
-                                </table>
-                            </div>
-
-                            <div class="row mt-4">
-                                <div class="col-md-6 align-self-center">
-                                    <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite"></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                                        <ul class="pagination" id="data-pagination"></ul>
-                                    </nav>
+                                        id="search_by_name" placeholder="Recherche rapide..."
+                                        oninput="filterCars()">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                </div>
-            </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle my-0" id="dataTable">
+                                <thead class="table-light">
+                                    <tr class="text-xs text-uppercase text-muted">
+                                        <th>Véhicule</th>
+                                        <th>Immatriculation</th>
+                                        <th>Propriétaire</th>
+                                        <th>Infos Techniques</th>
+                                        <th class="text-center">Statut</th>
+                                        <th>Administration</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="carsTableBody"></tbody>
+                            </table>
+                        </div>
 
-            <footer class="bg-white sticky-footer">
-                <div class="container my-auto">
-                    <div class="text-center my-auto copyright">
-                        <span>Copyright © ALT 2025</span>
+                        <div class="row mt-4">
+                            <div class="col-md-6 align-self-center">
+                                <p id="dataTable_info" class="dataTables_info small text-muted"></p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav class="d-lg-flex justify-content-lg-end">
+                                    <ul class="pagination pagination-sm" id="data-pagination"></ul>
+                                </nav>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </footer>
-        </div>
-
-        <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- AFFECTATION MODAL                                             -->
-    <!-- ============================================================ -->
-    <div class="modal fade" id="affectationModal" tabindex="-1"
-        aria-labelledby="affectationModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-
-                <div class="modal-header border-0 pb-0">
-                    <div>
-                        <h5 class="modal-title fw-bold text-primary" id="affectationModalLabel">
-                            <i class="fas fa-user-tag me-2"></i>Affecter un Employé
-                        </h5>
-                        <p class="text-muted small mb-0" id="affectation_car_label"></p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body px-4">
-
-                    <!-- Warning if car already assigned -->
-                    <div id="affectation_warning" class="alert alert-warning border-0 d-flex align-items-center py-2 mb-3" style="display:none !important;">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <span class="small" id="affectation_warning_text"></span>
-                    </div>
-
-                    <input type="hidden" id="affectation_car_id">
-
-                    <div class="mb-3">
-                        <label class="form-label mb-1"><strong>Employé</strong></label>
-                        <select class="form-select bg-light border-0" id="affectation_employee_id">
-                            <option value="">-- Sélectionner un employé --</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label mb-1 text-success small fw-bold">DATE DE DÉBUT</label>
-                        <input class="form-control bg-light border-0" type="date" id="affectation_start_date">
-                    </div>
-
-                    <div class="mb-0">
-                        <label class="form-label mb-1 text-xs"><strong>Notes</strong></label>
-                        <textarea class="form-control bg-light border-0" id="affectation_notes" rows="2"
-                            placeholder="Optionnel..."></textarea>
-                    </div>
-
-                </div>
-
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none"
-                        data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-primary px-4 py-2 shadow"
-                        onclick="affecterVoiture()">
-                        <i class="fas fa-check-circle me-2"></i>Confirmer l'affectation
-                    </button>
                 </div>
 
             </div>
         </div>
+
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright">
+                    <span>Copyright © ALT 2025</span>
+                </div>
+            </div>
+        </footer>
     </div>
-    <!-- ============================================================ -->
-<!-- EDIT CAR MODAL                                               -->
-<!-- ============================================================ -->
+
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+
+<!-- AFFECTATION MODAL -->
+<div class="modal fade" id="affectationModal" tabindex="-1"
+    data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold text-primary">
+                        <i class="fas fa-user-tag me-2"></i>Affecter un Employé
+                    </h5>
+                    <p class="text-muted small mb-0" id="affectation_car_label"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <div id="affectation_warning"
+                    class="alert alert-warning border-0 d-flex align-items-center py-2 mb-3"
+                    style="display:none !important;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span class="small" id="affectation_warning_text"></span>
+                </div>
+                <input type="hidden" id="affectation_car_id">
+                <div class="mb-3">
+                    <label class="form-label mb-1"><strong>Employé</strong></label>
+                    <select class="form-select bg-light border-0" id="affectation_employee_id">
+                        <option value="">-- Sélectionner un employé --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label mb-1 text-success small fw-bold">DATE DE DÉBUT</label>
+                    <input class="form-control bg-light border-0" type="date" id="affectation_start_date">
+                </div>
+                <div class="mb-0">
+                    <label class="form-label mb-1 small"><strong>Notes</strong></label>
+                    <textarea class="form-control bg-light border-0" id="affectation_notes"
+                        rows="2" placeholder="Optionnel..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-link text-muted text-decoration-none"
+                    data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary px-4 py-2 shadow"
+                    onclick="affecterVoiture()">
+                    <i class="fas fa-check-circle me-2"></i>Confirmer l'affectation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT CAR MODAL -->
 <div class="modal fade" id="editCarModal" tabindex="-1"
-    aria-labelledby="editCarModalLabel" aria-hidden="true"
     data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-
             <div class="modal-header border-0 pb-0">
                 <div>
-                    <h5 class="modal-title fw-bold text-primary" id="editCarModalLabel">
+                    <h5 class="modal-title fw-bold text-primary">
                         <i class="fas fa-edit me-2"></i>Modifier le Véhicule
                     </h5>
                     <p class="text-muted small mb-0" id="edit_car_subtitle"></p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body px-4">
                 <input type="hidden" id="edit_car_id">
-
                 <div class="row g-3">
-                    <!-- Marque -->
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Marque</label>
-                        <input type="text" class="form-control bg-light border-0" id="edit_brand" placeholder="Ex: Peugeot">
+                        <input type="text" class="form-control bg-light border-0" id="edit_brand">
                     </div>
-                    <!-- Modèle -->
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Modèle</label>
-                        <input type="text" class="form-control bg-light border-0" id="edit_model" placeholder="Ex: Partner">
+                        <input type="text" class="form-control bg-light border-0" id="edit_model">
                     </div>
-                    <!-- Immatriculation -->
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Immatriculation</label>
                         <input type="text" class="form-control bg-light border-0 font-monospace" id="edit_plate_number">
                     </div>
-                    <!-- Année -->
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Année</label>
-                        <input type="number" class="form-control bg-light border-0" id="edit_year" min="1990" max="2100">
+                        <input type="number" class="form-control bg-light border-0" id="edit_year">
                     </div>
-                    <!-- Propriétaire -->
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Propriétaire</label>
                         <input type="text" class="form-control bg-light border-0" id="edit_owner_name">
                     </div>
-                    <!-- Numéro de châssis -->
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">N° Châssis (VIN)</label>
                         <input type="text" class="form-control bg-light border-0 font-monospace" id="edit_chassis_number">
                     </div>
-                    <!-- Puissance fiscale -->
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Puissance Fiscale (CV)</label>
                         <input type="number" class="form-control bg-light border-0" id="edit_puissance_fiscale">
                     </div>
-                    <!-- Carburant -->
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Carburant</label>
                         <select class="form-select bg-light border-0" id="edit_carburant">
@@ -224,7 +216,6 @@
                             <option value="electrique">Électrique</option>
                         </select>
                     </div>
-                    <!-- Statut -->
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Statut</label>
                         <select class="form-select bg-light border-0" id="edit_status">
@@ -234,29 +225,25 @@
                             <option value="retired">Retiré</option>
                         </select>
                     </div>
-                    <!-- Date mise en circulation -->
                     <div class="col-md-4">
-                        <label class="form-label small fw-bold">Date de mise en circulation</label>
+                        <label class="form-label small fw-bold">Date mise en circulation</label>
                         <input type="date" class="form-control bg-light border-0" id="edit_registration_date">
                     </div>
-                    <!-- Date expiration CG -->
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Expiration Carte Grise</label>
                         <input type="date" class="form-control bg-light border-0" id="edit_expiration_date">
                     </div>
-                    <!-- Date acquisition -->
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Date d'acquisition</label>
                         <input type="date" class="form-control bg-light border-0" id="edit_acquisition_date">
                     </div>
-                    <!-- Notes -->
                     <div class="col-12">
                         <label class="form-label small fw-bold">Notes</label>
-                        <textarea class="form-control bg-light border-0" id="edit_notes" rows="2" placeholder="Optionnel..."></textarea>
+                        <textarea class="form-control bg-light border-0" id="edit_notes"
+                            rows="2" placeholder="Optionnel..."></textarea>
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-link text-muted text-decoration-none"
                     data-bs-dismiss="modal">Annuler</button>
@@ -265,19 +252,16 @@
                     <i class="fas fa-save me-2"></i>Enregistrer
                 </button>
             </div>
-
         </div>
     </div>
 </div>
-<!-- END EDIT CAR MODAL -->
-    <!-- END AFFECTATION MODAL -->
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ url_for('static', filename='js/car.js') }}"></script>
-    <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
-    <script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/car.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

@@ -292,7 +292,7 @@ class MaintenanceService:
             km_row = cursor.fetchone()
             current_km = km_row['km'] if km_row else None
 
-            # open alerts with urgency flag
+            # open alerts
             cursor.execute("""
                 SELECT ma.id, ma.part_id, ma.alert_type,
                        ma.due_date, ma.due_km,
@@ -308,20 +308,29 @@ class MaintenanceService:
 
             alerts = []
             for a in raw_alerts:
-                urgent = False
                 due_date = a['due_date']
                 due_km = a['due_km']
                 days_left = a['days_left']
                 km_interval = a['alert_km_interval']
+                urgent = False
 
-                if due_date and days_left is not None and days_left <= 15:
+                # date check — due within 30 days or overdue
+                if due_date and days_left is not None and days_left <= 30:
                     urgent = True
+
+                # km check — within 5% of interval or overdue
                 if due_km and current_km is not None:
                     threshold = int(km_interval * 0.05) if km_interval else 500
                     if current_km >= due_km - threshold:
                         urgent = True
+
+                # no date and no km — always show
                 if not due_date and not due_km:
                     urgent = True
+
+                # skip alerts not due soon
+                if not urgent:
+                    continue
 
                 a['urgent'] = urgent
                 a.pop('alert_km_interval', None)

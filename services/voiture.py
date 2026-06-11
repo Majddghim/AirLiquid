@@ -89,35 +89,41 @@ class VoitureService:
 
     def get_all_voitures(self):
         con, cursor = self.db_tools.find_connection()
-        cursor.execute("""
-        SELECT
-            c.id, c.plate_number, c.brand, c.status, c.acquisition_date,
-            c.notes, c.created_at, c.updated_at,
-            cg.model, cg.year, cg.owner_name, cg.chassis_number,
-            cg.puissance_fiscale, cg.carburant,
-            cg.registration_date, cg.expiration_date,
-            CASE WHEN ins.car_id IS NOT NULL THEN 1 ELSE 0 END AS has_assurance,
-            CASE WHEN vig.car_id IS NOT NULL THEN 1 ELSE 0 END AS has_vignette,
-            CASE WHEN vt.car_id  IS NOT NULL THEN 1 ELSE 0 END AS has_visite
-        FROM cars c
-        LEFT JOIN carte_grises cg   ON c.current_cg_id = cg.id
-        LEFT JOIN (SELECT DISTINCT car_id FROM insurances)        ins ON ins.car_id = c.id
-        LEFT JOIN (SELECT DISTINCT car_id FROM vignettes)         vig ON vig.car_id = c.id
-        LEFT JOIN (SELECT DISTINCT car_id FROM visite_technique)  vt  ON vt.car_id  = c.id
-        """)
-        rows = cursor.fetchall()
-        con.close()
+        try:
+            cursor.execute("""
+            SELECT
+                c.id, c.plate_number, c.brand, c.status, c.acquisition_date,
+                c.notes, c.created_at, c.updated_at,
+                cg.model, cg.year, cg.owner_name, cg.chassis_number,
+                cg.puissance_fiscale, cg.carburant,
+                cg.registration_date, cg.expiration_date,
+                CASE WHEN ins.car_id IS NOT NULL THEN 1 ELSE 0 END AS has_assurance,
+                CASE WHEN vig.car_id IS NOT NULL THEN 1 ELSE 0 END AS has_vignette,
+                CASE WHEN vt.car_id  IS NOT NULL THEN 1 ELSE 0 END AS has_visite,
+                (SELECT ca.employee_id FROM car_assignments ca
+                 WHERE ca.car_id = c.id AND ca.end_date IS NULL
+                 LIMIT 1) AS employee_id
+            FROM cars c
+            LEFT JOIN carte_grises cg   ON c.current_cg_id = cg.id
+            LEFT JOIN (SELECT DISTINCT car_id FROM insurances)        ins ON ins.car_id = c.id
+            LEFT JOIN (SELECT DISTINCT car_id FROM vignettes)         vig ON vig.car_id = c.id
+            LEFT JOIN (SELECT DISTINCT car_id FROM visite_technique)  vt  ON vt.car_id  = c.id
+            ORDER BY c.created_at DESC
+            """)
+            rows = cursor.fetchall()
 
-        result = []
-        for row in rows:
-            row = dict(row)
-            row['dossier_complet'] = bool(
-                row.pop('has_assurance') and
-                row.pop('has_vignette')  and
-                row.pop('has_visite')
-            )
-            result.append(row)
-        return result
+            result = []
+            for row in rows:
+                row = dict(row)
+                row['dossier_complet'] = bool(
+                    row.pop('has_assurance') and
+                    row.pop('has_vignette') and
+                    row.pop('has_visite')
+                )
+                result.append(row)
+            return result
+        finally:
+            con.close()
 
     def get_voitures_paginated(self, search_by_name='', limit=10, offset=0):
         con, cursor = self.db_tools.find_connection()

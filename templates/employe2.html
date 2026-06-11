@@ -1,17 +1,14 @@
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Table - Brand</title>
+    <title>Employés - ALT Fleet</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
 </head>
-
 <body id="page-top">
 <div id="wrapper">
 
@@ -26,25 +23,40 @@
 
             <div class="container-fluid">
 
-                <!-- Title + Add Employee Button -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-dark mb-0">Team</h3>
-
+                    <h3 class="text-dark mb-0">Liste des Employés</h3>
                     <a href="/dashboard/ajout-employe" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Ajouter Employé
+                        <i class="fas fa-plus me-1"></i>Ajouter Employé
                     </a>
                 </div>
 
                 <div class="card shadow border-0">
-                    <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-                        <h6 class="text-primary fw-bold m-0"><i class="fas fa-users-cog me-2"></i>Gestion des
-                            Collaborateurs</h6>
-                        <div class="dataTables_filter d-none d-md-block" id="dataTable_filter">
-                            <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-0"><i
-                                            class="fas fa-search text-muted"></i></span>
-                                <input type="search" class="form-control form-control-sm bg-light border-0"
-                                       id="search_by_name" placeholder="Chercher un employé...">
+                    <div class="card-header py-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="text-primary fw-bold m-0">
+                                <i class="fas fa-users-cog me-2"></i>Gestion des Collaborateurs
+                            </h6>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <select class="form-select form-select-sm bg-light border-0"
+                                    id="filter_status" onchange="filterEmployees()"
+                                    style="width:140px;">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="active">Actif</option>
+                                    <option value="inactive">Inactif</option>
+                                </select>
+                                <select class="form-select form-select-sm bg-light border-0"
+                                    id="filter_dept" onchange="filterEmployees()"
+                                    style="width:160px;">
+                                    <option value="">Tous les départements</option>
+                                </select>
+                                <div class="input-group input-group-sm" style="width:200px;">
+                                    <span class="input-group-text bg-light border-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="search" class="form-control form-control-sm bg-light border-0"
+                                        id="search_by_name" placeholder="Chercher un employé..."
+                                        oninput="filterEmployees()">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -53,15 +65,14 @@
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0" id="dataTable">
                                 <thead class="table-light">
-                                <tr class="text-xs text-uppercase text-muted">
-                                <th class="ps-4">Collaborateur</th>
-                                <th>Coordonnées</th>
-                                <th>Poste / Département</th>
-                                <th class="text-end pe-4">Actions</th>
-                                </tr>
+                                    <tr class="text-xs text-uppercase text-muted">
+                                        <th class="ps-4">Collaborateur</th>
+                                        <th>Coordonnées</th>
+                                        <th>Poste / Département</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
                                 </thead>
-                                <tbody id="employeesTableBody">
-                                </tbody>
+                                <tbody id="employeesTableBody"></tbody>
                             </table>
                         </div>
                         <div class="d-flex justify-content-between align-items-center p-3">
@@ -79,35 +90,29 @@
         <footer class="bg-white sticky-footer">
             <div class="container my-auto">
                 <div class="text-center my-auto copyright">
-                    <span>Copyright © Brand 2025</span>
+                    <span>Copyright © ALT 2025</span>
                 </div>
             </div>
         </footer>
-
     </div>
 
     <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
 </div>
 
-<!-- ============================================================ -->
-<!-- EDIT EMPLOYEE MODAL                                          -->
-<!-- ============================================================ -->
+<!-- EDIT EMPLOYEE MODAL -->
 <div class="modal fade" id="editEmployeModal" tabindex="-1"
-    aria-labelledby="editEmployeModalLabel" aria-hidden="true"
     data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-
             <div class="modal-header border-0 pb-0">
                 <div>
-                    <h5 class="modal-title fw-bold text-primary" id="editEmployeModalLabel">
+                    <h5 class="modal-title fw-bold text-primary">
                         <i class="fas fa-user-edit me-2"></i>Modifier l'Employé
                     </h5>
                     <p class="text-muted small mb-0" id="edit_employe_subtitle"></p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body px-4">
                 <input type="hidden" id="edit_employe_id">
                 <div class="row g-3">
@@ -142,7 +147,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-link text-muted text-decoration-none"
                     data-bs-dismiss="modal">Annuler</button>
@@ -151,11 +155,9 @@
                     <i class="fas fa-save me-2"></i>Enregistrer
                 </button>
             </div>
-
         </div>
     </div>
 </div>
-<!-- END EDIT EMPLOYEE MODAL -->
 
 <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/bs-init.js') }}"></script>
@@ -163,111 +165,6 @@
 <script src="{{ url_for('static', filename='js/elements/Notifications.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/empl.js') }}"></script>
-
-<script>
-    let employees = [];
-    let currentPage = 1;
-    const rowsPerPage = 5;
-
-    async function loadEmployees() {
-        try {
-            const response = await fetch("/employe/get-all-employes");
-            const result = await response.json();
-            if (result.status === "success") {
-                employees = result.data;
-                renderTable();
-                renderPagination();
-            }
-        } catch (error) {
-            console.error("Error loading employees:", error);
-        }
-    }
-
-    function renderTable() {
-        const tbody = document.getElementById("employeesTableBody");
-        tbody.innerHTML = "";
-
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        const pageItems = employees.slice(start, end);
-
-        pageItems.forEach(p => {
-            const initials =
-                (p.prenom ? p.prenom[0].toUpperCase() : "E") +
-                (p.nom ? p.nom[0].toUpperCase() : "P");
-
-            const row = `
-            <tr style="cursor:pointer;" onclick="window.location.href='/employe/profil/${p.id}'">
-                <td class="ps-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-soft-primary p-2 rounded-circle me-3 text-center"
-                            style="width:40px;height:40px;background:#eef4ff;">
-                            <span class="fw-bold text-primary">${initials}</span>
-                        </div>
-                        <div>
-                            <div class="fw-bold text-dark">${p.prenom || ""} ${p.nom || ""}</div>
-                            <div class="text-xs text-muted">ID: #${p.id}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="text-sm">
-                        <div><i class="far fa-envelope me-1 text-muted"></i>${p.email || ""}</div>
-                        <div class="text-muted small">
-                            <i class="fas fa-phone-alt me-1"></i>${p.telephone || ""}
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="fw-bold text-sm">${p.poste || ""}</div>
-                    <div class="badge bg-light text-primary border-0">${p.departement || "Général"}</div>
-                </td>
-                <td class="text-end pe-4" onclick="event.stopPropagation()">
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary border-0 rounded-circle me-1"
-                            title="Modifier"
-                            onclick="ouvrirModalEditEmploye(event, ${p.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-outline-danger border-0 rounded-circle"
-                            title="Supprimer"
-                            onclick="supprimerEmploye(event, ${p.id}, '${p.prenom} ${p.nom}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>`;
-
-            tbody.innerHTML += row;
-        });
-
-        const info = document.getElementById("tableInfo");
-        const startItem = start + 1;
-        const endItem = Math.min(end, employees.length);
-        info.innerText = `Showing ${startItem} to ${endItem} of ${employees.length} employees`;
-    }
-
-    function renderPagination() {
-        const totalPages = Math.ceil(employees.length / rowsPerPage);
-        const pagination = document.getElementById("pagination");
-        pagination.innerHTML = "";
-        for (let i = 1; i <= totalPages; i++) {
-            const active = i === currentPage ? "active" : "";
-            pagination.innerHTML += `
-            <li class="page-item ${active}">
-                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-            </li>`;
-        }
-    }
-
-    function changePage(page) {
-        currentPage = page;
-        renderTable();
-        renderPagination();
-    }
-
-    document.addEventListener("DOMContentLoaded", loadEmployees);
-</script>
-
+<script src="{{ url_for('static', filename='js/employe-list.js') }}"></script>
 </body>
 </html>

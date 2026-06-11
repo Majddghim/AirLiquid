@@ -6,12 +6,6 @@ var page = 1;
 let debounceTimer;
 let controller = null;
 
-const searchInput = document.querySelector("#search_by_name");
-if (searchInput) {
-    searchInput.addEventListener("input", function () {
-        prepare_search_link(1);
-    });
-}
 
 function initPage() {
     const table = document.getElementById('dataTable');
@@ -507,6 +501,5 @@ async function enregistrerEmploye() {
 // INIT
 
 document.addEventListener("DOMContentLoaded", () => {
-    initPage();
     loadDepartements();
 });

@@ -12,9 +12,9 @@ let currentTo    = null;
 document.addEventListener('DOMContentLoaded', () => {
     // set default dates BEFORE any API calls
     const y = new Date().getFullYear();
-    currentFrom = `${y - 1}-01-01`;
-    currentTo   = `${y - 1}-12-31`;
-    document.getElementById('period_preset').value = 'last_year';
+    currentFrom = `${y}-01-01`;
+    currentTo   = new Date().toISOString().split('T')[0];
+    document.getElementById('period_preset').value = 'this_year';
 
     loadFleetKpis();
     loadExpenseKpis();
@@ -612,7 +612,7 @@ async function loadGmailEmails() {
                 ${escapeHtml(email.sender)} · ${escapeHtml(email.date)}
             </div>
             <div class="text-muted small mt-1" style="font-size:12px;line-height:1.4;">
-                ${escapeHtml(email.preview)}...
+                ${email.preview ? email.preview.replace(/<[^>]*>/g, '').substring(0, 120) : ''}...
             </div>
         </div>
         <i class="fas fa-chevron-right text-muted small ms-2 mt-2"></i>
