@@ -95,3 +95,47 @@
 .al-dot {
     color: var(--al-red);
 }
+/* Fixed sidebar — stays in place while content scrolls */
+#wrapper {
+    display: flex;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 14rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+}
+
+#content-wrapper {
+    margin-left: 14rem;
+    width: calc(100% - 14rem);
+    min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: relative;
+        height: auto;
+        width: 100%;
+    }
+    #content-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+.sidebar .container-fluid {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar #accordionSidebar {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}

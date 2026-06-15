@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify , request
-
+from werkzeug.security import check_password_hash
 from services.admin import AdminService
 
 class AuthViews:
@@ -44,7 +44,7 @@ class AuthViews:
                 print(user, 'failed')
                 return jsonify({'status': 'error', 'message': 'Something went wrong'})
             print("user found:", user)
-            if not user or user.password_hash != password:
+            if not user or not check_password_hash(user.password_hash, password):
                 return jsonify({'status': 'failed', 'message': 'mot de passe incorrect'})
             session['user_id'] = user.id
             print(session['user_id'], 'logged in successfully')

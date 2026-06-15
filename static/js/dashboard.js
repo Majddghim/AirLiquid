@@ -103,7 +103,6 @@ async function loadExpenseKpis() {
         const d = data.data;
         document.getElementById('exp_maintenance').innerText = formatDT(d.maintenance);
         document.getElementById('exp_sinistres').innerText   = formatDT(d.sinistres);
-        document.getElementById('exp_carburant').innerText   = formatDT(d.carburant);
         document.getElementById('exp_admin').innerText       = formatDT(d.vignettes + d.visites);
         document.getElementById('exp_total').innerText       = formatDT(d.total);
     } catch (e) {

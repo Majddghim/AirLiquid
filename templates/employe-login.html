@@ -4,36 +4,57 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ALT Fleet — Connexion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/employe.css') }}">
 </head>
 <body class="auth-body">
 
-    <div class="auth-card">
-        <div class="auth-logo">
-            <i class="fas fa-car text-white fa-lg"></i>
+    <div class="auth-hero">
+        <div class="bubbles" aria-hidden="true">
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="bubble"></span>
         </div>
-        <div class="auth-title">ALT Fleet</div>
-        <div class="auth-subtitle">Espace Employé — Air Liquide Tunisia</div>
-
-        <div class="error-box" id="error_msg"></div>
-
-        <div class="auth-input-group">
-            <i class="fas fa-envelope input-icon"></i>
-            <input type="email" id="email" placeholder="Votre adresse email" autocomplete="email">
+        <div class="auth-hero__content">
+            <div class="auth-hero__logo">
+                <img src="/static/assets/img/air-liquide_1.svg" alt="Air Liquide" class="auth-hero__logo-img">
+            </div>
+            <h1 class="auth-hero__title">ALT&nbsp;Fleet</h1>
+            <p class="auth-hero__subtitle">Espace Employé</p>
         </div>
+    </div>
 
-        <div class="auth-input-group">
-            <i class="fas fa-lock input-icon"></i>
-            <input type="password" id="password" placeholder="Mot de passe" autocomplete="current-password">
+    <div class="auth-sheet">
+        <div class="auth-sheet__inner">
+
+            <h2 class="auth-sheet__title">Identification</h2>
+            <p class="auth-sheet__sub">Connectez-vous pour accéder à votre espace.</p>
+
+            <div class="error-box" id="error_msg"></div>
+
+            <div class="auth-input-group">
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" id="email" placeholder="Votre adresse email" autocomplete="email">
+            </div>
+
+            <div class="auth-input-group">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" id="password" placeholder="Mot de passe" autocomplete="current-password">
+            </div>
+
+            <button class="auth-btn" onclick="login()" id="login_btn">
+                <span>Se connecter</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+
+            <div class="auth-footer">Air Liquide Tunisie © 2026</div>
         </div>
-
-        <button class="auth-btn" onclick="login()" id="login_btn">
-            <i class="fas fa-sign-in-alt me-2"></i>Se connecter
-        </button>
-
-        <div class="auth-footer">Air Liquide Tunisia © 2026</div>
     </div>
 
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>

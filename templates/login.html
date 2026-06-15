@@ -1,61 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Login - Air Liquide</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap for utility classes -->
+    <title>Connexion — ALT Fleet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/assets/bootstrap/css/bootstrap.min.css">
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="/static/assets/fonts/fontawesome-all.min.css">
-    <!-- Custom Login Styles -->
     <link rel="stylesheet" href="/static/css/login.css">
 </head>
-
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="logo-container">
-                <!-- Air Liquide Logo -->
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Air_Liquide_logo.svg/320px-Air_Liquide_logo.svg.png"
-                    alt="Air Liquide Logo">
+    <div class="auth-shell">
+
+        <!-- LEFT — BRAND PANEL -->
+        <aside class="auth-brand">
+            <div class="bubbles" aria-hidden="true">
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
+                <span class="bubble"></span>
             </div>
 
-            <h4 class="login-title">Identification</h4>
+            <div class="auth-brand__content">
+                <div class="auth-brand__logo">
+    <img src="/static/assets/img/air-liquide_1.svg" alt="Air Liquide" class="auth-brand__logo-img">
+</div>
 
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email">E-mail</label>
-                    <input class="form-control" type="email" id="email" placeholder="votre@email.com" name="email"
-                        required>
+                <div class="auth-brand__spacer"></div>
+
+                <div class="auth-brand__footer">
+                    <p class="auth-brand__eyebrow">Gestion de Flotte</p>
+                    <h1 class="auth-brand__title">ALT&nbsp;Fleet</h1>
+                    <p class="auth-brand__tagline">
+                        Pilotez votre flotte automobile en temps réel — véhicules,
+                        maintenance, documents et missions, réunis dans un seul
+                        tableau de bord.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT — FORM PANEL -->
+        <main class="auth-form-panel">
+            <div class="auth-form-card">
+
+                <div class="auth-form-header">
+                    <span class="auth-form-eyebrow">Espace Administrateur</span>
+                    <h2>Identification</h2>
+                    <p class="auth-form-sub">Connectez-vous pour accéder au tableau de bord.</p>
                 </div>
 
-                <div class="form-group">
-                    <label for="password">Mot de passe</label>
-                    <input class="form-control" type="password" id="password" placeholder="••••••••" name="password"
-                        required>
-                </div>
-
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="rememberMe">
-                        <label class="form-check-label small text-muted" for="rememberMe">Se souvenir de moi</label>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Adresse e-mail</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-envelope"></i>
+                            <input class="form-control" type="email" id="email"
+                                placeholder="vous@airliquide.com" name="email" required>
+                        </div>
                     </div>
-                    <a class="small" href="forgot-password.html" style="color: var(--primary-color);">Oubli ?</a>
+
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-lock"></i>
+                            <input class="form-control" type="password" id="password"
+                                placeholder="••••••••" name="password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="check">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Se souvenir de moi</span>
+                        </label>
+                        <a class="link" href="forgot-password.html">Mot de passe oublié ?</a>
+                    </div>
+
+                    <button class="btn-login" type="button" id="loginBtn" onclick="handleLogin()">
+                        <span>Se connecter</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="auth-form-footer">
+                    <p>© 2026 Air Liquide Tunisie — Tous droits réservés.</p>
                 </div>
-
-                <button class="btn-login" type="button" id="loginBtn" onclick="handleLogin()">
-                    Se connecter
-                </button>
-            </form>
-
-            <div class="footer-links">
-                <p class="text-muted mb-0">© 2026 Air Liquide. Tous droits réservés.</p>
             </div>
-        </div>
+        </main>
+
     </div>
 
     <!-- Scripts -->
@@ -80,5 +119,4 @@
         }
     </script>
 </body>
-
 </html>
