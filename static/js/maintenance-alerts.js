@@ -32,7 +32,7 @@ async function loadAlerts() {
 // SUMMARY CARDS
 
 function updateSummaryCards() {
-    const today    = new Date();
+    const today = new Date();
     today.setHours(0,0,0,0);
 
     let overdue = 0, soon = 0, kmBased = 0;
@@ -41,11 +41,15 @@ function updateSummaryCards() {
     allAlerts.forEach(a => {
         carIds.add(a.car_id);
 
-        if (a.due_date) {
-            const due = new Date(a.due_date);
-            if (due < today) overdue++;
-            else soon++;
+        const kmOverdue   = a.due_km && a.current_km && a.current_km >= a.due_km;
+        const dateOverdue = a.due_date && new Date(a.due_date) < today;
+
+        if (kmOverdue || dateOverdue) {
+            overdue++;
+        } else if (a.due_date) {
+            soon++;
         }
+
         if (a.alert_type === 'km' || a.alert_type === 'both') kmBased++;
     });
 
@@ -74,13 +78,18 @@ function applyFilters() {
             if (!plate.includes(search) && !model.includes(search) && !brand.includes(search)) return false;
         }
         if (type && a.alert_type !== type) return false;
+
+        const kmOverdue   = a.due_km && a.current_km && a.current_km >= a.due_km;
+        const dateOverdue = a.due_date && new Date(a.due_date) < today;
+
         if (urgency === 'overdue') {
-            if (!a.due_date || new Date(a.due_date) >= today) return false;
+            if (!(kmOverdue || dateOverdue)) return false;
         }
         if (urgency === 'soon') {
+            if (kmOverdue || dateOverdue) return false;
             if (!a.due_date) return false;
             const due = new Date(a.due_date);
-            if (due < today || due > new Date(today.getTime() + 15 * 86400000)) return false;
+            if (due > new Date(today.getTime() + 15 * 86400000)) return false;
         }
         return true;
     });
@@ -97,6 +106,9 @@ function resetFilters() {
     currentPage = 1;
     renderTable();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// RENDER TABLE
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // RENDER TABLE
@@ -119,26 +131,36 @@ function renderTable() {
     today.setHours(0,0,0,0);
 
     tbody.innerHTML = page.map(a => {
-        // urgency
+        // determine overdue status — check KM and date independently
+        const kmOverdue   = a.due_km && a.current_km && a.current_km >= a.due_km;
+        const dateOverdue = a.due_date && new Date(a.due_date) < today;
+
         let urgencyBadge = '';
         let rowClass     = '';
 
-        if (a.due_date) {
-            const due      = new Date(a.due_date);
-            const daysLeft = a.days_left;
-            if (due < today) {
-                urgencyBadge = `<span class="badge bg-danger">En retard (${Math.abs(daysLeft)}j)</span>`;
-                rowClass     = 'table-danger';
+        if (kmOverdue || dateOverdue) {
+            // overdue — show whichever metric is actually overdue
+            if (kmOverdue) {
+                const kmDiff = a.current_km - a.due_km;
+                urgencyBadge = `<span class="badge bg-danger">Dépassé (${kmDiff.toLocaleString()} km)</span>`;
             } else {
-                urgencyBadge = `<span class="badge bg-warning text-dark">Dans ${daysLeft}j</span>`;
-                rowClass     = 'table-warning';
+                urgencyBadge = `<span class="badge bg-danger">En retard (${Math.abs(a.days_left)}j)</span>`;
             }
+            rowClass = 'table-danger';
+
         } else if (a.due_km && a.current_km) {
+            // not overdue by km — show km remaining (more accurate than date for km-based parts)
             const diff = a.due_km - a.current_km;
-            urgencyBadge = diff <= 0
-                ? `<span class="badge bg-danger">Dépassé (${Math.abs(diff)} km)</span>`
-                : `<span class="badge bg-info text-dark">Dans ${diff} km</span>`;
-            rowClass = diff <= 0 ? 'table-danger' : '';
+            urgencyBadge = `<span class="badge bg-info text-dark">Dans ${diff.toLocaleString()} km</span>`;
+            rowClass = '';
+
+        } else if (a.due_date) {
+            // pure date-based alert with no km tracking
+            urgencyBadge = `<span class="badge bg-warning text-dark">Dans ${a.days_left}j</span>`;
+            rowClass = 'table-warning';
+
+        } else {
+            urgencyBadge = `<span class="badge bg-secondary">—</span>`;
         }
 
         return `

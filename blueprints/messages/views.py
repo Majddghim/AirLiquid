@@ -96,3 +96,14 @@ class MessageViews:
                 return jsonify({'status': 'success', 'data': messages})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.message_bp.route('/conversations-list', methods=['GET'])
+        def conversations_list():
+            try:
+                data = self.service.get_conversations_list(admin_id=1)
+                for c in data:
+                    if c.get('last_message_at'):
+                        c['last_message_at'] = str(c['last_message_at'])
+                return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500

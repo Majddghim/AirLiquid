@@ -1,0 +1,86 @@
+<!-- ============================================================ -->
+<!-- FLOATING CHAT WIDGET — single panel, Messenger-style         -->
+<!-- ============================================================ -->
+<div id="chat-widget-root">
+
+    <!-- Collapsed bar -->
+    <div id="chat_widget_bar" onclick="toggleChatPanel()">
+        <div class="chat-widget-bar__icon">
+            <i class="fas fa-comments"></i>
+            <span id="chat_widget_total_badge" class="chat-widget-bar__badge" style="display:none;"></span>
+        </div>
+        <span class="chat-widget-bar__label">Messages</span>
+        <i class="fas fa-chevron-up chat-widget-bar__chevron" id="chat_widget_chevron"></i>
+    </div>
+
+    <!-- Single panel — switches content between list / new-message / chat -->
+    <div id="chat_widget_panel" class="chat-widget-panel">
+
+        <!-- ===== VIEW: Conversation list ===== -->
+        <div id="cw_view_list" class="cw-view">
+            <div class="chat-widget-panel__header">
+                <span>Conversations</span>
+                <div class="d-flex gap-2">
+                    <button class="chat-widget-icon-btn" onclick="showNewMessageView()" title="Nouveau message">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="chat-widget-icon-btn" onclick="toggleChatPanel()" title="Fermer">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="chat_widget_list_body" class="chat-widget-panel__body">
+                <div class="text-center text-muted small py-4">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Chargement...
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== VIEW: New message (search employee) ===== -->
+        <div id="cw_view_new" class="cw-view" style="display:none;">
+            <div class="chat-widget-panel__header">
+                <button class="chat-widget-icon-btn" onclick="showListView()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <span>Nouveau message</span>
+                <button class="chat-widget-icon-btn" onclick="toggleChatPanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cw-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="cw_employee_search" placeholder="Rechercher un employé..."
+                    oninput="filterEmployeeSearch()">
+            </div>
+            <div id="cw_employee_results" class="chat-widget-panel__body"></div>
+        </div>
+
+        <!-- ===== VIEW: Active chat ===== -->
+        <div id="cw_view_chat" class="cw-view" style="display:none;">
+            <div class="chat-widget-panel__header">
+                <button class="chat-widget-icon-btn" onclick="showListView()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="chat-popup__avatar" id="cw_chat_avatar"></div>
+                <span id="cw_chat_name" class="chat-widget-panel__chat-name"></span>
+                <button class="chat-widget-icon-btn" onclick="toggleChatPanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="cw_chat_body" class="chat-widget-panel__body chat-widget-panel__body--chat"></div>
+            <div class="chat-popup__input-area">
+                <input type="text" id="cw_chat_input"
+                    placeholder="Écrire un message..."
+                    onkeydown="if(event.key==='Enter') sendCurrentChatMessage()">
+                <button class="chat-popup__send" onclick="sendCurrentChatMessage()">
+                    <i class="fas fa-paper-plane" style="font-size:12px;"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/chat-widget.js') }}"></script>

@@ -99,3 +99,39 @@ class MessageService:
             return [dict(r) for r in cursor.fetchall()]
         finally:
             con.close()
+
+    def get_conversations_list(self, admin_id):
+        """Get list of all conversations for admin with last message + unread count"""
+        con, cursor = self.db.find_connection()
+        try:
+            cursor.execute("""
+                SELECT
+                    e.id AS employee_id,
+                    e.prenom, e.nom, e.poste, e.departement,
+                    lm.content AS last_message,
+                    lm.created_at AS last_message_at,
+                    lm.sender_type AS last_sender_type,
+                    COALESCE(uc.cnt, 0) AS unread_count
+                FROM employees e
+                INNER JOIN (
+                    SELECT
+                        CASE WHEN sender_type = 'employee' THEN sender_id ELSE receiver_id END AS employee_id,
+                        MAX(id) AS last_id
+                    FROM messages
+                    WHERE (sender_type = 'admin' AND receiver_type = 'employee')
+                       OR (sender_type = 'employee' AND receiver_type = 'admin')
+                    GROUP BY employee_id
+                ) latest ON latest.employee_id = e.id
+                INNER JOIN messages lm ON lm.id = latest.last_id
+                LEFT JOIN (
+                    SELECT sender_id AS employee_id, COUNT(*) AS cnt
+                    FROM messages
+                    WHERE receiver_type = 'admin' AND receiver_id = %s
+                    AND sender_type = 'employee' AND is_read = 0
+                    GROUP BY sender_id
+                ) uc ON uc.employee_id = e.id
+                ORDER BY lm.created_at DESC
+            """, (admin_id,))
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            con.close()

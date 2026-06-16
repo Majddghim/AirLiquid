@@ -164,11 +164,11 @@ async function loadMonthlyChart() {
                         borderRadius:    4,
                     },
                     {
-                        label:           'Carburant',
-                        data:            d.carburant,
-                        backgroundColor: 'rgba(246, 194, 62, 0.8)',
-                        borderRadius:    4,
-                    }
+    label:           'Vignettes/Visites',
+    data:            d.admin,
+    backgroundColor: 'rgba(246, 194, 62, 0.8)',
+    borderRadius:    4,
+}
                 ]
             },
             options: {
@@ -199,9 +199,9 @@ function loadDonutChart(d) {
     const totals = [
         d.maintenance.reduce((a, b) => a + b, 0),
         d.sinistres.reduce((a, b) => a + b, 0),
-        d.carburant.reduce((a, b) => a + b, 0),
+        d.admin.reduce((a, b) => a + b, 0),
     ];
-    const labels = ['Maintenance', 'Sinistres', 'Carburant'];
+    const labels = ['Maintenance', 'Sinistres', 'Vignettes/Visites'];
     const colors = ['#4e73df', '#e74a3b', '#f6c23e'];
 
     if (donutChart) donutChart.destroy();

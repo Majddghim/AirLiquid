@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/fonts/fontawesome-all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat-widget.css') }}">
 </head>
 
 <body id="page-top">
@@ -18,6 +19,7 @@
             <nav class="navbar navbar-expand bg-white shadow mb-4 topbar">
                 {% include 'elements/header/header.html' %}
             </nav>
+            {% include 'elements/chat-widget/chat-widget.html' %}
 
             <div class="container-fluid">
 
@@ -203,7 +205,7 @@
                                 <div class="d-flex gap-2 small">
                                     <span><span class="badge bg-primary me-1">&nbsp;</span>Maintenance</span>
                                     <span><span class="badge bg-danger me-1">&nbsp;</span>Sinistres</span>
-                                    <span><span class="badge bg-warning me-1">&nbsp;</span>Carburant</span>
+                                    <span><span class="badge bg-warning me-1">&nbsp;</span>Vignettes/Visites</span>
                                 </div>
                             </div>
                             <div class="card-body">

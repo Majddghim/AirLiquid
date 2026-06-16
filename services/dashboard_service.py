@@ -164,30 +164,42 @@ class DashboardService:
             """, (date_from, date_to))
             sinistre_rows = {to_key(r): float(r['total']) for r in cursor.fetchall()}
 
-            # carburant by month
+            # vignettes + visites by month (based on expiration_date)
             cursor.execute("""
-                SELECT YEAR(periode) AS yr, MONTH(periode) AS mo,
-                       COALESCE(SUM(montant_ttc), 0) AS total
-                FROM carburant_expenses
-                WHERE periode BETWEEN %s AND %s
-                GROUP BY yr, mo ORDER BY yr, mo
-            """, (date_from, date_to))
-            carburant_rows = {to_key(r): float(r['total']) for r in cursor.fetchall()}
+                SELECT YEAR(expiration_date) AS yr, MONTH(expiration_date) AS mo,
+                       COALESCE(SUM(montant), 0) AS total
+                FROM vignettes
+                WHERE expiration_date BETWEEN %s AND %s
+                AND montant IS NOT NULL
+                GROUP BY yr, mo
+                UNION ALL
+                SELECT YEAR(expiration_date) AS yr, MONTH(expiration_date) AS mo,
+                       COALESCE(SUM(montant), 0) AS total
+                FROM visite_technique
+                WHERE expiration_date BETWEEN %s AND %s
+                AND montant IS NOT NULL
+                GROUP BY yr, mo
+            """, (date_from, date_to, date_from, date_to))
+            admin_raw = cursor.fetchall()
+            admin_rows = {}
+            for r in admin_raw:
+                key = to_key(r)
+                admin_rows[key] = admin_rows.get(key, 0) + float(r['total'])
 
             all_months = sorted(set(
                 list(maintenance_rows.keys()) +
                 list(sinistre_rows.keys()) +
-                list(carburant_rows.keys())
+                list(admin_rows.keys())
             ))
 
             if not all_months:
-                return {'labels': [], 'maintenance': [], 'sinistres': [], 'carburant': []}
+                return {'labels': [], 'maintenance': [], 'sinistres': [], 'admin': []}
 
             return {
                 'labels': all_months,
                 'maintenance': [maintenance_rows.get(m, 0) for m in all_months],
                 'sinistres': [sinistre_rows.get(m, 0) for m in all_months],
-                'carburant': [carburant_rows.get(m, 0) for m in all_months],
+                'admin': [admin_rows.get(m, 0) for m in all_months],
             }
         finally:
             con.close()
