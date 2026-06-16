@@ -65,7 +65,9 @@ async function loadMaintenanceAlerts() {
                 <div class="text-center py-3 text-muted small">
                     <i class="fas fa-check-circle text-success me-1"></i>
                     Aucune maintenance planifiée
-                </div>`;
+                </div>
+                <div id="ml_suggestions_content" style="display:none;"></div>`;
+            await loadMLSuggestions([]);
             return;
         }
 
@@ -109,7 +111,11 @@ async function loadMaintenanceAlerts() {
                         }).join('')}
                     </tbody>
                 </table>
-            </div>`;
+            </div>
+            <div id="ml_suggestions_content" style="display:none;"></div>`;
+
+        await loadMLSuggestions(data.data);
+
     } catch (e) {
         console.error('loadMaintenanceAlerts error:', e);
     }
@@ -1633,5 +1639,73 @@ async function loadEmployeeHistory() {
             </div>`;
     } catch (e) {
         console.error('loadEmployeeHistory error:', e);
+    }
+}
+async function loadMLSuggestions(currentAlerts) {
+    try {
+        const res  = await fetch('/dashboard/api/predictions');
+        const data = await res.json();
+        if (data.status !== 'success') return;
+
+        // find predictions for this car
+        const carPred = data.data.find(p => p.car && String(p.car.id) === String(carId));
+        if (!carPred || !carPred.maintenance) return;
+
+        const predictions = carPred.maintenance.predictions || [];
+        const kmRate      = carPred.maintenance.km_rate;
+
+        // get part names already shown in current alerts (avoid duplicates)
+        const alertPartNames = new Set(
+            currentAlerts.map(a => a.part_name.toLowerCase().trim())
+        );
+
+        // filter: not already alerted, realistic planning window (31–60 days)
+        const suggestions = predictions.filter(p =>
+            p.days_until !== null &&
+            p.days_until > 30 &&
+            p.days_until <= 60 &&
+            !alertPartNames.has(p.part_name.toLowerCase().trim())
+        );
+
+        if (!suggestions.length) return;
+
+        const el = document.getElementById('ml_suggestions_content');
+        if (!el) return;
+
+        el.innerHTML = `
+            <div class="mt-3 p-3 rounded border border-primary border-opacity-25 bg-primary bg-opacity-10">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-primary bg-opacity-10 p-2 rounded me-2">
+                        <i class="fas fa-brain text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold small text-primary">Suggestion ML</div>
+                        <div class="text-muted" style="font-size:11px;">
+                            Basé sur un taux d'usage de ${kmRate ? kmRate + ' km/jour' : 'votre historique KM'}
+                        </div>
+                    </div>
+                </div>
+                <p class="small text-dark mb-2">
+                    Lors de votre prochaine visite garage, profitez-en pour anticiper:
+                </p>
+                <ul class="mb-2 small">
+                    ${suggestions.map(s => `
+                        <li>
+                            <strong>${escapeHtml(s.part_name)}</strong>
+                            — prévu dans <strong>${s.days_until}j</strong>
+                            ${s.due_km ? `(${s.due_km.toLocaleString()} km)` : ''}
+                            ${s.predicted_date ? `· ${s.predicted_date}` : ''}
+                        </li>`).join('')}
+                </ul>
+                <div class="text-primary fw-bold small">
+                    <i class="fas fa-route me-1"></i>
+                    Optimisez votre visite — évitez ${suggestions.length} déplacement${suggestions.length > 1 ? 's' : ''} supplémentaire${suggestions.length > 1 ? 's' : ''}
+                </div>
+            </div>`;
+
+        el.style.display = 'block';
+
+    } catch (e) {
+        console.error('loadMLSuggestions error:', e);
     }
 }
