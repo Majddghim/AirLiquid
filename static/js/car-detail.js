@@ -38,7 +38,7 @@ async function loadCarDetail() {
         document.getElementById("detail-loading").style.display = "none";
         document.getElementById("detail-content").style.display = "block";
         document.getElementById('export_pdf_btn').href = `/car/export-dossier/${carId}`;
-
+        await loadExpensePrediction();
     } catch (e) {
         console.error("loadCarDetail error:", e);
         Swal.fire({ icon: "error", title: "Erreur serveur", text: "Impossible de charger le dossier." });
@@ -1697,7 +1697,7 @@ async function loadMLSuggestions(currentAlerts) {
                         <i class="fas fa-brain text-primary"></i>
                     </div>
                     <div>
-                        <div class="fw-bold small text-primary">Suggestion ML</div>
+                        <div class="fw-bold small text-primary">Suggestion Prédictive</div>
                         <div class="text-muted" style="font-size:11px;">
                             Basé sur un taux d'usage de ${kmRate ? kmRate + ' km/jour' : 'votre historique KM'}
                         </div>
@@ -1725,5 +1725,56 @@ async function loadMLSuggestions(currentAlerts) {
 
     } catch (e) {
         console.error('loadMLSuggestions error:', e);
+    }
+}
+async function loadExpensePrediction() {
+    try {
+        const res  = await fetch(`/dashboard/api/car-prediction/${carId}`);
+        const data = await res.json();
+        const el   = document.getElementById('expense_prediction_content');
+        if (!el) return;
+
+        const exp = data.data?.expenses;
+        if (data.status !== 'success' || !exp) {
+            el.innerHTML = `
+                <div class="text-center py-3 text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Historique insuffisant pour la prévision (minimum 2 mois de factures)
+                </div>`;
+            return;
+        }
+
+        const trendIcon  = exp.trend === 'up' ? 'fa-arrow-trend-up text-danger' :
+                            exp.trend === 'down' ? 'fa-arrow-trend-down text-success' :
+                            'fa-arrows-left-right text-secondary';
+        const trendLabel = exp.trend === 'up' ? 'En hausse' :
+                            exp.trend === 'down' ? 'En baisse' : 'Stable';
+
+        el.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center">
+                        <div class="text-muted small">Moyenne mensuelle</div>
+                        <div class="fw-bold fs-5 text-dark">${exp.avg_monthly} DT</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center">
+                        <div class="text-muted small">Prévision mois prochain</div>
+                        <div class="fw-bold fs-5 text-primary">${exp.next_month} DT</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center">
+                        <div class="text-muted small">Tendance</div>
+                        <div class="fw-bold fs-5"><i class="fas ${trendIcon} me-1"></i>${trendLabel}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-muted small mt-2 text-center">
+                <i class="fas fa-robot me-1"></i>Basé sur ${exp.months_analyzed} mois d'historique — régression linéaire (scikit-learn)
+            </div>`;
+    } catch (e) {
+        console.error('loadExpensePrediction error:', e);
     }
 }

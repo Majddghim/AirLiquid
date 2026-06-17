@@ -1,6 +1,7 @@
 import numpy as np
 import datetime
 from tools.database_tools import DatabaseTools
+from sklearn.linear_model import LinearRegression
 
 
 class MLService:
@@ -127,10 +128,9 @@ class MLService:
     # ------------------------------------------------------------------ #
 
     def predict_expenses(self, car_id):
-        """Predict next month and next year expenses using linear regression"""
+        """Predict next month and next year expenses using scikit-learn LinearRegression"""
         con, cursor = self.db.find_connection()
         try:
-            # get monthly expenses for this car
             cursor.execute("""
                 SELECT YEAR(date_facture) AS yr, MONTH(date_facture) AS mo,
                        SUM(montant_ttc) AS total
@@ -146,34 +146,32 @@ class MLService:
             if len(rows) < 2:
                 return None
 
-            # convert to numeric months (index from 0)
             totals = [float(r['total']) for r in rows]
-            n      = len(totals)
-            x      = np.array(range(n))
-            y      = np.array(totals)
+            n = len(totals)
 
-            # simple linear regression
-            x_mean = np.mean(x)
-            y_mean = np.mean(y)
-            slope  = np.sum((x - x_mean) * (y - y_mean)) / np.sum((x - x_mean) ** 2)
-            intercept = y_mean - slope * x_mean
+            X = np.array(range(n)).reshape(-1, 1)
+            y = np.array(totals)
 
-            # predict next month
-            next_month_pred  = max(0, slope * n + intercept)
-            # predict next 12 months
-            next_year_pred   = max(0, sum([slope * (n + i) + intercept for i in range(12)]))
+            model = LinearRegression()
+            model.fit(X, y)
 
-            # average monthly for context
+            slope = model.coef_[0]
+            intercept = model.intercept_
+
+            next_month_pred = max(0, model.predict([[n]])[0])
+            future_months = np.array(range(n, n + 12)).reshape(-1, 1)
+            next_year_pred = max(0, np.sum(model.predict(future_months)))
+
             avg_monthly = np.mean(totals)
 
             return {
-                'car_id':           car_id,
-                'avg_monthly':      round(avg_monthly, 2),
-                'next_month':       round(next_month_pred, 2),
-                'next_year':        round(next_year_pred, 2),
-                'trend':            'up' if slope > 5 else ('down' if slope < -5 else 'stable'),
-                'months_analyzed':  n,
-                'history':          [{'month': f"{r['yr']}-{str(r['mo']).zfill(2)}", 'total': float(r['total'])} for r in rows]
+                'car_id': car_id,
+                'avg_monthly': round(avg_monthly, 2),
+                'next_month': round(float(next_month_pred), 2),
+                'next_year': round(float(next_year_pred), 2),
+                'trend': 'up' if slope > 5 else ('down' if slope < -5 else 'stable'),
+                'months_analyzed': n,
+                'history': [{'month': f"{r['yr']}-{str(r['mo']).zfill(2)}", 'total': float(r['total'])} for r in rows]
             }
         finally:
             con.close()
