@@ -88,6 +88,7 @@ class ReportTools:
     - NE PAS inclure les colonnes: id, car_id, employee_id, part_id, garage_id, current_cg_id, reference_id, brand_id, departement_id
     - Inclure uniquement des colonnes lisibles (noms, plaques, dates, montants)
     - Aliaser toutes les colonnes avec des noms français lisibles: AS "Immatriculation", AS "Marque", AS "Modèle", etc.
+    - Pour toute colonne monétaire (montants, prix, coûts), utiliser le suffixe "(DT)" et JAMAIS "(€)" — la devise est le Dinar Tunisien (DT), pas l'Euro
 
     FORMAT DE RÉPONSE (JSON pur, pas de markdown):
     {{"title": "titre court en français", "sql": "SELECT ..."}}"""

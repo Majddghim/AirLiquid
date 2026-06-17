@@ -90,23 +90,20 @@ async function sendRequest() {
         currentSpec = { title: result.title, sql: result.sql };
 
         const html = `
-            <div>
-                <div class="fw-bold mb-1">✅ J'ai compris votre demande :</div>
-                <div class="report-card">
-                    <div class="fw-bold text-primary">${escapeHtml(result.title)}</div>
-                    <div class="text-muted small mt-2" style="font-family:monospace;font-size:11px;word-break:break-all;">
-                        ${escapeHtml(result.sql)}
-                    </div>
-                </div>
-                <div class="mt-3 d-flex gap-2">
-                    <button class="download-btn btn btn-primary" onclick="generateReport('pdf')">
-                        <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
-                    </button>
-                    <button class="download-btn btn btn-success" onclick="generateReport('excel')">
-                        <i class="fas fa-file-excel me-2"></i>Télécharger Excel
-                    </button>
-                </div>
-            </div>`;
+    <div>
+        <div class="fw-bold mb-1">✅ J'ai compris votre demande :</div>
+        <div class="report-card">
+            <div class="fw-bold text-primary">${escapeHtml(result.title)}</div>
+        </div>
+        <div class="mt-3 d-flex gap-2">
+            <button class="download-btn btn btn-primary" onclick="generateReport('pdf')">
+                <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
+            </button>
+            <button class="download-btn btn btn-success" onclick="generateReport('excel')">
+                <i class="fas fa-file-excel me-2"></i>Télécharger Excel
+            </button>
+        </div>
+    </div>`;
 
         addMessage(html, 'bot', true);
 
