@@ -681,9 +681,9 @@
                 <input type="hidden" id="cloture_replacement_car_id">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">Montant réparation (DT)</label>
-                        <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_montant">
-                    </div>
+    <label class="form-label small fw-bold">Montant réparation (DT) <span class="text-muted">(auto-rempli depuis la facture)</span></label>
+    <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_montant" readonly>
+</div>
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">Mode règlement</label>
                         <select class="form-select bg-light border-0" id="cloture_mode_reglement">
@@ -737,7 +737,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Montant HT</label>
-                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_ht">
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_montant_ht">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">TVA</label>
@@ -745,7 +745,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Montant TTC</label>
-                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_ttc">
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="cloture_facture_montant_ttc">
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-bold">Fichier facture</label>
@@ -800,7 +800,7 @@
                         <input type="file" class="form-control form-control-sm bg-white border-0"
                             id="sin_facture_scan_file" accept=".pdf,.jpg,.jpeg,.png,.webp">
                         <button class="btn btn-primary btn-sm px-3"
-                            onclick="scannerFacture('sin_facture')" id="sin_facture_scan_btn">
+                            onclick="scannerFacture('sin')" id="sin_facture_scan_btn">
                             <i class="fas fa-search me-1"></i>Scanner
                         </button>
                     </div>

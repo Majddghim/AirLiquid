@@ -252,51 +252,14 @@ function formatDate(dateStr) {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // ODOMETER SCAN
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// ODOMETER UPDATE (manual entry + photo proof)
+
 function ouvrirOdometer(carId) {
     document.getElementById('odometer_car_id').value  = carId;
     document.getElementById('odometer_km').value      = '';
     document.getElementById('odometer_file').value    = '';
-    document.getElementById('odometer_scan_status').style.display = 'none';
-    document.getElementById('odometer_scan_btn').disabled  = false;
-    document.getElementById('odometer_scan_btn').innerHTML = '<i class="fas fa-search me-1"></i>Lire le KM';
     new bootstrap.Modal(document.getElementById('odometerModal')).show();
-}
-
-async function scanOdometer() {
-    const fileInput = document.getElementById('odometer_file');
-    const statusEl  = document.getElementById('odometer_scan_status');
-    const scanBtn   = document.getElementById('odometer_scan_btn');
-    const carId     = document.getElementById('odometer_car_id').value;
-
-    if (!fileInput.files.length) {
-        alert('Veuillez sélectionner une photo du compteur.');
-        return;
-    }
-
-    scanBtn.disabled  = true;
-    scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analyse (~30s)...';
-    statusEl.style.display = 'block';
-    statusEl.innerHTML = '<div class="text-muted small"><i class="fas fa-spinner fa-spin me-1"></i>Claude analyse l\'image... cela peut prendre 30 secondes.</div>';
-
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-
-    try {
-        const res    = await fetch(`/employe/scan-odometer/${carId}`, { method: 'POST', body: formData });
-        const result = await res.json();
-
-        if (result.status === 'success' && result.km) {
-            document.getElementById('odometer_km').value = result.km;
-            statusEl.innerHTML = `<div class="text-success small"><i class="fas fa-check me-1"></i>KM détecté: <strong>${Number(result.km).toLocaleString()} km</strong> — vérifiez avant d'enregistrer.</div>`;
-        } else {
-            statusEl.innerHTML = `<div class="text-warning small"><i class="fas fa-exclamation me-1"></i>Impossible de lire automatiquement. Saisissez le KM manuellement.</div>`;
-        }
-    } catch (e) {
-        statusEl.innerHTML = '<div class="text-danger small">Erreur réseau.</div>';
-    }
-
-    scanBtn.disabled  = false;
-    scanBtn.innerHTML = '<i class="fas fa-search me-1"></i>Lire le KM';
 }
 
 async function confirmerUpdateKm() {
@@ -313,13 +276,13 @@ async function confirmerUpdateKm() {
     saveBtn.disabled  = true;
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enregistrement...';
 
-    // first upload the photo if exists
+    // upload photo as proof only (no OCR analysis)
     let filePath = null;
     if (fileInput.files.length) {
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
         try {
-            const uploadRes  = await fetch(`/employe/scan-odometer/${carId}`, {
+            const uploadRes  = await fetch(`/employe/upload-odometer-photo/${carId}`, {
                 method: 'POST', body: formData
             });
             const uploadData = await uploadRes.json();

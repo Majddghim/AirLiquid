@@ -932,7 +932,6 @@ async function loadSinistres() {
             badge.innerText = open.length;
         }
 
-        // show last 3 only — full list on history page
         const preview = data.data.slice(0, 3);
 
         el.innerHTML = `
@@ -943,6 +942,8 @@ async function loadSinistres() {
                             <th>Date</th>
                             <th>Type</th>
                             <th>Employé</th>
+                            <th>Description</th>
+                            <th>Photo</th>
                             <th>Statut</th>
                             <th>Prise en charge</th>
                             <th class="text-end">Actions</th>
@@ -954,11 +955,27 @@ async function loadSinistres() {
                                 s.status === 'ouvert'   ? '<span class="badge bg-danger">Ouvert</span>' :
                                 s.status === 'en_cours' ? '<span class="badge bg-warning text-dark">En cours</span>' :
                                 '<span class="badge bg-success">Clôturé</span>';
+
+                            const descCell = s.description
+                                ? `<span class="small" style="cursor:pointer;" title="${escapeHtml(s.description)}"
+                                       onclick="Swal.fire({title:'Description', html:'<div style=&quot;text-align:left;white-space:pre-wrap;font-size:13px;&quot;>${escapeHtml(s.description).replace(/\n/g, '<br>')}</div>', confirmButtonText:'Fermer'})">
+                                    ${escapeHtml(s.description.slice(0, 40))}${s.description.length > 40 ? '...' : ''}
+                                  </span>`
+                                : '<span class="text-muted">—</span>';
+
+                            const photoCell = s.file_path
+                                ? `<a href="/${s.file_path}" target="_blank">
+                                       <img src="/${s.file_path}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;">
+                                   </a>`
+                                : '<span class="text-muted">—</span>';
+
                             return `
                             <tr>
                                 <td>${formatDate(s.date_sinistre)}</td>
                                 <td><span class="badge bg-light text-dark border">${escapeHtml(s.type)}</span></td>
                                 <td>${s.nom ? escapeHtml(s.prenom + ' ' + s.nom) : '—'}</td>
+                                <td>${descCell}</td>
+                                <td>${photoCell}</td>
                                 <td>${statusBadge}</td>
                                 <td>
                                     ${s.facture_id
@@ -1142,9 +1159,9 @@ function ouvrirClotureSinistre(sinistreId, employeeId, replacementCarId) {
     document.getElementById('cloture_date_reglement').value     = '';
     document.getElementById('cloture_facture_num').value        = '';
     document.getElementById('cloture_facture_date').value       = '';
-    document.getElementById('cloture_facture_ht').value         = '';
+    document.getElementById('cloture_facture_montant_ht').value = '';
     document.getElementById('cloture_facture_tva').value        = '';
-    document.getElementById('cloture_facture_ttc').value        = '';
+    document.getElementById('cloture_facture_montant_ttc').value = '';
     document.getElementById('cloture_retourner_vehicule').checked = true;
 
     // show/hide retour section based on whether there's a replacement
@@ -1159,7 +1176,6 @@ async function confirmerClotureSinistre() {
     const employeeId     = document.getElementById('cloture_employee_id').value;
     const replacementId  = document.getElementById('cloture_replacement_car_id').value;
     const retourner      = document.getElementById('cloture_retourner_vehicule').checked;
-
     const payload = {
         car_id:               carId,
         employee_id:          employeeId || null,
@@ -1170,42 +1186,36 @@ async function confirmerClotureSinistre() {
         retourner_vehicule:   retourner,
         replacement_car_id:   replacementId || null
     };
-
     try {
         const res    = await fetch(`/sinistre/cloturer/${sinistreId}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         const result = await res.json();
-
         if (result.status !== 'success') {
             Swal.fire({ icon: 'error', title: 'Erreur', text: result.message, confirmButtonColor: '#d33' });
             return;
         }
-
         // attach facture if filled
         const factureNum  = document.getElementById('cloture_facture_num').value.trim();
-        const factureTtc  = document.getElementById('cloture_facture_ttc').value;
+        const factureTtc  = document.getElementById('cloture_facture_montant_ttc').value;
         const factureFile = document.getElementById('cloture_facture_file').files[0];
-
         if (factureNum || factureTtc || factureFile) {
             const formData = new FormData();
             formData.append('car_id',        carId);
             formData.append('num_facture',   factureNum);
             formData.append('date_facture',  document.getElementById('cloture_facture_date').value);
-            formData.append('montant_ht',    document.getElementById('cloture_facture_ht').value);
+            formData.append('montant_ht',    document.getElementById('cloture_facture_montant_ht').value);
             formData.append('tva',           document.getElementById('cloture_facture_tva').value);
             formData.append('montant_ttc',   factureTtc);
             formData.append('prise_en_charge', 'societe');
             if (factureFile) formData.append('file', factureFile);
             await fetch(`/sinistre/facture/attach/${sinistreId}`, { method: 'POST', body: formData });
         }
-
         bootstrap.Modal.getInstance(document.getElementById('clotureSinistreModal')).hide();
         await loadCarDetail();
         await loadSinistres();
         Swal.fire({ icon: 'success', title: 'Sinistre clôturé !', showConfirmButton: false, timer: 2000 });
-
     } catch (e) {
         console.error('confirmerClotureSinistre error:', e);
         Swal.fire({ icon: 'error', title: 'Erreur réseau', text: 'Impossible de contacter le serveur.' });
@@ -1492,7 +1502,10 @@ async function scannerFacture(prefix) {
         if (d.date_facture) document.getElementById(`${prefix}_facture_date`).value = d.date_facture;
         if (d.montant_ht) document.getElementById(`${prefix}_facture_montant_ht`).value = d.montant_ht;
         if (d.tva) document.getElementById(`${prefix}_facture_tva`).value = d.tva;
-        if (d.montant_ttc) document.getElementById(`${prefix}_facture_montant_ttc`).value = d.montant_ttc;
+        if (d.montant_ttc) {
+    document.getElementById(`${prefix}_facture_montant_ttc`).value = d.montant_ttc;
+    if (prefix === 'cloture') document.getElementById('cloture_montant').value = d.montant_ttc;
+}
         if (d.num_reglement) document.getElementById(`${prefix}_facture_num_reglement`).value = d.num_reglement;
 
         // also set the file input for upload
@@ -1641,6 +1654,11 @@ async function loadEmployeeHistory() {
         console.error('loadEmployeeHistory error:', e);
     }
 }
+document.addEventListener('input', (e) => {
+    if (e.target.id === 'cloture_facture_montant_ttc') {
+        document.getElementById('cloture_montant').value = e.target.value;
+    }
+});
 async function loadMLSuggestions(currentAlerts) {
     try {
         const res  = await fetch('/dashboard/api/predictions');

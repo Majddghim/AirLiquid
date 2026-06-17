@@ -144,44 +144,41 @@
 </div>
 
     <!-- ODOMETER MODAL -->
-    <div class="modal fade" id="odometerModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:20px;border:none;">
-                <div class="modal-header border-0 pb-0">
-                    <h6 class="fw-bold text-dark mb-0">
-                        <i class="fas fa-tachometer-alt text-primary me-2"></i>
-                        Mettre à jour le kilométrage
-                    </h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- ODOMETER MODAL -->
+<div class="modal fade" id="odometerModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:20px;border:none;">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                    Mettre à jour le kilométrage
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <input type="hidden" id="odometer_car_id">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Kilométrage <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control bg-light border-0"
+                        id="odometer_km" placeholder="Ex: 47500" style="border-radius:12px;">
                 </div>
-                <div class="modal-body px-4">
-                    <input type="hidden" id="odometer_car_id">
-                    <div class="border rounded p-3 bg-light mb-3">
-                        <div class="fw-bold small text-dark mb-2">
-                            <i class="fas fa-camera text-primary me-1"></i>
-                            Scanner le compteur (OCR)
-                        </div>
-                        <input type="file" class="form-control form-control-sm bg-white border-0"
-                            id="odometer_file" accept="image/*" capture="environment">
-                        <button class="auth-btn mt-2" style="padding:10px;"
-                            onclick="scanOdometer()" id="odometer_scan_btn">
-                            <i class="fas fa-search me-1"></i>Lire le KM
-                        </button>
-                        <div id="odometer_scan_status" class="mt-2" style="display:none;"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Kilométrage <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control bg-light border-0"
-                            id="odometer_km" placeholder="Ex: 47500" style="border-radius:12px;">
-                        <small class="text-muted">Vérifiez et corrigez si nécessaire</small>
-                    </div>
-                    <button class="auth-btn" onclick="confirmerUpdateKm()" id="odometer_save_btn">
-                        <i class="fas fa-save me-2"></i>Enregistrer
-                    </button>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">
+                        <i class="fas fa-camera text-primary me-1"></i>
+                        Photo du compteur <span class="text-muted">(preuve)</span>
+                    </label>
+                    <input type="file" class="form-control bg-light border-0"
+                        id="odometer_file" accept="image/*" capture="environment"
+                        style="border-radius:12px;">
+                    <small class="text-muted">Prenez une photo claire du compteur kilométrique</small>
                 </div>
+                <button class="auth-btn" onclick="confirmerUpdateKm()" id="odometer_save_btn">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- PROBLEM REPORT MODAL -->
     <div class="modal fade" id="problemModal" tabindex="-1" data-bs-backdrop="static">

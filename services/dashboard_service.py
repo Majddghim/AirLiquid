@@ -416,20 +416,26 @@ class DashboardService:
 
             # 1. Expired documents (25 points max)
             cursor.execute("""
-                SELECT COUNT(*) AS cnt FROM insurances
-                WHERE end_date < CURDATE() AND status != 'cancelled'
+                SELECT COUNT(*) AS cnt FROM insurances i
+                JOIN cars c ON c.id = i.car_id
+                WHERE i.end_date < CURDATE() AND i.status != 'cancelled'
+                AND c.status != 'retired'
             """)
             expired_insurance = cursor.fetchone()['cnt']
 
             cursor.execute("""
-                SELECT COUNT(*) AS cnt FROM vignettes
-                WHERE expiration_date < CURDATE()
+                SELECT COUNT(*) AS cnt FROM vignettes v
+                JOIN cars c ON c.id = v.car_id
+                WHERE v.expiration_date < CURDATE()
+                AND c.status != 'retired'
             """)
             expired_vignettes = cursor.fetchone()['cnt']
 
             cursor.execute("""
-                SELECT COUNT(*) AS cnt FROM visite_technique
-                WHERE expiration_date < CURDATE()
+                SELECT COUNT(*) AS cnt FROM visite_technique vt
+                JOIN cars c ON c.id = vt.car_id
+                WHERE vt.expiration_date < CURDATE()
+                AND c.status != 'retired'
             """)
             expired_visites = cursor.fetchone()['cnt']
 

@@ -246,8 +246,8 @@ class employe:
 
         # add in employe_routes():
 
-        @self.employe_bp.route('/scan-odometer/<int:car_id>', methods=['POST'])
-        def scan_odometer(car_id):
+        @self.employe_bp.route('/upload-odometer-photo/<int:car_id>', methods=['POST'])
+        def upload_odometer_photo(car_id):
             try:
                 if 'employe_id' not in session:
                     return jsonify({'status': 'failed', 'message': 'Non connecté'}), 401
@@ -265,13 +265,9 @@ class employe:
                 file_path = os.path.join(upload_folder, filename)
                 file.save(file_path)
 
-                ocr = OCRTools()
-                result = ocr.scan_odometer(file_path)
-
                 return jsonify({
                     'status': 'success',
-                    'km': result.get('km') if result else None,
-                    'file_path': file_path  # ← return file path
+                    'file_path': file_path
                 })
 
             except Exception as e:
