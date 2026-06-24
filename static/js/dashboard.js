@@ -70,6 +70,8 @@ function reloadExpenses() {
     loadExpenseKpis();
     loadMonthlyChart();
     loadTopCars();
+    const btn = document.getElementById('export_depenses_btn');
+    if (btn) btn.href = `/dashboard/export/depenses?from=${currentFrom}&to=${currentTo}`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

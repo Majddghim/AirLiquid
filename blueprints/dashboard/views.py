@@ -104,8 +104,6 @@ class DashboardViews:
                 data = self.DashboardService.get_monthly_expenses(date_from, date_to)
                 return jsonify({'status': 'success', 'data': data})
             except Exception as e:
-                import traceback
-                print(traceback.format_exc())  # add this line
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
         @self.admin_bp.route('/api/top-cars', methods=['GET'])
@@ -203,6 +201,160 @@ class DashboardViews:
             try:
                 data = self.MLService.detect_expense_anomalies()
                 return jsonify({'status': 'success', 'data': data})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        # ------------------------------------------------------------------ #
+        # EXPORTS                                                              #
+        # ------------------------------------------------------------------ #
+
+        @self.admin_bp.route('/export/employes', methods=['GET'])
+        def export_employes():
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login_template'))
+            try:
+                import openpyxl
+                from openpyxl.styles import Font, PatternFill, Alignment
+                from flask import send_file
+                from io import BytesIO
+
+                employes = self.EmployeService.get_all_employes()
+
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = 'Employés'
+
+                headers = ['ID', 'Nom', 'Prénom', 'Email', 'Téléphone', 'Poste', 'Département', 'Statut', 'Date création']
+                header_fill = PatternFill('solid', fgColor='0D6EFD')
+                header_font = Font(bold=True, color='FFFFFF')
+
+                for col, h in enumerate(headers, 1):
+                    cell = ws.cell(row=1, column=col, value=h)
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal='center')
+
+                for row, e in enumerate(employes, 2):
+                    ws.append([
+                        e.get('id'), e.get('nom'), e.get('prenom'), e.get('email'),
+                        e.get('telephone'), e.get('poste'), e.get('departement'),
+                        e.get('status'), str(e.get('created_at') or '')
+                    ])
+
+                for col in ws.columns:
+                    ws.column_dimensions[col[0].column_letter].width = 18
+
+                buf = BytesIO()
+                wb.save(buf)
+                buf.seek(0)
+                return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                 as_attachment=True, download_name='employes.xlsx')
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.admin_bp.route('/export/voitures', methods=['GET'])
+        def export_voitures():
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login_template'))
+            try:
+                import openpyxl
+                from openpyxl.styles import Font, PatternFill, Alignment
+                from flask import send_file
+                from io import BytesIO
+
+                voitures = self.VoitureService.get_all_voitures()
+
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = 'Véhicules'
+
+                headers = ['ID', 'Immatriculation', 'Marque', 'Modèle', 'Année',
+                           'Statut', 'Propriétaire', 'Châssis', 'Date acquisition']
+                header_fill = PatternFill('solid', fgColor='0D6EFD')
+                header_font = Font(bold=True, color='FFFFFF')
+
+                for col, h in enumerate(headers, 1):
+                    cell = ws.cell(row=1, column=col, value=h)
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal='center')
+
+                for row, v in enumerate(voitures, 2):
+                    ws.append([
+                        v.get('id'), v.get('plate_number'), v.get('brand'), v.get('model'),
+                        v.get('year'), v.get('status'), v.get('owner_name'),
+                        v.get('chassis_number'), str(v.get('acquisition_date') or '')
+                    ])
+
+                for col in ws.columns:
+                    ws.column_dimensions[col[0].column_letter].width = 18
+
+                buf = BytesIO()
+                wb.save(buf)
+                buf.seek(0)
+                return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                 as_attachment=True, download_name='vehicules.xlsx')
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.admin_bp.route('/export/depenses', methods=['GET'])
+        def export_depenses():
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login_template'))
+            try:
+                import openpyxl
+                from openpyxl.styles import Font, PatternFill, Alignment, numbers
+                from flask import send_file
+                from io import BytesIO
+                import datetime
+
+                date_from = request.args.get('from', f"{datetime.date.today().year}-01-01")
+                date_to   = request.args.get('to',   datetime.date.today().isoformat())
+
+                data = self.DashboardService.get_all_cars_expenses(date_from, date_to)
+
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = 'Dépenses par véhicule'
+
+                headers = ['Immatriculation', 'Marque', 'Modèle', 'Année', 'Statut',
+                           'Affecté à', 'KM actuel',
+                           'Maintenance (DT)', 'Sinistres (DT)', 'Carburant (DT)',
+                           'Vignettes (DT)', 'Visites (DT)', 'Total (DT)']
+                header_fill = PatternFill('solid', fgColor='0D6EFD')
+                header_font = Font(bold=True, color='FFFFFF')
+
+                for col, h in enumerate(headers, 1):
+                    cell = ws.cell(row=1, column=col, value=h)
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal='center')
+
+                for row, v in enumerate(data, 2):
+                    ws.append([
+                        v.get('plate_number'), v.get('brand'), v.get('model'), v.get('year'),
+                        v.get('status'), v.get('assigned_to') or '—', v.get('current_km') or 0,
+                        v.get('total_maintenance', 0), v.get('total_sinistres', 0),
+                        v.get('total_carburant', 0), v.get('total_vignettes', 0),
+                        v.get('total_visites', 0), v.get('grand_total', 0)
+                    ])
+
+                # total row
+                last = len(data) + 2
+                ws.cell(row=last, column=1, value='TOTAL').font = Font(bold=True)
+                for ci, col_key in enumerate(['total_maintenance', 'total_sinistres', 'total_carburant',
+                                              'total_vignettes', 'total_visites', 'grand_total'], 8):
+                    ws.cell(row=last, column=ci, value=sum(r.get(col_key, 0) for r in data)).font = Font(bold=True)
+
+                for col in ws.columns:
+                    ws.column_dimensions[col[0].column_letter].width = 18
+
+                buf = BytesIO()
+                wb.save(buf)
+                buf.seek(0)
+                fname = f"depenses_{date_from}_{date_to}.xlsx"
+                return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                 as_attachment=True, download_name=fname)
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 

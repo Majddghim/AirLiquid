@@ -6,10 +6,12 @@ import os
 from werkzeug.utils import secure_filename
 from tools.ocr_tools import OCRTools
 from services.maintenance import MaintenanceService
+from services.audit_service import AuditService
 
 class employe:
     def __init__(self):
         self.EmployeService = EmployeService()
+        self.audit = AuditService()
         self.employe_bp = Blueprint('employe', __name__)
         self.employe_routes()
 
@@ -46,6 +48,8 @@ class employe:
             self.EmployeService.set_temp_password(employe_id, temp_password)
             send_welcome_email(email, prenom, nom, temp_password)
 
+            self.audit.log('create', 'employee', employe_id, user_id=session.get('user_id'),
+                           details=f"{prenom} {nom} ({email})")
             return {'status': 'success', 'message': 'Employé ajouté avec succès — identifiants envoyés par email'}
 
         @self.employe_bp.route('/get-employes', methods=['GET'])
@@ -122,7 +126,21 @@ class employe:
                     departement=data.get('departement'),
                     poste=data.get('poste')
                 )
+                self.audit.log('update', 'employee', employe_id, user_id=session.get('user_id'))
                 return jsonify({'status': 'success', 'message': 'Employé mis à jour avec succès'})
+            except Exception as e:
+                return jsonify({'status': 'failed', 'message': str(e)}), 500
+
+        @self.employe_bp.route('/reset-password/<int:employe_id>', methods=['POST'])
+        def reset_password(employe_id):
+            try:
+                emp = self.EmployeService.get_employe_by_id(employe_id)
+                if not emp:
+                    return jsonify({'status': 'failed', 'message': 'Employé introuvable'}), 404
+                temp_password = self.EmployeService.generate_temp_password()
+                self.EmployeService.set_temp_password(employe_id, temp_password)
+                send_welcome_email(emp.email, emp.prenom, emp.nom, temp_password)
+                return jsonify({'status': 'success', 'message': 'Mot de passe réinitialisé et envoyé par email'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
@@ -130,6 +148,7 @@ class employe:
         def delete_employe(employe_id):
             try:
                 self.EmployeService.supprimer_employe(employe_id)
+                self.audit.log('delete', 'employee', employe_id, user_id=session.get('user_id'))
                 return jsonify({'status': 'success', 'message': 'Employé désactivé avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)}), 500

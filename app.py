@@ -18,6 +18,7 @@ import os
 load_dotenv()
 
 import datetime
+from datetime import timedelta
 from flask.json.provider import DefaultJSONProvider
 from blueprints.sinistre import sinistre_bp
 class CustomJSONProvider(DefaultJSONProvider):
@@ -28,13 +29,21 @@ class CustomJSONProvider(DefaultJSONProvider):
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app = Flask(__name__)
 app.json = CustomJSONProvider(app)
-app.secret_key = 'xxx'
+app.secret_key = os.getenv('SECRET_KEY', 'change-this-in-production')
+app.permanent_session_lifetime = timedelta(hours=8)
+
+@app.before_request
+def make_session_permanent():
+    from flask import session
+    session.permanent = True
 
 def start_scheduler():
+    from services.dashboard_service import DashboardService
     digest_service = DigestService()
+    dashboard_service = DashboardService()
     scheduler = BackgroundScheduler()
 
-    # every Monday at 8:00 AM
+    # weekly digest to admin — every Monday at 8:00
     scheduler.add_job(
         func=lambda: digest_service.send_digest('majddghim25@gmail.com'),
         trigger='cron',
@@ -43,8 +52,18 @@ def start_scheduler():
         minute=0,
         id='weekly_digest'
     )
+
+    # employee document alerts — every Monday at 8:30
+    scheduler.add_job(
+        func=lambda: dashboard_service.notify_employees_expiring_docs(days_ahead=30),
+        trigger='cron',
+        day_of_week='mon',
+        hour=8,
+        minute=30,
+        id='employee_doc_alerts'
+    )
+
     scheduler.start()
-    print('✅ Scheduler started — weekly digest every Monday at 8:00')
 
 start_scheduler()
 
@@ -63,6 +82,14 @@ app.register_blueprint(message_bp, url_prefix='/messages')
 
 
 app.register_blueprint(sinistre_bp, url_prefix='/sinistre')
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('500.html'), 500
+
 @app.route('/')
 def hello_world():
     return redirect(url_for('login'))
@@ -80,4 +107,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=os.getenv('FLASK_DEBUG', 'false').lower() == 'true')

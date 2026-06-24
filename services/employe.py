@@ -1,8 +1,8 @@
 from tools.database_tools import DatabaseTools
 from entities.employe import Employe
-import hashlib
 import random
 import string
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class EmployeService:
     def __init__(self):
@@ -11,7 +11,6 @@ class EmployeService:
     def get_employe_by_something(self, condition, order='', limit='', dict_form=True):
         con, cursor = self.db_tools.find_connection()
         query = f"""SELECT id, nom, prenom, departement, poste, email, telephone, status, created_at, updated_at FROM employees WHERE {condition} {order} {limit} """
-        print(query)
         cursor.execute(query)
         result = cursor.fetchall()
         con.close()
@@ -243,13 +242,10 @@ class EmployeService:
         chars = string.ascii_letters + string.digits
         return ''.join(random.choices(chars, k=length))
 
-    def hash_password(self, password):
-        return hashlib.sha256(password.encode()).hexdigest()
-
     def set_temp_password(self, employe_id, temp_password):
         con, cursor = self.db_tools.find_connection()
         try:
-            hashed = self.hash_password(temp_password)
+            hashed = generate_password_hash(temp_password)
             cursor.execute("""
                 UPDATE employees SET
                     password_hash = %s,
@@ -274,13 +270,9 @@ class EmployeService:
                 return None, 'Employé introuvable'
             if emp['status'] != 'active':
                 return None, 'Compte inactif'
-            hashed = self.hash_password(password)
-            if emp['password_hash'] != hashed:
+            if not check_password_hash(emp['password_hash'], password):
                 return None, 'Mot de passe incorrect'
-            # update last login
-            cursor.execute("""
-                UPDATE employees SET last_login = NOW() WHERE id = %s
-            """, (emp['id'],))
+            cursor.execute("UPDATE employees SET last_login = NOW() WHERE id = %s", (emp['id'],))
             con.commit()
             return dict(emp), None
         finally:
@@ -289,7 +281,7 @@ class EmployeService:
     def change_password(self, employe_id, new_password):
         con, cursor = self.db_tools.find_connection()
         try:
-            hashed = self.hash_password(new_password)
+            hashed = generate_password_hash(new_password)
             cursor.execute("""
                 UPDATE employees SET
                     password_hash = %s,

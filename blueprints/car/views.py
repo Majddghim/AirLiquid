@@ -2,15 +2,18 @@ import time
 import os
 from services.voiture import VoitureService
 from services.employe import EmployeService
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, session
 from werkzeug.utils import secure_filename
 from tools.ocr_tools import OCRTools
+from tools.upload_tools import validate_upload
+from services.audit_service import AuditService
 
 
 class CarViews:
     def __init__(self):
         self.VoitureService = VoitureService()
         self.EmployeService = EmployeService()
+        self.audit = AuditService()
         self.car_bp = Blueprint('car', __name__)
         self.car_routes()
 
@@ -37,6 +40,9 @@ class CarViews:
             if 'carte_grise' in request.files:
                 file = request.files['carte_grise']
                 if file.filename != '':
+                    ok, err = validate_upload(file)
+                    if not ok:
+                        return jsonify({'status': 'failed', 'message': err})
                     upload_folder = 'static/uploads/carte_grises'
                     os.makedirs(upload_folder, exist_ok=True)
                     filename  = secure_filename(f"{plate_number}_{file.filename}")
@@ -54,6 +60,8 @@ class CarViews:
                     expiration_date=expiration_date, acquisition_date=acquisition_date,
                     notes=notes, file_path=file_path
                 )
+                self.audit.log('create', 'car', voiture_id, user_id=session.get('user_id'),
+                               details=f"{plate_number} — {model}")
                 return jsonify({'status': 'success', 'message': 'Voiture ajoutée avec succès', 'voiture_id': voiture_id})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)})
@@ -134,8 +142,9 @@ class CarViews:
             if 'file' not in request.files:
                 return jsonify({'status': 'failed', 'message': 'Aucun fichier reçu'})
             file = request.files['file']
-            if file.filename == '':
-                return jsonify({'status': 'failed', 'message': 'Fichier vide'})
+            ok, err = validate_upload(file)
+            if not ok:
+                return jsonify({'status': 'failed', 'message': err})
             try:
                 upload_folder = 'static/uploads/carte_grises'
                 os.makedirs(upload_folder, exist_ok=True)
@@ -318,6 +327,8 @@ class CarViews:
                     car_id=car_id, employee_id=int(employee_id),
                     start_date=start_date, admin_id=admin_id, notes=notes
                 )
+                self.audit.log('assign', 'car', car_id, user_id=session.get('user_id'),
+                               details=f"employee_id={employee_id}")
                 return jsonify({'status': 'success', 'message': 'Véhicule affecté avec succès'})
             except Exception as e:
                 return jsonify({'status': 'failed', 'message': str(e)})
@@ -652,8 +663,6 @@ class CarViews:
                 )
 
             except Exception as e:
-                import traceback
-                print(traceback.format_exc())
                 return jsonify({'status': 'failed', 'message': str(e)}), 500
 
         @self.car_bp.route('/employee-history/<int:car_id>', methods=['GET'])

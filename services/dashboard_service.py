@@ -186,20 +186,32 @@ class DashboardService:
                 key = to_key(r)
                 admin_rows[key] = admin_rows.get(key, 0) + float(r['total'])
 
+            # carburant by month
+            cursor.execute("""
+                SELECT YEAR(periode) AS yr, MONTH(periode) AS mo,
+                       COALESCE(SUM(montant_ttc), 0) AS total
+                FROM carburant_expenses
+                WHERE periode BETWEEN %s AND %s
+                GROUP BY yr, mo ORDER BY yr, mo
+            """, (date_from, date_to))
+            carburant_rows = {to_key(r): float(r['total']) for r in cursor.fetchall()}
+
             all_months = sorted(set(
                 list(maintenance_rows.keys()) +
                 list(sinistre_rows.keys()) +
-                list(admin_rows.keys())
+                list(admin_rows.keys()) +
+                list(carburant_rows.keys())
             ))
 
             if not all_months:
-                return {'labels': [], 'maintenance': [], 'sinistres': [], 'admin': []}
+                return {'labels': [], 'maintenance': [], 'sinistres': [], 'admin': [], 'carburant': []}
 
             return {
-                'labels': all_months,
+                'labels':      all_months,
                 'maintenance': [maintenance_rows.get(m, 0) for m in all_months],
-                'sinistres': [sinistre_rows.get(m, 0) for m in all_months],
-                'admin': [admin_rows.get(m, 0) for m in all_months],
+                'sinistres':   [sinistre_rows.get(m, 0)   for m in all_months],
+                'admin':       [admin_rows.get(m, 0)       for m in all_months],
+                'carburant':   [carburant_rows.get(m, 0)  for m in all_months],
             }
         finally:
             con.close()
@@ -223,7 +235,12 @@ class DashboardService:
                     cg.model,
                     COALESCE(f.total_factures, 0)   AS total_factures,
                     COALESCE(cb.total_carburant, 0)  AS total_carburant,
-                    COALESCE(f.total_factures, 0) + COALESCE(cb.total_carburant, 0) AS grand_total
+                    COALESCE(vig.total_vignettes, 0) AS total_vignettes,
+                    COALESCE(vt.total_visites, 0)    AS total_visites,
+                    COALESCE(f.total_factures, 0) +
+                    COALESCE(cb.total_carburant, 0) +
+                    COALESCE(vig.total_vignettes, 0) +
+                    COALESCE(vt.total_visites, 0)    AS grand_total
                 FROM cars c
                 LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
                 LEFT JOIN (
@@ -239,9 +256,23 @@ class DashboardService:
                     WHERE periode BETWEEN %s AND %s
                     GROUP BY car_id
                 ) cb ON cb.car_id = c.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant) AS total_vignettes
+                    FROM vignettes
+                    WHERE expiration_date BETWEEN %s AND %s
+                    AND montant IS NOT NULL
+                    GROUP BY car_id
+                ) vig ON vig.car_id = c.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant) AS total_visites
+                    FROM visite_technique
+                    WHERE expiration_date BETWEEN %s AND %s
+                    AND montant IS NOT NULL
+                    GROUP BY car_id
+                ) vt ON vt.car_id = c.id
                 ORDER BY grand_total DESC
                 LIMIT 5
-            """, (date_from, date_to, date_from, date_to))
+            """, (date_from, date_to, date_from, date_to, date_from, date_to, date_from, date_to))
             return cursor.fetchall()
         finally:
             con.close()
@@ -328,24 +359,55 @@ class DashboardService:
                     'level':  'danger' if days <= 7 else 'warning'
                 })
 
-            # already expired documents
+            # already expired assurances
             cursor.execute("""
-                SELECT c.id AS car_id, c.plate_number, cg.model,
-                       i.end_date AS expiry, 'assurance' AS doc_type
+                SELECT c.id AS car_id, c.plate_number, cg.model, i.end_date AS expiry
                 FROM insurances i
                 JOIN cars c ON i.car_id = c.id
                 LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
                 WHERE i.end_date < %s AND i.status != 'cancelled'
             """, (today_str,))
             for r in cursor.fetchall():
+                days = (datetime.date.fromisoformat(str(r['expiry'])) - today).days
                 alerts.append({
-                    'type':   'expired',
-                    'doc':    'Assurance',
+                    'type':   'expired', 'doc': 'Assurance',
                     'car_id': r['car_id'],
                     'car':    f"{r['model'] or ''} — {r['plate_number'] or ''}",
-                    'expiry': str(r['expiry']),
-                    'days':   0,
-                    'level':  'danger'
+                    'expiry': str(r['expiry']), 'days': days, 'level': 'danger'
+                })
+
+            # already expired vignettes
+            cursor.execute("""
+                SELECT c.id AS car_id, c.plate_number, cg.model, v.expiration_date AS expiry
+                FROM vignettes v
+                JOIN cars c ON v.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE v.expiration_date < %s
+            """, (today_str,))
+            for r in cursor.fetchall():
+                days = (datetime.date.fromisoformat(str(r['expiry'])) - today).days
+                alerts.append({
+                    'type':   'expired', 'doc': 'Vignette',
+                    'car_id': r['car_id'],
+                    'car':    f"{r['model'] or ''} — {r['plate_number'] or ''}",
+                    'expiry': str(r['expiry']), 'days': days, 'level': 'danger'
+                })
+
+            # already expired visites techniques
+            cursor.execute("""
+                SELECT c.id AS car_id, c.plate_number, cg.model, vt.expiration_date AS expiry
+                FROM visite_technique vt
+                JOIN cars c ON vt.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE vt.expiration_date < %s
+            """, (today_str,))
+            for r in cursor.fetchall():
+                days = (datetime.date.fromisoformat(str(r['expiry'])) - today).days
+                alerts.append({
+                    'type':   'expired', 'doc': 'Visite Technique',
+                    'car_id': r['car_id'],
+                    'car':    f"{r['model'] or ''} — {r['plate_number'] or ''}",
+                    'expiry': str(r['expiry']), 'days': days, 'level': 'danger'
                 })
 
             # incomplete dossiers
@@ -380,6 +442,81 @@ class DashboardService:
             alerts.sort(key=lambda a: (0 if a['level'] == 'danger' else 1, a['days'] or 999))
             return alerts
 
+        finally:
+            con.close()
+
+    def notify_employees_expiring_docs(self, days_ahead=30):
+        """
+        For each employee with an assigned car that has expiring/expired documents,
+        send them a single alert email listing all affected documents.
+        Called weekly by the scheduler.
+        """
+        from tools.email_tools import send_document_alert_email
+        today = datetime.date.today()
+        deadline = (today + datetime.timedelta(days=days_ahead)).isoformat()
+        today_str = today.isoformat()
+
+        con, cursor = self.db_tools.find_connection()
+        try:
+            cursor.execute("""
+                SELECT e.id AS emp_id, e.prenom, e.nom, e.email,
+                       c.id AS car_id, c.plate_number, cg.model
+                FROM car_assignments ca
+                JOIN employees e ON ca.employee_id = e.id
+                JOIN cars c ON ca.car_id = c.id
+                LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
+                WHERE ca.end_date IS NULL AND e.status = 'active'
+            """)
+            assignments = cursor.fetchall()
+
+            for row in assignments:
+                car_id = row['car_id']
+                alerts = []
+
+                # check assurance
+                cursor.execute("""
+                    SELECT end_date FROM insurances
+                    WHERE car_id = %s AND status != 'cancelled'
+                    ORDER BY end_date DESC LIMIT 1
+                """, (car_id,))
+                ins = cursor.fetchone()
+                if ins:
+                    days = (datetime.date.fromisoformat(str(ins['end_date'])) - today).days
+                    if days <= days_ahead:
+                        alerts.append({'doc': 'Assurance', 'expiry': str(ins['end_date']),
+                                       'days': days, 'level': 'danger' if days <= 7 else 'warning'})
+
+                # check vignette
+                cursor.execute("""
+                    SELECT expiration_date FROM vignettes
+                    WHERE car_id = %s ORDER BY expiration_date DESC LIMIT 1
+                """, (car_id,))
+                vig = cursor.fetchone()
+                if vig:
+                    days = (datetime.date.fromisoformat(str(vig['expiration_date'])) - today).days
+                    if days <= days_ahead:
+                        alerts.append({'doc': 'Vignette', 'expiry': str(vig['expiration_date']),
+                                       'days': days, 'level': 'danger' if days <= 7 else 'warning'})
+
+                # check visite technique
+                cursor.execute("""
+                    SELECT expiration_date FROM visite_technique
+                    WHERE car_id = %s ORDER BY expiration_date DESC LIMIT 1
+                """, (car_id,))
+                vt = cursor.fetchone()
+                if vt:
+                    days = (datetime.date.fromisoformat(str(vt['expiration_date'])) - today).days
+                    if days <= days_ahead:
+                        alerts.append({'doc': 'Visite Technique', 'expiry': str(vt['expiration_date']),
+                                       'days': days, 'level': 'danger' if days <= 7 else 'warning'})
+
+                if alerts and row['email']:
+                    send_document_alert_email(
+                        to_email=row['email'],
+                        prenom=row['prenom'],
+                        nom=row['nom'],
+                        alerts=alerts
+                    )
         finally:
             con.close()
 
@@ -571,12 +708,16 @@ class DashboardService:
                     cg.model,
                     cg.year,
                     c.status,
-                    COALESCE(f.total_factures, 0)  AS total_maintenance,
-                    COALESCE(s.total_sinistres, 0)  AS total_sinistres,
-                    COALESCE(cb.total_carburant, 0) AS total_carburant,
+                    COALESCE(f.total_factures, 0)   AS total_maintenance,
+                    COALESCE(s.total_sinistres, 0)   AS total_sinistres,
+                    COALESCE(cb.total_carburant, 0)  AS total_carburant,
+                    COALESCE(vig.total_vignettes, 0) AS total_vignettes,
+                    COALESCE(vt.total_visites, 0)    AS total_visites,
                     COALESCE(f.total_factures, 0) +
                     COALESCE(s.total_sinistres, 0) +
-                    COALESCE(cb.total_carburant, 0) AS grand_total,
+                    COALESCE(cb.total_carburant, 0) +
+                    COALESCE(vig.total_vignettes, 0) +
+                    COALESCE(vt.total_visites, 0)    AS grand_total,
                     (SELECT km FROM car_km
                      WHERE car_id = c.id
                      ORDER BY recorded_at DESC, id DESC LIMIT 1) AS current_km,
@@ -589,33 +730,39 @@ class DashboardService:
                 LEFT JOIN carte_grises cg ON c.current_cg_id = cg.id
                 LEFT JOIN (
                     SELECT car_id, SUM(montant_ttc) AS total_factures
-                    FROM factures
-                    WHERE type = 'maintenance'
-                    AND date_facture BETWEEN %s AND %s
-                    AND montant_ttc IS NOT NULL
+                    FROM factures WHERE type = 'maintenance'
+                    AND date_facture BETWEEN %s AND %s AND montant_ttc IS NOT NULL
                     GROUP BY car_id
                 ) f ON f.car_id = c.id
                 LEFT JOIN (
                     SELECT car_id, SUM(montant_ttc) AS total_sinistres
-                    FROM factures
-                    WHERE type = 'sinistre'
-                    AND date_facture BETWEEN %s AND %s
-                    AND montant_ttc IS NOT NULL
+                    FROM factures WHERE type = 'sinistre'
+                    AND date_facture BETWEEN %s AND %s AND montant_ttc IS NOT NULL
                     GROUP BY car_id
                 ) s ON s.car_id = c.id
                 LEFT JOIN (
                     SELECT car_id, SUM(montant_ttc) AS total_carburant
-                    FROM carburant_expenses
-                    WHERE periode BETWEEN %s AND %s
+                    FROM carburant_expenses WHERE periode BETWEEN %s AND %s
                     GROUP BY car_id
                 ) cb ON cb.car_id = c.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant) AS total_vignettes
+                    FROM vignettes WHERE expiration_date BETWEEN %s AND %s
+                    AND montant IS NOT NULL GROUP BY car_id
+                ) vig ON vig.car_id = c.id
+                LEFT JOIN (
+                    SELECT car_id, SUM(montant) AS total_visites
+                    FROM visite_technique WHERE expiration_date BETWEEN %s AND %s
+                    AND montant IS NOT NULL GROUP BY car_id
+                ) vt ON vt.car_id = c.id
                 ORDER BY grand_total DESC
-            """, (date_from, date_to, date_from, date_to, date_from, date_to))
+            """, (date_from, date_to, date_from, date_to, date_from, date_to, date_from, date_to, date_from, date_to))
             rows = cursor.fetchall()
             result = []
             for r in rows:
                 d = dict(r)
-                for k in ['total_maintenance', 'total_sinistres', 'total_carburant', 'grand_total']:
+                for k in ['total_maintenance', 'total_sinistres', 'total_carburant',
+                          'total_vignettes', 'total_visites', 'grand_total']:
                     d[k] = float(d[k]) if d[k] else 0.0
                 result.append(d)
             return result

@@ -1,13 +1,9 @@
+<!-- Dark mode early init — must be first -->
+<script src="/static/js/dark-mode.js"></script>
 <div class="container-fluid">
     <button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop" type="button">
         <i class="fas fa-bars"></i>
     </button>
-    <form class="d-none d-sm-inline-block me-auto ms-md-3 my-2 my-md-0 mw-100 navbar-search">
-        <div class="input-group">
-            <input class="bg-light form-control border-0 small" type="text" placeholder="Rechercher...">
-            <button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button>
-        </div>
-    </form>
 
     <ul class="navbar-nav flex-nowrap ms-auto">
 
@@ -55,28 +51,7 @@
 
         <!-- Messages (kept as-is) -->
         <!-- Messages -->
-<li class="nav-item dropdown no-arrow mx-1">
-    <a class="dropdown-toggle nav-link" aria-expanded="false"
-        data-bs-toggle="dropdown" href="#" id="messagesDropdownToggle">
-        <span class="badge bg-danger badge-counter d-none" id="msg_badge">0</span>
-        <i class="fas fa-envelope fa-fw"></i>
-    </a>
-    <div class="dropdown-menu dropdown-menu-end dropdown-list animated--grow-in" style="min-width:340px;">
-        <h6 class="dropdown-header d-flex justify-content-between align-items-center">
-            <span>Messages Employés</span>
-            <span class="badge bg-danger rounded-pill" id="msg_header_count">0</span>
-        </h6>
-        <div id="messages_dropdown_list">
-            <div class="dropdown-item text-center text-muted small py-3">
-                <div class="spinner-border spinner-border-sm me-2"></div>
-                Chargement...
-            </div>
-        </div>
-        <a class="dropdown-item text-center small text-primary fw-bold py-2" href="#">
-            Voir tous les messages
-        </a>
-    </div>
-</li>
+
 
         <div class="d-none d-sm-block topbar-divider"></div>
 
@@ -90,6 +65,11 @@
                 <div class="dropdown-menu shadow dropdown-menu-end animated--grow-in">
                     <a class="dropdown-item" href="#"><i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Profil</a>
                     <a class="dropdown-item" href="#"><i class="fas fa-cogs fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Paramètres</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" onclick="toggleDarkMode(); return false;">
+                        <i id="theme_icon" class="fas fa-moon fa-fw me-2"></i>
+                        <span id="theme_label">Mode sombre</span>
+                    </a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="/auth/logout"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Déconnexion</a>
                 </div>
@@ -168,16 +148,20 @@ async function loadHeaderMessages() {
 
         // update badge
         const badge = document.getElementById('msg_badge');
-        if (total > 0) {
-            badge.classList.remove('d-none');
-            badge.innerText = total > 9 ? '9+' : total;
-        } else {
-            badge.classList.add('d-none');
+        if (badge) {
+            if (total > 0) {
+                badge.classList.remove('d-none');
+                badge.innerText = total > 9 ? '9+' : total;
+            } else {
+                badge.classList.add('d-none');
+            }
         }
-        document.getElementById('msg_header_count').innerText = total;
+        const msgCount = document.getElementById('msg_header_count');
+        if (msgCount) msgCount.innerText = total;
 
         // fill dropdown
         const list = document.getElementById('messages_dropdown_list');
+        if (!list) return;
         if (total === 0) {
             list.innerHTML = `
                 <div class="dropdown-item text-center text-muted small py-3">
@@ -224,9 +208,7 @@ async function loadHeaderMessages() {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadHeaderAlerts();
-    loadHeaderMessages();
-    // refresh every 10 seconds
-    setInterval(loadHeaderMessages, 10000);
+    setInterval(loadHeaderAlerts, 10000);
 });
 
 document.addEventListener('DOMContentLoaded', loadHeaderAlerts);

@@ -244,6 +244,63 @@ def send_weekly_digest(to_email, data):
 
     return send_email(to_email, subject, html)
 
+def send_document_alert_email(to_email, prenom, nom, alerts):
+    """Send document expiry alert to an employee about their assigned car."""
+    today = __import__('datetime').date.today()
+    subject = 'ALT Fleet — Alerte documents véhicule'
+
+    rows = ''
+    for a in alerts:
+        color = '#dc3545' if a.get('level') == 'danger' else '#ffc107'
+        days = a.get('days')
+        if days is None or days < 0:
+            status = '<span style="color:#dc3545;font-weight:bold;">Expiré</span>'
+        elif days == 0:
+            status = '<span style="color:#dc3545;font-weight:bold;">Expire aujourd\'hui</span>'
+        else:
+            status = f'<span style="color:{color};font-weight:bold;">Dans {days} jour(s)</span>'
+        rows += f"""
+        <tr>
+            <td style="padding:10px;border-bottom:1px solid #eee;">{a.get('doc','')}</td>
+            <td style="padding:10px;border-bottom:1px solid #eee;">{a.get('expiry','—')}</td>
+            <td style="padding:10px;border-bottom:1px solid #eee;">{status}</td>
+        </tr>"""
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family:Arial,sans-serif;background:#f4f6f9;padding:20px;">
+        <div style="max-width:520px;margin:auto;background:white;border-radius:10px;
+                    padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align:center;margin-bottom:20px;">
+                <h2 style="color:#0d6efd;">AIR LIQUIDE TUNISIA</h2>
+                <p style="color:#666;font-size:13px;">Système de Gestion de Flotte</p>
+            </div>
+            <p>Bonjour <strong>{prenom} {nom}</strong>,</p>
+            <p>Un ou plusieurs documents de votre véhicule nécessitent votre attention :</p>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border:1px solid #dee2e6;border-radius:8px;overflow:hidden;margin:16px 0;">
+                <thead>
+                    <tr style="background:#0d6efd;color:white;">
+                        <th style="padding:10px;text-align:left;">Document</th>
+                        <th style="padding:10px;text-align:left;">Expiration</th>
+                        <th style="padding:10px;text-align:left;">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            <p style="color:#666;font-size:13px;">
+                Veuillez contacter votre responsable fleet pour régulariser la situation.
+            </p>
+            <p style="color:#aaa;font-size:12px;margin-top:20px;">
+                Ce message est automatique, merci de ne pas y répondre.
+            </p>
+        </div>
+    </body>
+    </html>"""
+    return send_email(to_email, subject, html)
+
+
 def send_bon_commande_email(to_email, prenom, nom, plate_number, garage_name, pdf_path):
     subject = f'ALT Fleet — Bon de Commande — {plate_number}'
     html = f"""

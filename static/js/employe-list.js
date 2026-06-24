@@ -112,6 +112,11 @@ function renderTable() {
                         onclick="ouvrirModalEditEmploye(event, ${p.id})">
                         <i class="fas fa-edit"></i>
                     </button>
+                    <button class="btn btn-outline-warning border-0 rounded-circle me-1"
+                        title="Réinitialiser le mot de passe"
+                        onclick="resetPassword(event, ${p.id}, '${p.prenom} ${p.nom}', '${p.email}')">
+                        <i class="fas fa-key"></i>
+                    </button>
                     <button class="btn btn-outline-danger border-0 rounded-circle"
                         title="Supprimer"
                         onclick="supprimerEmploye(event, ${p.id}, '${p.prenom} ${p.nom}')">
@@ -145,6 +150,32 @@ function changePage(page) {
     currentPage = page;
     renderTable();
     renderPagination();
+}
+
+async function resetPassword(event, id, name, email) {
+    event.stopPropagation();
+    const result = await Swal.fire({
+        title: 'Réinitialiser le mot de passe ?',
+        html: `Un nouveau mot de passe temporaire sera généré et envoyé à<br><strong>${email}</strong>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        confirmButtonText: 'Oui, réinitialiser',
+        cancelButtonText: 'Annuler'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        const res  = await fetch(`/employe/reset-password/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'success') {
+            Swal.fire('Envoyé !', `Nouveau mot de passe envoyé à ${email}`, 'success');
+        } else {
+            Swal.fire('Erreur', data.message || 'Échec de la réinitialisation', 'error');
+        }
+    } catch (e) {
+        Swal.fire('Erreur', 'Problème réseau', 'error');
+    }
 }
 
 document.addEventListener("DOMContentLoaded", loadEmployees);

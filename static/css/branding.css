@@ -139,3 +139,14 @@
     overflow-y: auto;
     overflow-x: hidden;
 }
+
+/* Dark mode text fix — Bootstrap's text-dark/text-body resolve to the card background color */
+[data-bs-theme="dark"] .text-dark,
+[data-bs-theme="dark"] .text-body {
+    color: rgba(255, 255, 255, 0.87) !important;
+}
+
+[data-bs-theme="dark"] .card-header {
+    background-color: var(--bs-card-bg) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}

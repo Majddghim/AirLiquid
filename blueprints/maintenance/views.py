@@ -4,6 +4,7 @@ import os
 from werkzeug.utils import secure_filename
 from tools.database_tools import DatabaseTools
 from tools.email_tools import send_bon_commande_email
+from tools.upload_tools import validate_upload
 
 
 class MaintenanceViews:
@@ -191,10 +192,8 @@ class MaintenanceViews:
                 # generate PDF + send email to assigned employee (non-blocking)
                 try:
                     emp = self.service.get_assigned_employee(car_id)
-                    print(f'Employee found: {emp}')
                     if emp and emp.get('email'):
                         pdf_path = self.service.generate_bon_pdf(car, garage, items, date)
-                        print(f'PDF generated at: {pdf_path}')
                         send_bon_commande_email(
                             to_email=emp['email'],
                             prenom=emp['prenom'],
@@ -203,11 +202,8 @@ class MaintenanceViews:
                             garage_name=garage.get('name', ''),
                             pdf_path=pdf_path
                         )
-                        print('Email sent successfully')
-                except Exception as email_err:
-                    import traceback
-                    print(f'BDC email error: {email_err}')
-                    print(traceback.format_exc())
+                except Exception:
+                    pass
 
                 return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
             except Exception as e:
@@ -284,6 +280,9 @@ class MaintenanceViews:
                 if 'file' in request.files:
                     file = request.files['file']
                     if file and file.filename != '':
+                        ok, err = validate_upload(file)
+                        if not ok:
+                            return jsonify({'status': 'failed', 'message': err})
                         upload_folder = 'static/uploads/factures/maintenance'
                         os.makedirs(upload_folder, exist_ok=True)
                         filename = secure_filename(file.filename)
@@ -342,5 +341,5 @@ class MaintenanceViews:
                     garage_name=garage.get('name', ''),
                     pdf_path=pdf_path
                 )
-            except Exception as e:
-                print(f'BDC email error: {e}')
+            except Exception:
+                pass
