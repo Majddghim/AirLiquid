@@ -1,0 +1,21 @@
+# Environment / secrets
+.env
+gmail_credentials.json
+gmail_token.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.idea/workspace.xml
+.idea/dataSources.local.xml
+.idea/dataSources/
+
+# Uploads (user-generated files)
+static/uploads/
+
+# Logs
+*.log

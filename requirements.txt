@@ -1,0 +1,14 @@
+flask
+python-dotenv
+apscheduler
+pymysql
+anthropic
+google-api-python-client
+google-auth
+google-auth-oauthlib
+requests-oauthlib
+reportlab
+openpyxl
+numpy
+scikit-learn
+werkzeug
